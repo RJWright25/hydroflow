@@ -934,8 +934,8 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
                 print(dset)
                 data1=np.array(part_data_candidates_snap1[dset].values)
                 data2=np.array(part_data_candidates_snap2[dset].values)
-                file1.create_dataset(dset,data1)
-                file2.create_dataset(dset,data2)
+                file1.create_dataset(dset,data=data1)
+                file2.create_dataset(dset,data=data2)
 
         #masks snap 1
         gas_snap1=part_data_candidates_snap1["ParticleTypes"].values==0
