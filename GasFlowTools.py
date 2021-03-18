@@ -920,7 +920,7 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
                 if not os.path.exists(runningfolder):
                     os.mkdir(runningfolder)
 
-            dsets=list(part_data_candidates_snap2)
+            dsets=list(part_data_candidates_snap2.columns)
 
             if os.path.exists(f'{folder}/initial.hdf5'):
                 os.remove(f'{folder}/initial.hdf5')
@@ -931,10 +931,11 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
             file2=h5py.File(f'{folder}/final.hdf5','w')
 
             for dset in dsets:
-                print(part_data_candidates_snap1[dset].shape)
-                file1.create_dataset(dset,part_data_candidates_snap1[dset].values)
-                file2.create_dataset(dset,part_data_candidates_snap2[dset].values)
-
+                print(dset)
+                data1=np.array(part_data_candidates_snap1[dset].values)
+                data2=np.array(part_data_candidates_snap2[dset].values)
+                file1.create_dataset(dset,data1)
+                file2.create_dataset(dset,data2)
 
         #masks snap 1
         gas_snap1=part_data_candidates_snap1["ParticleTypes"].values==0
