@@ -672,6 +672,8 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
 
     snapidx1_z=h5py.File(snapidx1_particledatapath,'r')['Header'].attrs['Redshift'];snapidx1_lt=cosmology.lookback_time(snapidx1_z)
     snapidx2_z=h5py.File(snapidx2_particledatapath,'r')['Header'].attrs['Redshift'];snapidx2_lt=cosmology.lookback_time(snapidx2_z)
+
+
     delta_lt=snapidx1_lt-snapidx2_lt
     boxsize=h5py.File(snapidx2_particledatapath,'r')['Header'].attrs['BoxSize']
     nh_conversion=6.76991e-31/(1.6726219e-24)
@@ -944,7 +946,11 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
                 val_snap2=galaxy_snap2[dset]
                 file1['Header'].attrs[dset]=val_snap1
                 file2['Header'].attrs[dset]=val_snap2
-
+            
+            file1['Header'].attrs['Redshift']=snapidx1_z
+            file2['Header'].attrs['Redshift']=snapidx2_z 
+            file1['Header'].attrs['ScaleFactor']=1/(1+snapidx1_z)     
+            file2['Header'].attrs['ScaleFactor']=1/(1+snapidx2_z)  
             
             file1.close()
             file2.close()
