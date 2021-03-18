@@ -931,8 +931,8 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
             file2=h5py.File(f'{folder}/final.hdf5','w')
 
             for dset in dsets:
-                file1.create_dataset(dset,part_data_candidates_snap1[dset])
-                file2.create_dataset(dset,part_data_candidates_snap2[dset])
+                file1.create_dataset(dset,part_data_candidates_snap1[dset].values)
+                file2.create_dataset(dset,part_data_candidates_snap2[dset].values)
 
 
         #masks snap 1
