@@ -936,7 +936,16 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
                 data2=np.array(part_data_candidates_snap2[dset].values)
                 file1.create_dataset(dset,data=data1)
                 file2.create_dataset(dset,data=data2)
+            
+            file1.create_group('Header')
+            file2.create_group('Header')
+            for dset in list(galaxy_snap1.columns):
+                val_snap1=galaxy_snap1[dset].values[0]
+                val_snap2=galaxy_snap2[dset]
+                file1['Header'].attrs[dset]=val_snap1
+                file2['Header'].attrs[dset]=val_snap2
 
+            
             file1.close()
             file2.close()
 
