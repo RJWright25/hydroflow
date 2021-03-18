@@ -911,20 +911,29 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
         # part_data_candidates_snap1.loc[:,[f"Velocity_{x}rel" for x in 'xyz']]=np.column_stack([part_data_candidates_snap1[f'Velocity_{x}']-vcom_snap1[ix] for ix,x in enumerate('xyz')])
         # part_data_candidates_snap1["vrad_inst"]=np.sum(np.multiply(np.column_stack([part_data_candidates_snap1[f"Velocity_{x}rel"] for x in 'xyz']),np.column_stack([part_data_candidates_snap1[f"runit_{x}rel"] for x in 'xyz'])),axis=1)
 
-        if dump and galaxy_snap2[f'ApertureMeasurements/Mass/030kpc_4']*10**10>5*10**9:
-            folder=f'catalogues/galaxies/snap_{int(snapidx2)}/group_{int(groupnumber)}/subgroup_{int(subgroupnumber)}'
+        if dump and galaxy_snap2[f'ApertureMeasurements/Mass/030kpc_4']*10**10>10**9:
+            folder=f'catalogues/galaxies/snap_{int(snapidx2)}/group_{int(groupnumber)}'
             runningfolder=''
             for ifolder in folder.split('/'):
                 runningfolder+=f'{ifolder}/'
                 if not os.path.exists(runningfolder):
                     os.mkdir(runningfolder)
 
-            snap1data=part_data_candidates_snap1.loc[:,:]
-            snap2data=part_data_candidates_snap2.loc[:,:]
+            dsets=list(part_data_candidates_snap2)
 
-            snap1data.to_hdf(f'{folder}/initial.hdf5',key='Galaxy')
-            snap2data.to_hdf(f'{folder}/final.hdf5',key='Galaxy')
-            
+            if os.path.exists(f'{folder}/initial.hdf5'):
+                os.remove(f'{folder}/initial.hdf5')
+            if os.path.exists(f'{folder}/final.hdf5'):
+                os.remove(f'{folder}/final.hdf5')
+
+            file1=h5py.File(f'{folder}/initial.hdf5','w')
+            file2=h5py.File(f'{folder}/final.hdf5','w')
+
+            for dset in dsets:
+                file1.create_dataset(dset,part_data_candidates_snap1[dset])
+                file2.create_dataset(dset,part_data_candidates_snap2[dset])
+
+
         #masks snap 1
         gas_snap1=part_data_candidates_snap1["ParticleTypes"].values==0
         subgroup_snap1=part_data_candidates_snap1["SubGroupNumber"].values==subgroupnumber_snap1
