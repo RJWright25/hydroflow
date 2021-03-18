@@ -606,7 +606,7 @@ def analyse_subhalo(path,mcut,snapidx,nvol,ivol):
             barymp_fac,nfit=np.nan,0
 
         if nfit:
-            barymp_mstar=np.nansum(part_data_selection.loc[np.logical_and.reduce([selection,rrel<barymp_fac,part_data_selection.loc[:,"ParticleTypes"]==4]),"Mass"])
+            barymp_mstar=np.nansum(part_data_selection.loc[np.logical_and.reduce([rrel<barymp_fac,part_data_selection.loc[:,"ParticleTypes"]==4]),"Mass"])
         else:
             barymp_mstar=np.nan
 
