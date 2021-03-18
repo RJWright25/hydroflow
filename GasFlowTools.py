@@ -913,7 +913,7 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
         # part_data_candidates_snap1.loc[:,[f"Velocity_{x}rel" for x in 'xyz']]=np.column_stack([part_data_candidates_snap1[f'Velocity_{x}']-vcom_snap1[ix] for ix,x in enumerate('xyz')])
         # part_data_candidates_snap1["vrad_inst"]=np.sum(np.multiply(np.column_stack([part_data_candidates_snap1[f"Velocity_{x}rel"] for x in 'xyz']),np.column_stack([part_data_candidates_snap1[f"runit_{x}rel"] for x in 'xyz'])),axis=1)
 
-        if dump and galaxy_snap2[f'ApertureMeasurements/Mass/030kpc_4']*10**10>10**9:
+        if dump and galaxy_snap2[f'ApertureMeasurements/Mass/030kpc_4']*10**10>10**9 and icen:
             print('dumping data')
             folder=f'catalogues/galaxies/snap_{int(snapidx2)}/group_{int(groupnumber)}'
             runningfolder=''
