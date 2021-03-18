@@ -937,6 +937,9 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
                 file1.create_dataset(dset,data=data1)
                 file2.create_dataset(dset,data=data2)
 
+            file1.close()
+            file2.close()
+
         #masks snap 1
         gas_snap1=part_data_candidates_snap1["ParticleTypes"].values==0
         subgroup_snap1=part_data_candidates_snap1["SubGroupNumber"].values==subgroupnumber_snap1
