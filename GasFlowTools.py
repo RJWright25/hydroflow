@@ -719,7 +719,7 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
                 particledata_snap2[dset]=dset_snap2
 
     logging.info(f'Reading star datasets [runtime = {time.time()-t0:.2f}s]')
-    for dset in ['Coordinates','Velocity','Mass']:
+    for dset in ['Coordinates','Velocity','Mass','SubGroupNumber']:
         dset_snap1=snapidx1_eagledata.read_dataset(4,dset)
         dset_snap2=snapidx2_eagledata.read_dataset(4,dset)
         if dset_snap2.shape[-1]==3:
