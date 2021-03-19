@@ -457,6 +457,7 @@ def analyse_subhalo(path,mcut,snapidx,nvol,ivol):
     buffer=subvol_edgelength/10
     cosmology=FlatLambdaCDM(H0=h5py.File(snapidx_particledatapath,'r')['Header'].attrs['HubbleParam']*100,
                             Om0=h5py.File(snapidx_particledatapath,'r')['Header'].attrs['Omega0'])
+    nh_conversion=6.76991e-31/(1.6726219e-24)
 
     rhocrit=cosmology.critical_density(redshift)
     rhocrit=rhocrit.to(units.Msun/units.Mpc**3)
@@ -586,7 +587,7 @@ def analyse_subhalo(path,mcut,snapidx,nvol,ivol):
         part_data_candidates.loc[:,"rrel_com"]=np.sqrt(np.sum(np.square(np.column_stack([part_data_candidates[f'Coordinates_{x}']-com[ix] for ix,x in enumerate('xyz')])),axis=1))/r200_eff #Mpc
 
         #fit baryon mass profile
-        selection=np.logical_and.reduce([part_data_candidates["rrel_com"]<1,part_data_candidates["SubGroupNumber"]==subgroupnumber,part_data_candidates["Temperature"]<=10**6])
+        selection=np.logical_and.reduce([part_data_candidates["rrel_com"]<1,part_data_candidates["SubGroupNumber"]==subgroupnumber,part_data_candidates["Temperature"]<=tfloor_eagle(part_data_candidates["Temperature"].values*nh_conversion)*10**1])
         part_data_selection=part_data_candidates.loc[selection,:]
 
         rrel=part_data_selection["rrel_com"].values
