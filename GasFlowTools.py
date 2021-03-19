@@ -1060,6 +1060,7 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
         isnap+=1
 
     accfile_data=pd.concat(accfile_data_vols,ignore_index=True)
+    mask=accfile_data['BaryMP-mstar']*10**10>=10**(mcut-0.2)
     ngal=accfile_data.shape[0]
     iigal=0
     for igal, gal in accfile_data.iterrows():
