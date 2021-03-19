@@ -952,17 +952,7 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
         inside_30kpc_snap1=part_data_candidates_snap1.loc[:,"r_com"]<0.03
 
         if detailed:
-            if galaxy_snap2_detailed['BaryMP-radius-pos']==np.nan and galaxy_snap2_detailed['BaryMP-radius-neg']==np.nan:
-                barymp_rad=np.nan
-            elif galaxy_snap2_detailed['BaryMP-radius-pos']==np.nan:
-                barymp_rad=galaxy_snap2_detailed['BaryMP-radius-neg']
-            elif galaxy_snap2_detailed['BaryMP-radius-neg']==np.nan:
-                barymp_rad=galaxy_snap2_detailed['BaryMP-radius-pos']
-            else:
-                if galaxy_snap2_detailed['BaryMP-radius-pos']<galaxy_snap2_detailed['BaryMP-radius-neg']:
-                    barymp_rad=galaxy_snap2_detailed['BaryMP-radius-pos']
-                else:
-                    barymp_rad=galaxy_snap2_detailed['BaryMP-radius-neg']
+            barymp_rad=galaxy_snap2_detailed['BaryMP-radius']
 
         if detailed:
             insidebarymp_snap1=part_data_candidates_snap1.loc[:,"r_com"]<barymp_rad
