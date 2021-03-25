@@ -1014,7 +1014,7 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
             gasflow_df.loc[igalaxy_snap2,'inflow-ism_barymp']=np.nansum(part_data_candidates_snap2.loc[ism_partidx_in_barymp,'Mass'])
             gasflow_df.loc[igalaxy_snap2,'inflow-sph_barymp']=np.nansum(part_data_candidates_snap2.loc[sph_partidx_in_barymp,'Mass'])
             gasflow_df.loc[igalaxy_snap2,'outflow-ism_barymp']=np.nansum(part_data_candidates_snap2.loc[ism_partidx_out_barymp,'Mass'])
-            gasflow_df.loc[igalaxy_snap2,'outflow-sph_barymp_kick']=np.nansum(part_data_candidates_snap2.loc[sph_partidx_out_barymp_kick,'Mass'])
+            gasflow_df.loc[igalaxy_snap2,'outflow-sph_barymp']=np.nansum(part_data_candidates_snap2.loc[sph_partidx_out_barymp,'Mass'])
             gasflow_df.loc[igalaxy_snap2,'outflow-ism_barymp_kick']=np.nansum(part_data_candidates_snap2.loc[ism_partidx_out_barymp_kick,'Mass'])
             gasflow_df.loc[igalaxy_snap2,detailed_fields]=np.array([galaxy_snap2_detailed[detailed_field] for detailed_field in detailed_fields])
 
