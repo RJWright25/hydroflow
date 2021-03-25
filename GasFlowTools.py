@@ -983,9 +983,9 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
         G=4.3*10**-9    
         v_vir=10**(np.log10(G*galaxy_snap2['Group_M_Crit200']*10**10)*1/3)
         T_vir=3.6*10**5*(v_vir/100)**2
-        phasekick_outflow=np.logical_and(part_data_candidates_snap2["Temperature"].values>T_vir,
+        phasekick_outflow=np.logical_and(part_data_candidates_snap2["Temperature"].values>10**6,
                                          np.logical_or(part_data_candidates_snap2["Temperature"].values/part_data_candidates_snap1["Temperature"].values>10**2,
-                                                      part_data_candidates_snap2["Density"].values/part_data_candidates_snap1["Density"].values<0.01))
+                                                       part_data_candidates_snap2["Density"].values/part_data_candidates_snap1["Density"].values<0.01))
 
         # particles in/ou
         ism_partidx_out_30kpc=np.logical_and.reduce([ism_30kpc_snap1,np.logical_not(ism_30kpc_snap2),gas_snap1])
@@ -1016,6 +1016,7 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
             gasflow_df.loc[igalaxy_snap2,'outflow-ism_barymp']=np.nansum(part_data_candidates_snap2.loc[ism_partidx_out_barymp,'Mass'])
             gasflow_df.loc[igalaxy_snap2,'outflow-sph_barymp']=np.nansum(part_data_candidates_snap2.loc[sph_partidx_out_barymp,'Mass'])
             gasflow_df.loc[igalaxy_snap2,'outflow-ism_barymp_kick']=np.nansum(part_data_candidates_snap2.loc[ism_partidx_out_barymp_kick,'Mass'])
+            gasflow_df.loc[igalaxy_snap2,'outflow-sph_barymp_kick']=np.nansum(part_data_candidates_snap2.loc[sph_partidx_out_barymp_kick,'Mass'])
             gasflow_df.loc[igalaxy_snap2,detailed_fields]=np.array([galaxy_snap2_detailed[detailed_field] for detailed_field in detailed_fields])
 
         #halo def
