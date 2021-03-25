@@ -1003,19 +1003,19 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
             sph_partidx_out_barymp_kick=np.logical_and.reduce([sph_barymp_snap1,np.logical_not(sph_barymp_snap2),gas_snap1,phasekick_outflow])
             sph_partidx_in_barymp=np.logical_and.reduce([np.logical_not(sph_barymp_snap1),sph_barymp_snap2,gas_snap1])
 
-        gasflow_df.loc[igalaxy_snap2,'inflow-ism_30kpc']=np.sum(part_data_candidates_snap2.loc[ism_partidx_in_30kpc,'Mass'])
-        gasflow_df.loc[igalaxy_snap2,'inflow-sph_30kpc']=np.sum(part_data_candidates_snap2.loc[sph_partidx_in_30kpc,'Mass'])
-        gasflow_df.loc[igalaxy_snap2,'outflow-ism_30kpc']=np.sum(part_data_candidates_snap2.loc[ism_partidx_out_30kpc,'Mass'])
-        gasflow_df.loc[igalaxy_snap2,'outflow-sph_30kpc']=np.sum(part_data_candidates_snap2.loc[sph_partidx_out_30kpc,'Mass'])
-        gasflow_df.loc[igalaxy_snap2,'outflow-ism_30kpc_kick']=np.sum(part_data_candidates_snap2.loc[ism_partidx_out_30kpc_kick,'Mass'])
-        gasflow_df.loc[igalaxy_snap2,'outflow-sph_30kpc_kick']=np.sum(part_data_candidates_snap2.loc[sph_partidx_out_30kpc_kick,'Mass'])
+        gasflow_df.loc[igalaxy_snap2,'inflow-ism_30kpc']=np.nansum(part_data_candidates_snap2.loc[ism_partidx_in_30kpc,'Mass'])
+        gasflow_df.loc[igalaxy_snap2,'inflow-sph_30kpc']=np.nansum(part_data_candidates_snap2.loc[sph_partidx_in_30kpc,'Mass'])
+        gasflow_df.loc[igalaxy_snap2,'outflow-ism_30kpc']=np.nansum(part_data_candidates_snap2.loc[ism_partidx_out_30kpc,'Mass'])
+        gasflow_df.loc[igalaxy_snap2,'outflow-sph_30kpc']=np.nansum(part_data_candidates_snap2.loc[sph_partidx_out_30kpc,'Mass'])
+        gasflow_df.loc[igalaxy_snap2,'outflow-ism_30kpc_kick']=np.nansum(part_data_candidates_snap2.loc[ism_partidx_out_30kpc_kick,'Mass'])
+        gasflow_df.loc[igalaxy_snap2,'outflow-sph_30kpc_kick']=np.nansum(part_data_candidates_snap2.loc[sph_partidx_out_30kpc_kick,'Mass'])
 
         if detailed:
-            gasflow_df.loc[igalaxy_snap2,'inflow-ism_barymp']=np.sum(part_data_candidates_snap2.loc[ism_partidx_in_barymp,'Mass'])
-            gasflow_df.loc[igalaxy_snap2,'inflow-sph_barymp']=np.sum(part_data_candidates_snap2.loc[sph_partidx_in_barymp,'Mass'])
-            gasflow_df.loc[igalaxy_snap2,'outflow-ism_barymp']=np.sum(part_data_candidates_snap2.loc[ism_partidx_out_barymp,'Mass'])
-            gasflow_df.loc[igalaxy_snap2,'outflow-sph_barymp_kick']=np.sum(part_data_candidates_snap2.loc[sph_partidx_out_barymp_kick,'Mass'])
-            gasflow_df.loc[igalaxy_snap2,'outflow-ism_barymp_kick']=np.sum(part_data_candidates_snap2.loc[ism_partidx_out_barymp_kick,'Mass'])
+            gasflow_df.loc[igalaxy_snap2,'inflow-ism_barymp']=np.nansum(part_data_candidates_snap2.loc[ism_partidx_in_barymp,'Mass'])
+            gasflow_df.loc[igalaxy_snap2,'inflow-sph_barymp']=np.nansum(part_data_candidates_snap2.loc[sph_partidx_in_barymp,'Mass'])
+            gasflow_df.loc[igalaxy_snap2,'outflow-ism_barymp']=np.nansum(part_data_candidates_snap2.loc[ism_partidx_out_barymp,'Mass'])
+            gasflow_df.loc[igalaxy_snap2,'outflow-sph_barymp_kick']=np.nansum(part_data_candidates_snap2.loc[sph_partidx_out_barymp_kick,'Mass'])
+            gasflow_df.loc[igalaxy_snap2,'outflow-ism_barymp_kick']=np.nansum(part_data_candidates_snap2.loc[ism_partidx_out_barymp_kick,'Mass'])
             gasflow_df.loc[igalaxy_snap2,detailed_fields]=np.array([galaxy_snap2_detailed[detailed_field] for detailed_field in detailed_fields])
 
         #halo def
