@@ -983,7 +983,7 @@ def analyse_gasflow(path,mcut,snapidx,nvol,ivol,snapidx_delta=1,detailed=True,du
         G=4.3*10**-9    
         v_vir=10**(np.log10(G*galaxy_snap2['Group_M_Crit200']*10**10)*1/3)
         T_vir=3.6*10**5*(v_vir/100)**2
-        phasekick_outflow=np.logical_and(part_data_candidates_snap2["Temperature"].values>10**6,
+        phasekick_outflow=np.logical_and(part_data_candidates_snap2["Temperature"].values>10**7,
                                          np.logical_or(part_data_candidates_snap2["Temperature"].values/part_data_candidates_snap1["Temperature"].values>10**2,
                                                        part_data_candidates_snap2["Density"].values/part_data_candidates_snap1["Density"].values<0.01))
 
