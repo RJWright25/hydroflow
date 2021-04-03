@@ -1098,8 +1098,7 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
         os.remove(outname)
     
     catalogue_subhalo.to_hdf(outname,key='Subhalo')
-    print(catalogue_subhalo[::1000])
-    print(list(catalogue_subhalo[::1000]))
+    print(np.column_stack([catalogue_subhalo[::1000]['nodeIndex'],catalogue_subhalo[::1000]['nodeIndex-acc']]))
 
 #lower level
 
