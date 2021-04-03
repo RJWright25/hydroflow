@@ -1081,7 +1081,7 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     mask=accfile_data['BaryMP-mstar']*10**10>=10**(mcut)
 
     accfile_data=accfile_data.loc[mask,:]
-    accfile_data['nodeIndex-acc']=accfile_data['nodeIndex']
+    accfile_data.loc[:,'nodeIndex-acc']=accfile_data['nodeIndex'].values
     accfile_data.sort_values(by='nodeIndex',inplace=True)
     accfile_fields=list(accfile_data)
     accfile_fields.remove('nodeIndex')
@@ -1091,8 +1091,7 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
 
     accretion_idxinsubcat=np.searchsorted(subcat_nodeidx,accretion_nodeidx)
     mask=np.zeros(len(catalogue_subhalo['nodeIndex']))
-    mask[accretion_idxinsubcat]=True
-    mask=mask.astype(bool)
+    mask[accretion_idxinsubcat]=True;mask=mask.astype(bool)
     catalogue_subhalo.loc[mask,accfile_fields]=accfile_data.loc[:,accfile_fields]
 
     print(np.column_stack([catalogue_subhalo['nodeIndex'],catalogue_subhalo['nodeIndex-acc']]))
