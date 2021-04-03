@@ -1084,9 +1084,6 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     accretion_nodeidx=accfile_data['nodeIndex'].values
     subcat_nodeidx=catalogue_subhalo['nodeIndex'].values
 
-    print(len(accretion_nodeidx))
-    print(len(subcat_nodeidx))
-
     accretion_idxinsubcat=np.searchsorted(subcat_nodeidx,accretion_nodeidx)
     mask=np.zeros(len(catalogue_subhalo['nodeIndex']))
     mask[accretion_idxinsubcat]=True;mask=mask.astype(bool)
@@ -1094,22 +1091,14 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     for field in accfile_fields:
         catalogue_subhalo.loc[mask,field]=accfile_data[field].values
 
-    print(np.column_stack([catalogue_subhalo['nodeIndex'],catalogue_subhalo['nodeIndex-acc']]))
+    valid=catalogue_subhalo['nodeIndex-acc']>0
+    catalogue_subhalo=catalogue_subhalo.loc[valid,:]
 
-    # ngal=accfile_data.shape[0]
-    # iigal=0
-    # for igal, gal in accfile_data.iterrows():
-    #     if iigal%1000==0:
-    #         print(f'{iigal/ngal*100:.1f}% done with matching ...')
-    #     nodeidx=gal['nodeIndex']
-    #     match=nodeidx==catalogue_subhalo['nodeIndex']
-    #     catalogue_subhalo.loc[match,accfields]=gal.values
-    #     iigal+=1
-
-    # if os.path.exists(outname):
-    #     os.remove(outname)
+    if os.path.exists(outname):
+        os.remove(outname)
     
-    # catalogue_subhalo.to_hdf(outname,key='Subhalo')
+    catalogue_subhalo.to_hdf(outname,key='Subhalo')
+    print(catalogue_subhalo[::1000])
 
 #lower level
 
