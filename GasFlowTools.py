@@ -1094,7 +1094,7 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     mask[accretion_idxinsubcat]=True;mask=mask.astype(bool)
     catalogue_subhalo.loc[mask,accfile_fields]=accfile_data.loc[:,accfile_fields]
 
-    print(np.column_stack([catalogue_subhalo['nodeIndex'],catalogue_subhalo['nodeIndex-acc']]))
+    print(np.column_stack([catalogue_subhalo['nodeIndex'],catalogue_subhalo['inflow-1p000r200']]))
 
     # ngal=accfile_data.shape[0]
     # iigal=0
