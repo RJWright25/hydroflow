@@ -1055,9 +1055,16 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
 
     ifile=0
     isnap=0
+    logfile=f'logs/combine_cats.log'
+    if os.path.exists(logfile):
+        os.remove(logfile)
+    logging.basicConfig(filename=logfile, level=logging.INFO)
+
     for snapidx in snapidxs:
         ivol=0
         for ivol in range(nvol**3):
+            logging.info(f'Loading volume {ivol+1}/{nvol**3} for snap {snapidx} (delta {snapidx_delta})')
+            
             print(f'Loading volume {ivol+1}/{nvol**3} for snap {snapidx} (delta {snapidx_delta})')
             try:
                 accfile_data_file=pd.read_hdf(f'catalogues/gasflow/gasflow_snapidx_{snapidx}_delta_{str(snapidx_delta).zfill(3)}_n_{str(nvol).zfill(2)}_volume_{str(ivol).zfill(3)}.hdf5',key='Flux')
