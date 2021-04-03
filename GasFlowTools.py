@@ -1086,7 +1086,7 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     accretion_idxinsubcat=np.searchsorted(subcat_nodeidx,accretion_nodeidx)
     mask=np.zeros(len(catalogue_subhalo['nodeIndex']))
     mask[accretion_idxinsubcat]=True;mask=mask.astype(bool)
-    print(len(mask),print(np.nansum(mask)))
+    print(len(mask),np.nansum(mask))
     catalogue_subhalo.loc[mask,accfile_fields]=accfile_data.loc[:,accfile_fields]
 
 
