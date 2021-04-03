@@ -1051,6 +1051,7 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     catalogue_subhalo=pd.read_hdf('catalogues/catalogue_subhalo.hdf5',key='Subhalo')
     catalogue_subhalo=catalogue_subhalo.loc[np.logical_and(np.logical_or.reduce([catalogue_subhalo['snapshotidx']==snapidx for snapidx in snapidxs]),catalogue_subhalo['ApertureMeasurements/Mass/030kpc_4']>=10**mcut/10**10),:]
     catalogue_subhalo.reset_index()
+    catalogue_subhalo.sort_values(by='nodeIndex',inplace=True)
     
     accfile_data_vols=[]
 
@@ -1078,21 +1079,27 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
 
     accfile_data=pd.concat(accfile_data_vols,ignore_index=True)
     mask=accfile_data['BaryMP-mstar']*10**10>=10**(mcut)
-    accfile_data=accfile_data.loc[mask,:]
-    ngal=accfile_data.shape[0]
-    iigal=0
-    for igal, gal in accfile_data.iterrows():
-        if iigal%1000==0:
-            print(f'{iigal/ngal*100:.1f}% done with matching ...')
-        nodeidx=gal['nodeIndex']
-        match=nodeidx==catalogue_subhalo['nodeIndex']
-        catalogue_subhalo.loc[match,accfields]=gal.values
-        iigal+=1
 
-    if os.path.exists(outname):
-        os.remove(outname)
+    accfile_data=accfile_data.loc[mask,:]
+    accfile_data.sort_values(by='nodeIndex',inplace=True)
+
+    print(len(accfile_data))
+    print(len(catalogue_subhalo))
+
+    # ngal=accfile_data.shape[0]
+    # iigal=0
+    # for igal, gal in accfile_data.iterrows():
+    #     if iigal%1000==0:
+    #         print(f'{iigal/ngal*100:.1f}% done with matching ...')
+    #     nodeidx=gal['nodeIndex']
+    #     match=nodeidx==catalogue_subhalo['nodeIndex']
+    #     catalogue_subhalo.loc[match,accfields]=gal.values
+    #     iigal+=1
+
+    # if os.path.exists(outname):
+    #     os.remove(outname)
     
-    catalogue_subhalo.to_hdf(outname,key='Subhalo')
+    # catalogue_subhalo.to_hdf(outname,key='Subhalo')
 
 #lower level
 
