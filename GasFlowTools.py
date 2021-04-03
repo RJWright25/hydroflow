@@ -1082,12 +1082,9 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
 
     accfile_data=accfile_data.loc[mask,:]
     accfile_data.loc[:,'nodeIndex-acc']=accfile_data['nodeIndex'].values
+    print(accfile_data['nodeIndex'].values)
     accfile_data.sort_values(by='nodeIndex',inplace=True)
-    accfile_fields=list(accfile_data)
-    accfile_fields.remove('nodeIndex')
 
-    print(accfile_data['outflow-1.000r200'])
-    
     accretion_nodeidx=accfile_data['nodeIndex'].values
     subcat_nodeidx=catalogue_subhalo['nodeIndex'].values
 
