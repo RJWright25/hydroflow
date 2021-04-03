@@ -1099,6 +1099,7 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     
     catalogue_subhalo.to_hdf(outname,key='Subhalo')
     print(catalogue_subhalo[::1000])
+    print(list(catalogue_subhalo[::1000]))
 
 #lower level
 
