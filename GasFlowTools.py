@@ -1085,7 +1085,6 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     accfile_data.sort_values(by='nodeIndex',inplace=True)
     accfile_fields=list(accfile_data)
     accfile_fields.remove('nodeIndex')
-    print(accfile_fields)
     
     accretion_nodeidx=accfile_data['nodeIndex'].values
     subcat_nodeidx=catalogue_subhalo['nodeIndex'].values
@@ -1095,7 +1094,7 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     mask[accretion_idxinsubcat]=True;mask=mask.astype(bool)
     catalogue_subhalo.loc[mask,accfile_fields]=accfile_data.loc[:,accfile_fields]
 
-    print(np.column_stack([catalogue_subhalo['nodeIndex'],catalogue_subhalo['inflow-1p000r200']]))
+    print(np.column_stack([catalogue_subhalo['nodeIndex'],catalogue_subhalo['outflow-1.000r200']]))
 
     # ngal=accfile_data.shape[0]
     # iigal=0
