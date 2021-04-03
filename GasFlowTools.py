@@ -1075,8 +1075,9 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
         isnap+=1
 
     accfile_data=pd.concat(accfile_data_vols,ignore_index=True)
-    catalogue_subhalo.sort_values(by='nodeIndex',inplace=True)
-    accfile_data.sort_values(by='nodeIndex',inplace=True)
+    catalogue_subhalo=catalogue_subhalo.sort_values(by='nodeIndex')
+    accfile_data=accfile_data.sort_values(by='nodeIndex')
+    catalogue_subhalo.reset_index();accfile_data.reset_index()
     accfile_data.loc[:,'nodeIndex-acc']=accfile_data['nodeIndex'].values
     accfile_fields=list(accfile_data);accfile_fields.remove('nodeIndex')
     
@@ -1090,8 +1091,10 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     mask=np.zeros(len(catalogue_subhalo['nodeIndex']))
     mask[accretion_idxinsubcat]=True;mask=mask.astype(bool)
     catalogue_subhalo.loc[:,accfile_fields]=np.nan
-    catalogue_subhalo.loc[mask,accfile_fields]=accfile_data.loc[:,accfile_fields]
+    for field in accfile_fields:
+        catalogue_subhalo.loc[mask,field]=accfile_data[field].values
 
+    print(np.column_stack([catalogue_subhalo['nodeIndex'],catalogue_subhalo['nodeIndex-acc']]))
 
     # ngal=accfile_data.shape[0]
     # iigal=0
