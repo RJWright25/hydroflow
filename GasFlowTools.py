@@ -1050,9 +1050,9 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     outname=f'catalogues/catalogue_gasflow_nvol_{str(nvol).zfill(2)}_mcut_{str(mcut).zfill(2)}_delta_{str(snapidx_delta).zfill(2)}.hdf5'
     catalogue_subhalo=pd.read_hdf('catalogues/catalogue_subhalo.hdf5',key='Subhalo')
     catalogue_subhalo=catalogue_subhalo.loc[np.logical_and(np.logical_or.reduce([catalogue_subhalo['snapshotidx']==snapidx for snapidx in snapidxs]),catalogue_subhalo['ApertureMeasurements/Mass/030kpc_4']>=10**mcut/10**10),:]
-    catalogue_subhalo.reset_index()
     catalogue_subhalo.sort_values(by='nodeIndex',inplace=True)
-    
+    catalogue_subhalo.reset_index()
+
     accfile_data_vols=[]
 
     ifile=0
@@ -1081,10 +1081,18 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     mask=accfile_data['BaryMP-mstar']*10**10>=10**(mcut)
 
     accfile_data=accfile_data.loc[mask,:]
+    accfile_data['nodeIndex-acc']=accfile_data['nodeIndex']
     accfile_data.sort_values(by='nodeIndex',inplace=True)
+    accfile_fields=list(accfile_data)
+    accfile_fields.remove('nodeIndex')
+    
+    accretion_nodeidx=accfile_data['nodeIndex'].values
+    subcat_nodeidx=catalogue_subhalo['nodeIndex'].values
 
-    print(len(accfile_data))
-    print(len(catalogue_subhalo))
+    accretion_idxinsubcat=np.searchsorted(subcat_nodeidx,accretion_nodeidx)
+    catalogue_subhalo.loc[accretion_idxinsubcat,accfile_fields]=accfile_data[:,accfile_fields]
+
+    print(np.column_stack([catalogue_subhalo['nodeIndex'],catalogue_subhalo['nodeIndex-acc']])
 
     # ngal=accfile_data.shape[0]
     # iigal=0
