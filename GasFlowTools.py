@@ -1092,7 +1092,7 @@ def combine_catalogues(mcut,snapidxs,nvol,snapidx_delta=1):
     accretion_idxinsubcat=np.searchsorted(subcat_nodeidx,accretion_nodeidx)
     catalogue_subhalo.loc[accretion_idxinsubcat,accfile_fields]=accfile_data[:,accfile_fields]
 
-    print(np.column_stack([catalogue_subhalo['nodeIndex'],catalogue_subhalo['nodeIndex-acc']])
+    print(np.column_stack([catalogue_subhalo['nodeIndex'],catalogue_subhalo['nodeIndex-acc']]))
 
     # ngal=accfile_data.shape[0]
     # iigal=0
