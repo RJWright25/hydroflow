@@ -1,4 +1,3 @@
-
 import sys
 sys.path.append('/home/rwright/Software')
 
@@ -8,7 +7,7 @@ import h5py
 from scipy.spatial import cKDTree
 from read_eagle import EagleSnapshot
 
-from hydroflow.utils.boxes import get_limits
+from hydroflow.physics.math import get_limits
 
 ##### READ PARTICLE DATA
 def read_subvol(path,ivol,nslice,ptypes=None):
@@ -18,36 +17,46 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     afac=file['Header'].attrs['ExpansionFactor']
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
-    ptypes={}
     if not ptypes:
-        ptypes[0]=['Mass','Temperature','Density','Entropy','Metallicity','StarFormationRate']
-        ptypes[4]=['Mass','Metallicity']
+        ptypes={0:['Mass','SubGroupNumber','Temperature','Density','Entropy','Metallicity'],
+                4:['Mass','SubGroupNumber','Metallicity']}
     
     snapshot=EagleSnapshot(path)
     snapshot.select_region(*lims)
-    pdata=[]
-    for ptype in ptypes:
-        pdata_itype=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
-        pdata_coords=snapshot.read_dataset(ptype,'Coordinates')
-        pdata_kdtree=cKDTree(pdata_coords,boxsize=boxsize)
-        pdata_itype.loc[:,[f'Coordinates_{x}' for x in 'xyz']]=pdata_coords;del pdata_coords
+    pdata={}
+    for iptype,ptype in enumerate(ptypes):
+        pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
+        pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')
+
         for field in ptypes[ptype]:
             hexp=file[f'PartType{ptype}/{field}'].attrs['h-scale-exponent']
             aexp=file[f'PartType{ptype}/{field}'].attrs['aexp-scale-exponent']
             cgs=file[f'PartType{ptype}/{field}'].attrs['CGSConversionFactor']
-            pdata_itype[field]=snapshot.read_dataset(ptype,field)*(hfac**hexp)*(afac**aexp)*cgs
+            pdata[ptype][field]=snapshot.read_dataset(ptype,field)*(hfac**hexp)*(afac**aexp)*cgs
+        pdata[ptype].loc[:,'ParticleType']=ptype
 
-        pdata_itype.loc[:,'ParticleType']=ptype
-        pdata.append(pdata_itype)
-    
-    pdata=pd.concat(pdata,ignore_index=True)
-    pdata=convert_pdata(path,pdata)
-
-    #mass to msun, density to nH
-    pdata=convert_sfr(pdata)
     snapshot.close()
 
-    return pdata,pdata_kdtree
+    #for star particles assign a crazy temp, density, entropy
+    npart_gas=pdata[0].shape[0]
+    npart_star=pdata[4].shape[0]
+    for field in ptypes[0]:
+        if not field in ptypes[4]:
+            pdata[4][field]=np.ones(npart_star)*10**10
+
+    #concat all pdata into one df
+    pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
+    pdata.sort_values(by="ParticleIDs",inplace=True)
+    pdata.reset_index(inplace=True,drop=True)
+
+    #conversions & SFRs
+    pdata=convert_pdata(path,pdata)
+    pdata=convert_sfr(pdata)
+
+    #generate KDtree
+    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
+
+    return pdata, pdata_kdtree
 
 ##### PARTICLE CONVERSIONS
 def convert_pdata(path,pdata):
