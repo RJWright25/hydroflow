@@ -86,7 +86,7 @@ subcat_snapmask=np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[sna
 subcat_boxmask=np.logical_and.reduce([subcat['CentreOfPotential_x'].values>=subcat_limits[0],subcat['CentreOfPotential_x'].values<subcat_limits[1],
                                       subcat['CentreOfPotential_y'].values>=subcat_limits[2],subcat['CentreOfPotential_y'].values<subcat_limits[3],
                                       subcat['CentreOfPotential_z'].values>=subcat_limits[4],subcat['CentreOfPotential_z'].values<subcat_limits[5]])
-subcat_selection=subcat.loc[subcat_boxmask,:].copy();del subcat
+subcat_selection=subcat.loc[np.logical_and(subcat_boxmask,subcat_snapmask),:].copy();del subcat
 subcat_selection.reset_index(drop=True,inplace=True)
 subcat_selection_final=subcat_selection.loc[subcat_selection[snap_key].values==snapf,:].copy()
 subcat_selection_final.reset_index(drop=True,inplace=True)

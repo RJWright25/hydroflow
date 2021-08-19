@@ -1,6 +1,6 @@
 import os
 
-def submit_gasflow_jobarray(exe,arguments,memory,time):
+def submit_gasflow_jobarray(exe,arguments,memory,time,array=None):
 
     cwd=os.getcwd()
     pathcat=arguments['path']
@@ -28,7 +28,10 @@ def submit_gasflow_jobarray(exe,arguments,memory,time):
         jobfile.writelines(f"#SBATCH --mem={memory}GB\n")
         jobfile.writelines(f"#SBATCH --time={time}\n")
         jobfile.writelines(f"#SBATCH --output={jobfolder}{jobname}_ivol%a.out\n")
-        jobfile.writelines(f"#SBATCH -a 0-{nvol-1}")
+        if not array:
+            jobfile.writelines(f"#SBATCH --array 0-{nvol-1}")
+        else:
+            jobfile.writelines(f"#SBATCH --array {array}")
 
         jobfile.writelines(f" \n")
 
