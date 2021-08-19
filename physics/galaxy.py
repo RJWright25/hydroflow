@@ -29,7 +29,7 @@ def find_progidx(subcat,galid,depth):
 		match_idepth_progen=subcat[descid_key].values==galid_idepth
 		numprogen=np.nansum(match_idepth_progen)        
 		if numprogen>1:
-			match_idepth_masses=subcat.loc[match_idepth_progen,'ApertureMeasurements/Mass/030kpc'].values
+			match_idepth_masses=subcat.loc[match_idepth_progen,'ApertureMeasurements/Mass/030kpc_4'].values
 			mratio=10**(np.abs(np.log10(match_idepth_masses[0]/match_idepth_masses[1])))
 			if mratio<=5:
 				nmerger_maj+=1
