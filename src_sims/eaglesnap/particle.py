@@ -6,7 +6,7 @@ import h5py
 from scipy.spatial import cKDTree
 from read_eagle import EagleSnapshot
 
-from hydroflow.physics.utils import get_limits
+from hydroflow.src_physics.utils import get_limits
 
 ##### READ PARTICLE DATA
 def read_subvol(path,ivol,nslice,ptypes=None):

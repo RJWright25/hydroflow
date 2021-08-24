@@ -10,7 +10,7 @@ from datetime import datetime
 
 from hydroflow.run.tools_hpc import create_dir
 from hydroflow.src_physics.utils import get_limits,get_progidx
-from hydroflow.src_physics.galaxy import analyse_galaxy
+from hydroflow.src_physics.galaxy import analyse_galaxy,calc_r200
 from hydroflow.src_physics.gasflow import candidates_gasflow,analyse_gasflow
 
 #arguments
@@ -76,7 +76,7 @@ dt=metadata.loc[snapi_mask,'lookbacktime'].values[0]-metadata.loc[snapf_mask,'lo
 boxsize=metadata.loc[snapf_mask,'boxsize'].values[0]
 
 #outputs
-output_folder=f'{path}/catalogues/gasflow/{namecat}/nvol_{str(int(nslice**3)).zfill(3)}/snap_{str(snapf).zfill(3)}_d{str(depth).zfill(2)}/'
+output_folder=f'{path}/catalogues/gasflow/{namecat}/nvol_{str(int(nslice**3)).zfill(3)}/snap{str(snapf).zfill(3)}_d{str(depth).zfill(2)}/'
 outcat_fname=output_folder+f'ivol_{str(ivol).zfill(3)}.hdf5'
 logging.info(f'Output file: {outcat_fname} [runtime {time.time()-t1:.3f} sec]')
 
@@ -93,6 +93,12 @@ subcat_selection.reset_index(drop=True,inplace=True)
 subcat_selection_final=subcat_selection.loc[subcat_selection[snap_key].values==snapf,:].copy()
 subcat_selection_final.reset_index(drop=True,inplace=True)
 
+#check for user requested outputs
+user_radii=[]
+for key in list(subcat_selection_final.keys()):
+    if '*' in key:
+        user_radii.append(key)
+
 #load pdata
 logging.info(f'Loading final snap particle data: {snapf_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
 pdata_snapf,kdtree_snapf=read_subvol(snapf_pdata_fname,ivol,nslice)
@@ -107,6 +113,7 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
     logging.info(f'')
     logging.info(f"Galaxy {igal+1}/{subcat_selection_final.shape[0]:.0f}: stellar mass - {galaxy_snapf[mass_key]:.1e} [runtime {time.time()-t1:.3f} sec]")
 
+
     nmin,nmaj,progid=get_progidx(subcat_selection,galaxy_snapf[galid_key],depth)
     
     galaxy_output=pd.DataFrame([])
@@ -119,6 +126,8 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
     progmatch=progid==subcat_selection[galid_key].values
 
     if progid and np.nansum(progmatch):
+        r200_eff=calc_r200(galaxy_snapf)
+
         galaxy_snapi=subcat_selection.loc[progmatch,:].iloc[0]
         t1_c=time.time()
         pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf)
@@ -128,23 +137,15 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
 
         t1_f=time.time()
         fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf)
-        fiti,galaxy_properties_snapi=analyse_galaxy(galaxy_snapi,pdata_candidates_snapi)
         t2_f=time.time()
         logging.info(f"Fitting: {t2_f-t1_f:.3f} sec")
 
         t1_g=time.time()
-        if fiti and fitf:
+
+        if fitf:
             #add outputs
             for key in list(galaxy_properties_snapf.keys()):
                 galaxy_output.loc[0,key]=galaxy_properties_snapf[key]
-            for key in list(galaxy_properties_snapi.keys()):
-                galaxy_output.loc[0,key+'-progen']=galaxy_properties_snapi[key]
-
-            ### r200 facs
-            for fac in [0.15,1]:
-                gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=galaxy_properties_snapf['r200_eff']*fac,dt=dt,Tcut=None)
-                for key in list(gasflow_ir200.keys()):
-                    galaxy_output.loc[0,f'{fac:.2f}r200-'+key]=gasflow_ir200[key]
 
             ### barymp
             gasflow_bmp=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=galaxy_properties_snapf['bmp_radius'],dt=dt,Tcut=None)
@@ -155,21 +156,25 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
             gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=galaxy_properties_snapf['bmp_radius'],dt=dt,Tcut=5*10**4)
             for key in list(gasflow_ism.keys()):
                 galaxy_output.loc[0,f'ism-'+key]=gasflow_ism[key]
-
-            ### user def
-            if 'r_user' in list(galaxy_snapf.keys()):
-                for fac in [1,2,3]:
-                    gasflow_iuser=analyse_gasflow(pdata_snapi,pdata_snapf,radius=galaxy_properties_snapf['r_user']*fac,dt=dt,Tcut=None)
-                    for key in list(gasflow_iuser.keys()):
-                        galaxy_output.loc[0,f'{fac:.2f}ruser-'+key]=gasflow_iuser[key]
-
-            
-            t2_g=time.time()
-            logging.info(f"Gasflow: {t2_g-t1_g:.3f} sec")
-            logging.info(f'Galaxy successfully processed')
-
         else:
-            logging.info(f'Could not process galaxy, unable to fit bmp')
+            logging.info(f'Could not fit BMP of galaxy')
+
+        ### r200 facs
+        for fac in [0.15,1]:
+            gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None)
+            for key in list(gasflow_ir200.keys()):
+                galaxy_output.loc[0,f'{fac:.2f}r200-'+key]=gasflow_ir200[key]
+
+        ### user def
+        for user_radius in user_radii:
+            iuser_radius=galaxy_snapf[user_radius]
+            gasflow_iuser=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=iuser_radius,dt=dt,Tcut=None)
+            for key in list(gasflow_iuser.keys()):
+                galaxy_output.loc[0,f'{user_radius}-'+key]=gasflow_iuser[key]
+            
+        t2_g=time.time()
+        logging.info(f"Gasflow: {t2_g-t1_g:.3f} sec")
+        logging.info(f'Galaxy successfully processed')
     else:
         logging.info(f'Could not process galaxy, progenitor lost')
 

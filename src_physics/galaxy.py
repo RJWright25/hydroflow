@@ -25,8 +25,8 @@ def analyse_galaxy(galaxy,pdata):
 	r_bins=np.linspace(0,1,num=101)
 	r200=calc_r200(galaxy);galaxy_output['r200_eff']=r200
 
-	baryons=np.logical_or.reduce([star,cool,sfr])
-	baryons=np.logical_and.reduce([baryons,sgm,pdata['R_rel'].values<r200])
+	baryon_candidates=np.logical_or.reduce([star,cool,sfr])
+	baryons=np.logical_and.reduce([baryon_candidates,sgm,pdata['R_rel'].values<r200])
 	rrel_galaxy=rrel[baryons]/r200
 	mass_galaxy=mass[baryons]
 

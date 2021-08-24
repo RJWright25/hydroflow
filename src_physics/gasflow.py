@@ -10,6 +10,9 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None):
     Z_snap1=pdata_snapi['Metallicity'].values
     Z_snap2=pdata_snapf['Metallicity'].values
 
+    T_snap1=pdata_snapi['Temperature'].values
+    T_snap2=pdata_snapf['Temperature'].values
+
     rcut_snap1=pdata_snapi['R_rel'].values<=radius
     rcut_snap2=pdata_snapf['R_rel'].values<=radius
 
@@ -24,10 +27,10 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None):
         hot_snap1=np.zeros(pdata_snapi.shape[0])>0
         hot_snap2=np.zeros(pdata_snapf.shape[0])>0
     else:
-        cool_snap1=pdata_snapi['Temperature'].values<=Tcut
-        cool_snap2=pdata_snapf['Temperature'].values<=Tcut
-        hot_snap1=pdata_snapi['Temperature'].values>Tcut
-        hot_snap2=pdata_snapf['Temperature'].values>Tcut
+        cool_snap1=T_snap1<=Tcut
+        cool_snap2=T_snap2<=Tcut
+        hot_snap1=T_snap1>Tcut
+        hot_snap2=T_snap2>Tcut
 
     selection_snap1=np.logical_and(rcut_snap1,cool_snap1)
     selection_snap2=np.logical_and(rcut_snap2,cool_snap2)
@@ -43,12 +46,16 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None):
     gasflow_output['inflow-m']=np.nansum(inflow_mass)
     if gasflow_output['inflow-n']>0.:
         gasflow_output['inflow-Z_mean']=np.average(Z_snap2[inflow_mask],weights=inflow_mass)
-        gasflow_output['inflow-Z_median']=np.nanmedian(Z_snap2[inflow_mask],weights=inflow_mass)
+        gasflow_output['inflow-Z_median']=np.nanmedian(Z_snap2[inflow_mask])
+        gasflow_output['inflow-T_mean']=np.average(T_snap2[inflow_mask],weights=inflow_mass)
+        gasflow_output['inflow-T_median']=np.nanmedian(T_snap2[inflow_mask])
 
         #infall vel
         arvel=(pdata_snapf['R_rel'].values[inflow_mask]-pdata_snapi['R_rel'].values[inflow_mask])/dt*vel_conversion
-        gasflow_output['inflow-arvel_mean']=np.average(arvel,weights=inflow_mass)
-        gasflow_output['inflow-arvel_median']=np.nanmedian(arvel,weights=inflow_mass)
+        mask=np.where(np.logical_and(np.isfinite(arvel),inflow_mass>=0))
+        if np.nansum(mask):
+            gasflow_output['inflow-arvel_mean']=np.average(arvel[mask],weights=inflow_mass[mask])
+            gasflow_output['inflow-arvel_median']=np.nanmedian(arvel)
 
         #reason for inflow
         cooled=np.logical_and.reduce([cool_snap2[inflow_mask],hot_snap1[inflow_mask]])
@@ -67,12 +74,16 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None):
     gasflow_output['outflow-m']=np.nansum(outflow_mass)
     if gasflow_output['outflow-n']>0.:
         gasflow_output['outflow-Z_mean']=np.average(Z_snap1[outflow_mask],weights=outflow_mass)
-        gasflow_output['outflow-Z_median']=np.nanmedian(Z_snap1[outflow_mask],weights=outflow_mass)
+        gasflow_output['outflow-Z_median']=np.nanmedian(Z_snap1[outflow_mask])
+        gasflow_output['outflow-T_mean']=np.average(T_snap1[outflow_mask],weights=outflow_mass)
+        gasflow_output['outflow-T_median']=np.nanmedian(T_snap1[outflow_mask])
         
         #ejection vel
         arvel=(pdata_snapf['R_rel'].values[outflow_mask]-pdata_snapi['R_rel'].values[outflow_mask])/dt*vel_conversion
-        gasflow_output['outflow-arvel_mean']=np.average(arvel,weights=outflow_mass)
-        gasflow_output['outflow-arvel_median']=np.nanmedian(arvel,weights=outflow_mass)
+        mask=np.where(np.logical_and(np.isfinite(arvel),outflow_mass>=0))
+        if np.nansum(mask):
+            gasflow_output['outflow-arvel_mean']=np.average(arvel[mask],weights=outflow_mass[mask])
+            gasflow_output['outflow-arvel_median']=np.nanmedian(arvel)
 
         #reason for outflow
         heated=np.logical_and.reduce([cool_snap1[outflow_mask],hot_snap2[outflow_mask]])

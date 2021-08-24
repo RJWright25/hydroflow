@@ -16,10 +16,10 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,array=None):
     jobname=f"s{str(snapf).zfill(3)}_d{str(depth).zfill(2)}_n{str(int(nslice**3)).zfill(3)}"
     create_dir(jobfolder)
 
-    runscriptfilepath=repo+'/utils/execute.py'
-    
+    runscriptfilepath=repo+'/run/execute.py'
+    num=len(array.split(','))
 
-    jobscriptfilepath=f'{jobfolder}submit-{jobname}_{len(array)}.slurm'
+    jobscriptfilepath=f'{jobfolder}submit-{jobname}_{num}.slurm'
     
     if os.path.exists(jobscriptfilepath):
         os.remove(jobscriptfilepath)
