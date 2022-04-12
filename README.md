@@ -4,6 +4,7 @@
 Tools for Lagrangian analysis of gas flows in hydrodynamical simulations. This repository contains code to generalise the analysis of gas flows to and from large samples of haloes and galaxies. For each object, this is achieved by comparing particles in a given reservoir from one simulation output to another, and identifying the particles which have joined or left the object via their ID.
 
 <img src="./graphics/halogasflow.png" width="1000"/>
+Image generated with Py-SPHViewer (Benitez-Llambay, 2015) and the EAGLE simulations (Schaye, 2015).
 
 ## Lagrangian calculations
 
@@ -16,6 +17,7 @@ $$ \dot{M}_{G}=\sum_{p\in\Delta G}m_{p}/\Delta t_{ij} $$
 Where $m_{p}$ is the mass of a particle $p$, and $\Delta G$ can refer to the inflow or outflow set. Such a calculation corresponds to a *gross* inflow or outflow rate, with the difference between these two reflecting the *net* change. In the case of gas particle flow rates, it is important to also include any stellar particles that were formed between $t_{\rm i}$ and $t_{\rm j}$ in the $\Delta G$ sets. This can be achieved by simply ensuring that a particle is gaseous at the initial snapshot, $t_{i}$; but not necessarily enforcing this requirement at  $t_{j}$. With a method for identifying the set of particles constituting the inflow and outflow sets, $\Delta G$, it is then also possible to characterise the properties of the $\Delta G$ sets (e.g. for their metallicity, temperature, density etc.).
 
 <img src="./graphics/lagrangianflow.png" width="1000"/>
+Image generated with Py-SPHViewer (Benitez-Llambay, 2015) and the EAGLE simulations (Schaye, 2015).
 
 ## Code outline
 
