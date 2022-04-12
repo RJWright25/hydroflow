@@ -44,18 +44,19 @@ def analyse_galaxy(galaxy,pdata):
 	##### OTHER PROPERTIES
 	
 	#within r200
-	r200=rrel<=r200
+	r200=np.logical_and(rrel<=r200,sgm)
+
 	reservoirs['r200_star']=np.logical_and(star,r200)
 	reservoirs['r200_gas']=np.logical_and(gas,r200)
 
 	#within barymp
-	bmp=rrel<=barymp_fac*r200
+	bmp=np.logical_and(rrel<=barymp_fac*r200,sgm)
 	reservoirs['bmp_star']=np.logical_and(star,bmp)
 	reservoirs['bmp_gas']=np.logical_and(gas,bmp)
 	reservoirs['bmp_ism']=np.logical_and(reservoirs['bmp_gas'],np.logical_or(cool,sfr))
 
 	#not in ism, within r200
-	nbmp=np.logical_and(np.logical_not(np.logical_or(reservoirs['bmp_ism'],reservoirs['bmp_star'])),rrel<=r200)
+	nbmp=np.logical_and.reduce([np.logical_not(np.logical_or(reservoirs['bmp_ism'],reservoirs['bmp_star'])),rrel<=r200,sgm])
 	reservoirs['cgm_star']=np.logical_and(star,nbmp)
 	reservoirs['cgm_gas']=np.logical_and(gas,nbmp)
 
@@ -82,5 +83,7 @@ def analyse_galaxy(galaxy,pdata):
 			for prop in reservoir_props:
 				galaxy_output[f'{reservoir}-{abbrev[prop]}_median']=np.nan
 				galaxy_output[f'{reservoir}-{abbrev[prop]}_mean']=np.nan
+			if reservoir=='bmp_ism':
+				galaxy_output[f'bmp_ism-SFR']=0
 
 	return True, galaxy_output

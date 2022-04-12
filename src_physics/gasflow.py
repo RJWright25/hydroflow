@@ -20,6 +20,10 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None):
     ocut_snap2=pdata_snapf['R_rel'].values>radius
 
     gas_snap2=pdata_snapf['ParticleType'].values==0
+    gas_snap1=pdata_snapi['ParticleType'].values==0
+
+    star_snap2=pdata_snapf['ParticleType'].values==4
+    star_snap1=pdata_snapi['ParticleType'].values==4
     
     if not Tcut:
         cool_snap1=np.ones(pdata_snapi.shape[0])>0
@@ -32,11 +36,12 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None):
         hot_snap1=T_snap1>Tcut
         hot_snap2=T_snap2>Tcut
 
-    selection_snap1=np.logical_and(rcut_snap1,cool_snap1)
-    selection_snap2=np.logical_and(rcut_snap2,cool_snap2)
+    selection_snap1=np.logical_and.reduce([rcut_snap1,np.logical_or(cool_snap1,star_snap1)])
+    selection_snap2=np.logical_and.reduce([rcut_snap2,np.logical_or(cool_snap2,star_snap2)])
 
-    inflow_mask=np.logical_and.reduce([selection_snap2,np.logical_not(selection_snap1),gas_snap2])
-    outflow_mask=np.logical_and.reduce([selection_snap1,np.logical_not(selection_snap2),gas_snap2])
+    inflow_mask=np.logical_and.reduce([selection_snap2,np.logical_not(selection_snap1),np.logical_or(gas_snap2,gas_snap1)])
+    outflow_mask=np.logical_and.reduce([selection_snap1,np.logical_not(selection_snap2),np.logical_or(gas_snap2,gas_snap1)])
+    sfr_mask=np.logical_and.reduce([gas_snap1,star_snap2,selection_snap2])
 
     gasflow_output={}
 
@@ -96,6 +101,14 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None):
         for field in ['outflow-f_heated_only','outflow-f_ejected_only','outflow-f_both','outflow-f_neither','outflow-Z_mean','outflow-Z_median']:
             gasflow_output[field]=np.nan
 
+
+    #star formation
+    sfr_mass=mass_snap2[sfr_mask]
+    sfr_inflow_mass=mass_snap2[np.logical_and(inflow_mask,sfr_mask)]
+    gasflow_output['ave_SFR-n']=np.nansum(sfr_mask)
+    gasflow_output['ave_SFR-m']=np.nansum(sfr_mass)
+    gasflow_output['directSFR-frac']=np.nansum(sfr_inflow_mass)/gasflow_output['inflow-m']
+
     return gasflow_output
 
 def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf):
@@ -112,8 +125,11 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     
     pid_allcandidates=np.unique(np.concatenate([pids_candidates_snapi,pids_candidates_snapf]))
 
-    pdata_candidates_snapi=pdata_snapi.loc[pdata_snapi['ParticleIDs'].searchsorted(pid_allcandidates),:]
-    pdata_candidates_snapf=pdata_snapf.loc[pdata_snapf['ParticleIDs'].searchsorted(pid_allcandidates),:]
+    try:
+        pdata_candidates_snapi=pdata_snapi.loc[pdata_snapi['ParticleIDs'].searchsorted(pid_allcandidates),:]
+        pdata_candidates_snapf=pdata_snapf.loc[pdata_snapf['ParticleIDs'].searchsorted(pid_allcandidates),:]
+    except:
+        return False,None,None
 
     pdata_candidates_snapi['R_rel']=np.sqrt(np.sum(np.square(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi),axis=1))
     pdata_candidates_snapf['R_rel']=np.sqrt(np.sum(np.square(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapf),axis=1))
@@ -124,4 +140,4 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     pdata_candidates_snapi.loc[nomatch_snapi,['Coordinates_x','Coordinates_y','Coordinates_z','Temperature','Density','Mass','ParticleIDs','Metallicity','R_rel']]=np.nan
     pdata_candidates_snapf.loc[nomatch_snapf,['Coordinates_x','Coordinates_y','Coordinates_z','Temperature','Density','Mass','ParticleIDs','Metallicity','R_rel']]=np.nan
 
-    return pdata_candidates_snapi,pdata_candidates_snapf
+    return True,pdata_candidates_snapi,pdata_candidates_snapf

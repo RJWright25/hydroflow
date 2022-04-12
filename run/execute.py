@@ -113,7 +113,6 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
     logging.info(f'')
     logging.info(f"Galaxy {igal+1}/{subcat_selection_final.shape[0]:.0f}: stellar mass - {galaxy_snapf[mass_key]:.1e} [runtime {time.time()-t1:.3f} sec]")
 
-
     nmin,nmaj,progid=get_progidx(subcat_selection,galaxy_snapf[galid_key],depth)
     
     galaxy_output=pd.DataFrame([])
@@ -130,54 +129,56 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
 
         galaxy_snapi=subcat_selection.loc[progmatch,:].iloc[0]
         t1_c=time.time()
-        pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf)
+        success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf)
         t2_c=time.time()
-
         logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
 
-        t1_f=time.time()
-        fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf)
-        t2_f=time.time()
-        logging.info(f"Fitting: {t2_f-t1_f:.3f} sec")
+        if success:
+            t1_f=time.time()
+            fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf)
+            t2_f=time.time()
+            logging.info(f"Fitting: {t2_f-t1_f:.3f} sec")
 
-        t1_g=time.time()
+            t1_g=time.time()
 
-        if fitf:
-            #add outputs
-            for key in list(galaxy_properties_snapf.keys()):
-                galaxy_output.loc[0,key]=galaxy_properties_snapf[key]
+            if fitf:
+                #add outputs
+                for key in list(galaxy_properties_snapf.keys()):
+                    galaxy_output.loc[0,key]=galaxy_properties_snapf[key]
 
-            ### barymp
-            gasflow_bmp=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=galaxy_properties_snapf['bmp_radius'],dt=dt,Tcut=None)
-            for key in list(gasflow_bmp.keys()):
-                galaxy_output.loc[0,f'bmp-'+key]=gasflow_bmp[key]
+                ### barymp
+                gasflow_bmp=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=galaxy_properties_snapf['bmp_radius'],dt=dt,Tcut=None)
+                for key in list(gasflow_bmp.keys()):
+                    galaxy_output.loc[0,f'bmp-'+key]=gasflow_bmp[key]
 
-            ### ism
-            gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=galaxy_properties_snapf['bmp_radius'],dt=dt,Tcut=5*10**4)
-            for key in list(gasflow_ism.keys()):
-                galaxy_output.loc[0,f'ism-'+key]=gasflow_ism[key]
+                ### ism
+                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=galaxy_properties_snapf['bmp_radius'],dt=dt,Tcut=5*10**4)
+                for key in list(gasflow_ism.keys()):
+                    galaxy_output.loc[0,f'ism-'+key]=gasflow_ism[key]
+            else:
+                logging.info(f'Could not fit BMP of galaxy')
+
+            ### r200 facs
+            for fac in [0.15,1]:
+                gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None)
+                for key in list(gasflow_ir200.keys()):
+                    galaxy_output.loc[0,f'{fac:.2f}r200-'+key]=gasflow_ir200[key]
+
+            ### user def
+            for user_radius in user_radii:
+                iuser_radius=galaxy_snapf[user_radius]
+                gasflow_iuser=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=iuser_radius,dt=dt,Tcut=None)
+                for key in list(gasflow_iuser.keys()):
+                    galaxy_output.loc[0,f'{user_radius}-'+key]=gasflow_iuser[key]
+                
+            t2_g=time.time()
+            logging.info(f"Gasflow: {t2_g-t1_g:.3f} sec")
+            logging.info(f'Galaxy successfully processed')
         else:
-            logging.info(f'Could not fit BMP of galaxy')
+            logging.info(f'Could not process galaxy, could not retrieve candidates')
 
-        ### r200 facs
-        for fac in [0.15,1]:
-            gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None)
-            for key in list(gasflow_ir200.keys()):
-                galaxy_output.loc[0,f'{fac:.2f}r200-'+key]=gasflow_ir200[key]
-
-        ### user def
-        for user_radius in user_radii:
-            iuser_radius=galaxy_snapf[user_radius]
-            gasflow_iuser=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=iuser_radius,dt=dt,Tcut=None)
-            for key in list(gasflow_iuser.keys()):
-                galaxy_output.loc[0,f'{user_radius}-'+key]=gasflow_iuser[key]
-            
-        t2_g=time.time()
-        logging.info(f"Gasflow: {t2_g-t1_g:.3f} sec")
-        logging.info(f'Galaxy successfully processed')
     else:
         logging.info(f'Could not process galaxy, progenitor lost')
-
 
     galaxy_outputs.append(galaxy_output)
 

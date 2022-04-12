@@ -34,43 +34,47 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
     if snapmax-snapmin==0:
         outpath=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmax)}.hdf5'
     else:
-        outpath=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmax)}to{int(snapmax)}.hdf5'
+        outpath=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmin)}to{int(snapmax)}.hdf5'
 
+    print(outpath)
     for depth in depths:
 
-        allfiles=[]
         snapdirs=sorted(os.listdir(path_gasflow))
         snapdirs=[snapdir for snapdir in snapdirs if (f'd{str(depth).zfill(2)}' in snapdir) and ('gas' not in snapdir)]
-
+        
+        snap_outputs=[]
         for snapdir in snapdirs:
-            print(snapdir)
             snap=snapdir.split('snap')[-1]
-            print(snap)
             snap=int(snap[:3])
             if snap>=snapmin and snap<=snapmax:
                 snapdir_path=path_gasflow+snapdir
                 isnap_files=sorted(os.listdir(snapdir_path))
                 isnap_files=[snapdir_path+'/'+isnap_file for isnap_file in isnap_files]
-                allfiles.extend(isnap_files)
+            else:
+                continue
+            
+            print(f'Loading gasflow files for snap {snap} delta {depth} ({len(isnap_files)})')
+            print(snapdir)
+            isnap_outputs=[]
+            for iifile,file in enumerate(isnap_files):
+                ifile=pd.read_hdf(file,key='Gasflow')
+                isnap_outputs.append(ifile)
+            try:
+                isnap_outputs=pd.concat(isnap_outputs)
+                isnap_outputs.sort_values(by='hydroflowID',inplace=True)
+                isnap_outputs.reset_index(drop=True,inplace=True)
+                snap_outputs.append(isnap_outputs)
+            except:
+                print(f'No outputs for {snap} depth {depth}')
+                continue
 
-        print(f'Loading gasflow files for snap {snap} delta {depth} ({len(allfiles)})')
-        outputs=[]
-        for iifile,file in enumerate(allfiles):
-            ifile=pd.read_hdf(file,key='Gasflow')
-            outputs.append(ifile)
-        try:
-            outputs=pd.concat(outputs)
-        except:
-            print(f'No outputs for {snap} depth {depth}')
-            continue
+        snap_outputs=pd.concat(snap_outputs)
+        snap_outputs.sort_values(by='hydroflowID',inplace=True)
+        snap_outputs.reset_index(drop=True,inplace=True)
+        print(snap_outputs.shape[0], f' hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs')
 
-        outputs.sort_values(by='hydroflowID',inplace=True)
-        outputs.reset_index(drop=True,inplace=True)
-
-        print(outputs.shape[0], f' hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs')
-
-        outputs['hydroflowID']=outputs['hydroflowID'].values.astype(np.int64)
-        hydroflow=outputs['hydroflowID'].values
+        snap_outputs['hydroflowID']=snap_outputs['hydroflowID'].values.astype(np.int64)
+        hydroflow=snap_outputs['hydroflowID'].values
         nodeidx=subcat_masked[idx_key].values
 
         valid_idx_hydroflow_in_subcat=np.searchsorted(a=nodeidx,v=hydroflow)
@@ -90,8 +94,8 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
         subcat_idxs=valid_idx_hydroflow_in_subcat[np.where(valid_idx_hydroflow_in_subcat>=0)]
 
         print(f'Adding depth {depth} data to subcat')
-        output_columns=[column+f'_d{str(depth).zfill(2)}' for column in list(outputs.columns)]
-        subcat_masked.loc[subcat_idxs,output_columns]=outputs.loc[hydroflow_idxs,:].values
+        output_columns=[column+f'_d{str(depth).zfill(2)}' for column in list(snap_outputs.columns)]
+        subcat_masked.loc[subcat_idxs,output_columns]=snap_outputs.loc[hydroflow_idxs,:].values
 
     create_dir(outpath)
     subcat_masked.to_hdf(outpath,key='Gasflow')
