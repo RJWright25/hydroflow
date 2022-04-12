@@ -1,7 +1,7 @@
 # HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
 ### *Ruby Wright (2021)*
 
-Tools for Lagrangian analysis of gas flows in cosmological simulations. 
+Tools for Lagrangian analysis of gas flows in cosmological simulations. The code compares the particles in a given reservoir (e.g. a galaxy, a halo) from one simulation output to another, identifying the particles which have joined or left the object via their ID.
 
 ## Lagrangian gas flows
 
@@ -9,9 +9,7 @@ If we determine the set of particles constituting a given reservoir (e.g. a gala
 
 The average mass inflow or outflow rate of a given structure $G$ can be calculated by summing all particle masses, $m_{p}$, constituting the inflow or outflow sets, and normalising by the relevant time interval of as per Equation \ref{eq:methods:dmdt}:
 
-\begin{equation}\label{eq:methods:dmdt}
-    \dot{M}_{G}=\sum_{p\in\Delta G}m_{p}/\Delta t_{ij}
-\end{equation}
+$$ \dot{M}_{G}=\sum_{p\in\Delta G}m_{p}/\Delta t_{ij} $$
 
 Where $m_{p}$ is the mass of a particle $p$, and $\Delta G$ can refer to the inflow or outflow set. Such a calculation corresponds to a *gross* inflow or outflow rate, with the difference between these two reflecting the *net* change. In the case of gas particle flow rates, it is important to also include any stellar particles that were formed between $t_{\rm i}$ and $t_{\rm j}$ in the $\Delta G$ sets. This can be achieved by simply ensuring that a particle is gaseous at the initial snapshot, $t_{i}$; but not necessarily enforcing this requirement at  $t_{j}$. With a method for identifying the set of particles constituting the inflow and outflow sets, $\Delta G$, it is then also possible to characterise the properties of the $\Delta G$ sets (e.g. for their metallicity, temperature, density etc.).
 
