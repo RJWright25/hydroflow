@@ -1,3 +1,8 @@
+# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
+# Ruby Wright (2021)
+
+# src_sims/eaglesnap/particle.py: routines to read particle data from EAGLE snapshot outputs. 
+# 
 
 import numpy as np
 import pandas as pd
@@ -50,7 +55,6 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     #conversions & SFRs
     pdata=convert_pdata(path,pdata)
-    pdata=convert_sfr(pdata)
 
     #generate KDtree
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
@@ -75,25 +79,5 @@ def convert_pdata(path,pdata):
         
     return pdata
 
-##### ADD SFR 
-def convert_sfr(pdata):
-    gamma=5/3;n=1.4
-    fac=1.7184561445175171e-15
-    keos=17235.4775202551
 
-    #thresholds
-    pdata.loc[:,'StarFormationRate_flag']=0
-    pdata.loc[:,'StarFormationRate_calc']=0
-    densitythresh=pdata['Density'].values>0.1*((pdata['Metallicity'].values)/0.002)**(-0.64)
-    tempthresh=(pdata['Temperature'].values/(keos*pdata['Density'].values**(1/3)))<=10**0.5
-    sfthresh=np.logical_and(densitythresh,tempthresh)
-    pdata.loc[sfthresh,'StarFormationRate_flag']=1
-
-    #sfr
-    mass=pdata.loc[sfthresh,'Mass'].values
-    entropy=pdata.loc[sfthresh,'Entropy'].values
-    density=pdata.loc[sfthresh,'Density'].values
-    pdata.loc[sfthresh,'StarFormationRate_calc']=fac*mass*(entropy*density**gamma)**((n-1)/2)
-
-    return pdata
 
