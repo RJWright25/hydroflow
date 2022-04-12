@@ -1,5 +1,4 @@
 # HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
-### *Ruby Wright (2021)*
 
 Tools for Lagrangian analysis of gas flows in hydrodynamical simulations. This repository contains code to generalise the analysis of gas flows to and from large samples of haloes and galaxies. For each object, this is achieved by comparing particles in a given reservoir from one simulation output to another, and identifying the particles which have joined or left the object via their ID.
 
