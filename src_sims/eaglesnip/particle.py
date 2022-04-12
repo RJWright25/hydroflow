@@ -1,3 +1,7 @@
+# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
+# Ruby Wright (2021)
+
+# src_sims/eaglesnip/particle.py: routines to read and convert particle data from EAGLE (SUBFIND) snipshot outputs – uses read_eagle. 
 
 import numpy as np
 import pandas as pd
@@ -17,7 +21,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     if not ptypes:
-        ptypes={0:['Mass','SubGroupNumber','Temperature','Density','Entropy','Metallicity'],
+        ptypes={0:['Mass','SubGroupNumber','Temperature','Density','Metallicity'],
                 4:['Mass','SubGroupNumber','Metallicity']}
     
     snapshot=EagleSnapshot(path)
@@ -48,9 +52,8 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
 
-    #conversions & SFRs
+    #conversions 
     pdata=convert_pdata(path,pdata)
-    pdata=convert_sfr(pdata)
 
     #generate KDtree
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
@@ -75,24 +78,5 @@ def convert_pdata(path,pdata):
         
     return pdata
 
-##### ADD SFRS
-def convert_sfr(pdata):
-    gamma=5/3;n=1.4
-    fac=1.7184561445175171e-15
-    keos=17235.4775202551
-    
-    gas=pdata['ParticleType'].values==0
-    pdata.loc[gas,'StarFormationRate']=0
-    
-    densitythresh=pdata['Density'].values>0.1*((pdata['Metallicity'].values)/0.002)**(-0.64)
-    tempthresh=pdata['Temperature'].values/(keos*pdata['Density'].values**(1/3))<=10**0.5
-    sfthresh=np.logical_and.reduce([densitythresh,tempthresh,gas])
 
-    mass=pdata.loc[sfthresh,'Mass'].values
-    entropy=pdata.loc[sfthresh,'Entropy'].values
-    density=pdata.loc[sfthresh,'Density'].values
-
-    pdata.loc[sfthresh,'StarFormationRate']=fac*mass*(entropy*density**gamma)**((n-1)/2)
-
-    return pdata
 

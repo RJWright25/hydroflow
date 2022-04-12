@@ -1,3 +1,7 @@
+# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
+# Ruby Wright (2021)
+
+# run/tools_catalogue.py: routine to combine output gas flow catalogues.
 
 import os
 import numpy as np

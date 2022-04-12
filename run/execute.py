@@ -1,3 +1,7 @@
+# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
+# Ruby Wright (2021)
+
+# run/execute.py: script to submit job array.
 
 import os
 import time

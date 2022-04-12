@@ -1,3 +1,7 @@
+# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
+# Ruby Wright (2021)
+
+# src_sims/eaglesnip/subhalo.py: routines to read and convert EAGLE SUBFIND/tree catalogues to desired format.
 
 import os
 import time

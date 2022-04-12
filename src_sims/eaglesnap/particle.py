@@ -1,8 +1,7 @@
 # HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
 # Ruby Wright (2021)
 
-# src_sims/eaglesnap/particle.py: routines to read particle data from EAGLE snapshot outputs. 
-# 
+# src_sims/eaglesnap/particle.py: routines to read and convert particle data from EAGLE (SUBFIND) snapshot outputs – uses read_eagle.
 
 import numpy as np
 import pandas as pd
@@ -22,7 +21,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     if not ptypes:
-        ptypes={0:['Mass','SubGroupNumber','Temperature','Density','Entropy','Metallicity','StarFormationRate'],
+        ptypes={0:['Mass','SubGroupNumber','Temperature','Density','Metallicity','StarFormationRate'],
                 4:['Mass','SubGroupNumber','Metallicity']}
     
     snapshot=EagleSnapshot(path)
@@ -41,7 +40,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     snapshot.close()
 
-    #for star particles assign a crazy temp, density, entropy
+    #for star particles assign a crazy temp, density
     npart_gas=pdata[0].shape[0]
     npart_star=pdata[4].shape[0]
     for field in ptypes[0]:

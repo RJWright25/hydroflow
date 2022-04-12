@@ -1,3 +1,7 @@
+# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
+# Ruby Wright (2021)
+
+# src_physics/gasflow.py: routines to analyse reservoir between snapshots, find inflow/outflow particles, and characterise them.
 
 import numpy as np
 

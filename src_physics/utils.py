@@ -1,5 +1,9 @@
-import numpy as np
+# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
+# Ruby Wright (2021)
 
+# src_physics/gasflow.py: lower level mathematical functions for the repository.
+
+import numpy as np
 from astropy import units
 from astropy.cosmology import Planck13 as cosmology
 

@@ -1,8 +1,12 @@
+# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
+# Ruby Wright (2021)
+
+# run/tools_hpc.py: handy functions to submit gas flow execute script via batch system.
 
 import os
 
 def submit_gasflow_jobarray(repo,arguments,memory,time,array=None):
-
+    
     cwd=os.getcwd()
     pathcat=arguments['path']
     nslice=int(arguments['nslice'])

@@ -1,3 +1,7 @@
+# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
+# Ruby Wright (2021)
+
+# src_physics/galaxy.py: routine to characterise a galaxy for output catalogues (including fitting baryonic mass profile).
 
 import numpy as np
 
