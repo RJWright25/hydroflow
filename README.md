@@ -1,5 +1,5 @@
-# hydroflow -- gas flows in cosmological simulations
-#### Ruby Wright (2021)
+# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
+### Ruby Wright (2021)
 
 Tools for Lagrangian analysis of gas flows in cosmological simulations. 
 
