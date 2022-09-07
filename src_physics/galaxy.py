@@ -15,6 +15,7 @@ def analyse_galaxy(galaxy,pdata):
 	properties_ptype={0:['Metallicity',
 			             'Temperature',
 			             'R_rel'], 
+					  1:['R_rel'],
 		   			  4:['Metallicity',
 					  	 'R_rel']}
 		  
@@ -57,8 +58,10 @@ def analyse_galaxy(galaxy,pdata):
 
 		if 'star' in reservoir:
 			reservoir_props=properties_ptype[4]
-		else:
+		elif 'gas' in reservoir:
 			reservoir_props=properties_ptype[0]
+		else:
+			reservoir_props=properties_ptype[1]
 		
 		if len(partmass)>0:
 			for prop in reservoir_props:
