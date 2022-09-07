@@ -32,6 +32,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     for iptype,ptype in enumerate(ptypes):
         pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
         pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')
+        pdata[ptype].loc[:,'ParticleType']=ptype
 
         for field in ptypes[ptype]:
             hexp=file[f'PartType{ptype}/{field}'].attrs['h-scale-exponent']
@@ -41,8 +42,6 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
         if ptype==1:
             pdata[1]['Mass']=file['Header'].attrs['MassTable'][1]*10**10/hfac
-            print(pdata[1]['Mass'])
-        pdata[ptype].loc[:,'ParticleType']=ptype
 
     snapshot.close()
 
