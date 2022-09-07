@@ -46,6 +46,10 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None,idm=False):
         gasflow_output['dm-inflow-n']=np.nansum(inflow_mask_dm)
         gasflow_output['dm-inflow-m']=np.nansum(inflow_mass_dm)
 
+        outflow_mask_dm=np.logical_and.reduce([rcut_snap1,np.logical_not(rcut_snap2),pdata_snapf['ParticleType'].values==1])
+        outflow_mass_dm=mass_snap2[outflow_mask_dm]
+        gasflow_output['dm-outflow-n']=np.nansum(outflow_mask_dm)
+        gasflow_output['dm-outflow-m']=np.nansum(outflow_mass_dm)
 
     #do gas calcs here
     inflow_mask=np.logical_and.reduce([selection_snap2,np.logical_not(selection_snap1),np.logical_or(gas_snap2,gas_snap1)])
