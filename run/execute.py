@@ -26,7 +26,7 @@ parser.add_argument('--nslice',metavar='-N',type=int,help='number of slices for 
 parser.add_argument('--ivol',metavar='-I',type=int,help='which sub-volume to consider')
 parser.add_argument('--snap',metavar='-S',type=int,help='which snapshot to consider')
 parser.add_argument('--depth',metavar='-D',type=int,help='time interval')
-parser.add_argument('--mcut',metavar='-M',type=int,help='mass limit (log mass)')
+parser.add_argument('--mcut',metavar='-M',type=float,help='mass limit (log mass)')
 
 args=parser.parse_args()
 code=args.code
