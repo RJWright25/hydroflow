@@ -71,7 +71,6 @@ def convert_pdata(path,pdata):
 
     molecularweight=1.2285
     conversions={'Mass':1/msun,
-                 'Density':1/(mproton*molecularweight),
                  'StarFormationRate':secperyear/msun}
     for field,conversion in conversions.items():
         pdata[field]=pdata[field].values*conversion
