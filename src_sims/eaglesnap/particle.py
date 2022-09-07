@@ -21,8 +21,8 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     if not ptypes:
-        ptypes={0:['Mass','SubGroupNumber','Temperature','Density','Metallicity','StarFormationRate'],
-                4:['Mass','SubGroupNumber','Metallicity']}
+        ptypes={0:['Mass','Temperature','Metallicity','StarFormationRate'],
+                4:['Mass','Metallicity']}
     
     snapshot=EagleSnapshot(path)
     snapshot.select_region(*lims)
