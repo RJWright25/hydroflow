@@ -41,6 +41,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
         if ptype==1:
             pdata[1]['Mass']=file['Header'].attrs['MassTable'][1]*10**10/hfac
+            print(pdata[1]['Mass'])
         pdata[ptype].loc[:,'ParticleType']=ptype
 
     snapshot.close()
