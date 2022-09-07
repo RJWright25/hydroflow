@@ -65,7 +65,7 @@ def convert_pdata(path,pdata):
     # density in nH/cm^3; mass in Msun; SFR in msun/yr (grams per second)
     snapshot=h5py.File(path,'r')
     msun=snapshot[f'Constants'].attrs['SOLAR_MASS']
-    mproton=snapshot[f'Constants'].attrs['PROTONMASS']
+    # mproton=snapshot[f'Constants'].attrs['PROTONMASS']
     secperyear=snapshot[f'Constants'].attrs['SEC_PER_YEAR']
     snapshot.close()
 

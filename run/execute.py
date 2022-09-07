@@ -168,7 +168,7 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
             for fac in [0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,2]:
                 gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None)
                 for key in list(gasflow_ir200.keys()):
-                    galaxy_output.loc[0,f'{fac:.2f}r200_gas-'+key]=gasflow_ir200[key]
+                    galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200[key]
 
             ### user def
             for user_radius in user_radii:
