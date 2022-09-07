@@ -41,7 +41,8 @@ def read_subvol(path,ivol,nslice,ptypes=None):
             pdata[ptype][field]=snapshot.read_dataset(ptype,field)*(hfac**hexp)*(afac**aexp)*cgs
 
         if ptype==1:
-            pdata[1]['Mass']=file['Header'].attrs['MassTable'][1]*10**10/hfac
+            m_dm=file['Header'].attrs['MassTable'][1]*10**10/hfac
+            pdata[1].loc[:,'Mass']=m_dm
 
     snapshot.close()
 
