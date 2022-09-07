@@ -122,7 +122,7 @@ logging.info(f'****** Entering main galaxy loop [runtime {time.time()-t1:.3f} se
 galaxy_outputs=[]
 for igal,galaxy_snapf in subcat_selection_final.iterrows():
     logging.info(f'')
-    logging.info(f"Galaxy {igal+1}/{subcat_selection_final.shape[0]:.0f}: stellar mass - {galaxy_snapf[mass_key]:.1e} [runtime {time.time()-t1:.3f} sec]")
+    logging.info(f"Galaxy {igal+1}/{subcat_selection_final.shape[0]:.0f}: subhalo mass - {galaxy_snapf[mass_key]:.1e} [runtime {time.time()-t1:.3f} sec]")
 
     nmin,nmaj,progid=get_progidx(subcat_selection,galaxy_snapf[galid_key],depth)
     
