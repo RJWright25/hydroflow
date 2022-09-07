@@ -11,10 +11,11 @@ from hydroflow.run.tools_hpc import create_dir
 
 def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,mcut=8):
     subcat=pd.read_hdf(path_subcat)
-    if 'snipshotidx' in list(subcat.columns):
-        snap_key='snipshotidx'
-        idx_key='nodeIndex'
-        mass_key='ApertureMeasurements/Mass/030kpc_4'
+
+    snap_key='SnapNum'
+    idx_key='GalaxyID'
+    mass_key='Mass'
+
     snaplims=np.logical_and(snapmin,snapmax)
 
     if not snaplims:
@@ -65,7 +66,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
                 isnap_outputs.append(ifile)
             try:
                 isnap_outputs=pd.concat(isnap_outputs)
-                isnap_outputs.sort_values(by='hydroflowID',inplace=True)
+                isnap_outputs.sort_values(by='HydroflowID',inplace=True)
                 isnap_outputs.reset_index(drop=True,inplace=True)
                 snap_outputs.append(isnap_outputs)
             except:
@@ -73,12 +74,12 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
                 continue
 
         snap_outputs=pd.concat(snap_outputs)
-        snap_outputs.sort_values(by='hydroflowID',inplace=True)
+        snap_outputs.sort_values(by='HydroflowID',inplace=True)
         snap_outputs.reset_index(drop=True,inplace=True)
         print(snap_outputs.shape[0], f' hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs')
 
-        snap_outputs['hydroflowID']=snap_outputs['hydroflowID'].values.astype(np.int64)
-        hydroflow=snap_outputs['hydroflowID'].values
+        snap_outputs['HydroflowID']=snap_outputs['HydroflowID'].values.astype(np.int64)
+        hydroflow=snap_outputs['HydroflowID'].values
         nodeidx=subcat_masked[idx_key].values
 
         valid_idx_hydroflow_in_subcat=np.searchsorted(a=nodeidx,v=hydroflow)

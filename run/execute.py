@@ -20,6 +20,7 @@ from hydroflow.src_physics.gasflow import candidates_gasflow,analyse_gasflow
 #arguments
 
 parser=argparse.ArgumentParser()
+parser.add_argument('--code',metavar='-C',type=str,help='which simulation (from hydroflow.src_sims)')
 parser.add_argument('--path',metavar='-P',type=str,help='path to subhalo catalogue')
 parser.add_argument('--nslice',metavar='-N',type=int,help='number of slices for simulation sub-boxes')
 parser.add_argument('--ivol',metavar='-I',type=int,help='which sub-volume to consider')
@@ -28,6 +29,7 @@ parser.add_argument('--depth',metavar='-D',type=int,help='time interval')
 parser.add_argument('--mcut',metavar='-M',type=int,help='mass limit (log stellar mass)')
 
 args=parser.parse_args()
+code=args.code
 pathcat=args.path
 path=pathcat.split('cat')[0]
 nslice=int(args.nslice)
@@ -63,14 +65,19 @@ subcat=pd.read_hdf(pathcat,key='Subhalo')
 logging.info(f'Subhalo catalogue loaded [runtime {time.time()-t1:.3f} sec]')
 logging.info(f'Masking catalogue and processing metadata [runtime {time.time()-t1:.3f} sec]')
 
+
+snap_key='SnapNum'
+galid_key='GalaxyID'
+descid_key='DescendantID'
+mass_key='Mass'
+
+
 #determine sim type
-if 'nodeIndex' in list(subcat.columns):#eagle snipshots
+if code=='eaglesnip':#eagle snipshots
     from hydroflow.src_sims.eaglesnip.particle import read_subvol
-    snap_key='snipshotidx'
-    galid_key='nodeIndex'
-    progid_key='mainProgenitorIndex'
-    descid_key='descendantIndex'
-    mass_key='ApertureMeasurements/Mass/030kpc_4'
+elif code=='eaglesnap':
+    from hydroflow.src_sims.eaglesnap.particle import read_subvol
+
 
 #metadata
 metadata=pd.read_pickle(path+'/redshifts.dat')
@@ -120,8 +127,8 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
     nmin,nmaj,progid=get_progidx(subcat_selection,galaxy_snapf[galid_key],depth)
     
     galaxy_output=pd.DataFrame([])
-    galaxy_output.loc[0,'hydroflowID']=galaxy_snapf[galid_key]
-    galaxy_output.loc[0,'hydroflowProgID']=progid
+    galaxy_output.loc[0,'HydroflowID']=galaxy_snapf[galid_key]
+    galaxy_output.loc[0,'HydroflowProgID']=progid
     galaxy_output.loc[0,'nmerger_minor']=nmin
     galaxy_output.loc[0,'nmerger_major']=nmaj
     galaxy_output.loc[0,'ivol']=ivol
@@ -150,20 +157,15 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
                 for key in list(galaxy_properties_snapf.keys()):
                     galaxy_output.loc[0,key]=galaxy_properties_snapf[key]
 
-                ### barymp
-                gasflow_bmp=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=galaxy_properties_snapf['bmp_radius'],dt=dt,Tcut=None)
-                for key in list(gasflow_bmp.keys()):
-                    galaxy_output.loc[0,f'bmp-'+key]=gasflow_bmp[key]
-
                 ### ism
-                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=galaxy_properties_snapf['bmp_radius'],dt=dt,Tcut=5*10**4)
+                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4)
                 for key in list(gasflow_ism.keys()):
                     galaxy_output.loc[0,f'ism-'+key]=gasflow_ism[key]
             else:
-                logging.info(f'Could not fit BMP of galaxy')
+                logging.info(f'Could not determine properties of galaxy')
 
             ### r200 facs
-            for fac in [0.15,1]:
+            for fac in [0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,2]:
                 gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None)
                 for key in list(gasflow_ir200.keys()):
                     galaxy_output.loc[0,f'{fac:.2f}r200-'+key]=gasflow_ir200[key]

@@ -8,6 +8,7 @@ import os
 def submit_gasflow_jobarray(repo,arguments,memory,time,array=None):
     
     cwd=os.getcwd()
+    code=arguments['code']
     pathcat=arguments['path']
     nslice=int(arguments['nslice'])
     nvol=nslice**3
@@ -43,7 +44,7 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,array=None):
         jobfile.writelines(f"date\n")
         jobfile.writelines(f"echo CPU DETAILS\n")
         jobfile.writelines(f"lscpu\n")
-        jobfile.writelines(f"python {runscriptfilepath} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut} --ivol $SLURM_ARRAY_TASK_ID \n")
+        jobfile.writelines(f"python {runscriptfilepath} --code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut} --ivol $SLURM_ARRAY_TASK_ID \n")
         jobfile.writelines(f"echo JOB END TIME\n")
         jobfile.writelines(f"date\n")
 

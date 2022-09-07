@@ -36,80 +36,51 @@ def get_limits(ivol,nslice,boxsize,buffer=0.1):
     return xmin,xmax,ymin,ymax,zmin,zmax
 
 def get_progidx(subcat,galid,depth):
-	fields=list(subcat.columns)
-	if 'nodeIndex' in fields:
-		galid_key='nodeIndex'
-		progid_key='mainProgenitorIndex'
-		descid_key='descendantIndex'
-	else:#eagle snaps
-		galid_key='GalaxyID'
-		progid_key='LastProgID'
-		descid_key='DescendantID'
+	galid_key='GalaxyID'
+	descid_key='DescendantID'
 
 	galid_idepth=galid
 	nmerger_min=0;nmerger_maj=0
+
 	for idepth in range(depth):
-		match_idepth=subcat[galid_key].values==galid_idepth
-		try:
-			mainprogen_id=subcat.loc[match_idepth,progid_key].values[0]
-		except:
+		#find main progenitor
+		match_idepth_progen=subcat[descid_key].values==galid_idepth
+		if np.nansum(match_idepth_progen):
+			progens=subcat.loc[match_idepth_progen,:].copy()
+			progens.sort_values('Mass',ignore_index=True,inplace=True,ascending=False)
+			progens_mainid=progens['GalaxyID'].values[0]
+		else:
 			return 0,0,0
 
-		match_idepth_progen=subcat[descid_key].values==galid_idepth
+		#check for mergers
 		numprogen=np.nansum(match_idepth_progen)        
 		if numprogen>1:
-			match_idepth_masses=subcat.loc[match_idepth_progen,'ApertureMeasurements/Mass/030kpc_4'].values
+			match_idepth_masses=progens['Mass'].values
 			mratio=10**(np.abs(np.log10(match_idepth_masses[0]/match_idepth_masses[1])))
 			if mratio<=5:
 				nmerger_maj+=1
 			elif mratio>5:
 				nmerger_min+=1
 
-		galid_idepth=mainprogen_id
+		#advance current id to progenitor
+		galid_idepth=progens_mainid
+
 	return nmerger_min,nmerger_maj,galid_idepth
 
-def calc_r200(gal):
-	h=cosmology.H0.value/100;a=(1/(1+gal['redshift']))
-	rhocrit=cosmology.critical_density(gal['redshift'])
-	rhocrit=rhocrit.to(units.Msun/units.Mpc**3)
-	rhocrit=rhocrit.value
-	if gal['SubGroupNumber']>0:
-		m200_eff=gal['Mass']
+def calc_r200(galaxy):
+	#if satellite, find approximate r200 from subfind "Mass" field 
+	if galaxy['SubGroupNumber']==0:
+		return galaxy['Group_R_Crit200']
 	else:
-		m200_eff=gal['Group_M_Crit200']
-
-	r200_cubed=3*m200_eff/(800*np.pi*rhocrit)
-	r200=r200_cubed**(1/3)*h/a #return in comoving units
-	return r200
-
-def calc_barymp(x,y,eps=0.01,grad=1):
-
-	"""
-	Find the radius for a galaxy from the BaryMP method
-	x = r/r_200
-	y = cumulative baryonic mass profile
-	eps = epsilon, if data 
-	"""
-	dydx = np.diff(y)/np.diff(x)
-	
-	maxarg = np.argwhere(dydx==np.max(dydx))[0][0] # Find where the gradient peaks
-	xind = np.argwhere(dydx[maxarg:]<=grad)[0][0] + maxarg # The index where the gradient reaches 1
-	
-	x2fit_new, y2fit_new = x[xind:], y[xind:] # Should read as, e.g., "x to fit".
-	x2fit, y2fit = np.array([]), np.array([]) # Gets the while-loop going
-	
-	while len(y2fit)!=len(y2fit_new):
-		x2fit, y2fit = np.array(x2fit_new), np.array(y2fit_new)
-		p = np.polyfit(x2fit, y2fit, 1)
-		yfit = p[0]*x2fit + p[1]
-		chi = abs(yfit-y2fit) # Separation in the y-direction for the fit from the data
-		chif = (chi<eps) # Filter for what chi-values are acceptable
-		x2fit_new, y2fit_new = x2fit[chif], y2fit[chif]
-	
-	r_bmp = x2fit[0] # Radius from the baryonic-mass-profile technique, returned as a fraction of the virial radius!
-	Nfit = len(x2fit) # Number of points on the profile fitted to in the end
-
-	return r_bmp, Nfit
+		h=cosmology.H0.value/100;a=(1/(1+galaxy['Redshift']))
+		rhocrit=cosmology.critical_density(galaxy['Redshift'])
+		rhocrit=rhocrit.to(units.Msun/units.Mpc**3)
+		rhocrit=rhocrit.value
+		if galaxy['SubGroupNumber']>0:
+			m200_eff=galaxy['Mass']
+			r200_cubed=3*m200_eff/(800*np.pi*rhocrit)
+			r200=r200_cubed**(1/3)*h/a #return in comoving units
+			return r200
 
 vel_conversion=1*units.Mpc/units.Gyr
 vel_conversion=vel_conversion.to(units.km/units.s)
