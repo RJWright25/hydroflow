@@ -165,8 +165,13 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
                 galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
 
             ### r200 facs
-            for fac in [0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,2]:
-                gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None)
+            for fac in [0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3]:
+                if fac>=1:
+                    idm=True
+                else:
+                    idm=False
+
+                gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=idm)
                 for key in list(gasflow_ir200.keys()):
                     galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200[key]
 

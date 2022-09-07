@@ -25,6 +25,7 @@ def analyse_galaxy(galaxy,pdata):
 	#masks
 	gas=pdata['ParticleType'].values==0
 	star=pdata['ParticleType'].values==4
+	dm=pdata['ParticleType'].values==1
 	mass=pdata['Mass'].values
 	cool=pdata['Temperature'].values<5*10**4
 	sfr=pdata['StarFormationRate'].values>0
@@ -34,6 +35,7 @@ def analyse_galaxy(galaxy,pdata):
 	r200=rrel<=calc_r200(galaxy)
 	galaxy_reservoirs['1p00r200_star']=np.logical_and(star,r200)
 	galaxy_reservoirs['1p00r200_gas']=np.logical_and(gas,r200)
+	galaxy_reservoirs['1p00r200_dm']=np.logical_and(dm,r200)
 
 	#within ISM
 	disk=rrel<=(0.15*calc_r200(galaxy))

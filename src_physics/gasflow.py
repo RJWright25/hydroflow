@@ -7,7 +7,7 @@ import numpy as np
 
 from hydroflow.src_physics.utils import calc_r200, vel_conversion
 
-def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None):
+def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None,idm=False):
     gasflow_output={}
 
     mass_snap1=pdata_snapi['Mass'].values
@@ -39,9 +39,17 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None):
     selection_snap1=np.logical_and.reduce([rcut_snap1,np.logical_or(cool_snap1,star_snap1)])
     selection_snap2=np.logical_and.reduce([rcut_snap2,np.logical_or(cool_snap2,star_snap2)])
 
+    #do DM calcs here
+    if idm:
+        inflow_mask_dm=np.logical_and.reduce([rcut_snap2,np.logical_not(rcut_snap1),pdata_snapf['ParticleType'].values==1])
+        inflow_mass_dm=mass_snap2[inflow_mask_dm]
+        gasflow_output['dm-inflow-n']=np.nansum(inflow_mask_dm)
+        gasflow_output['dm-inflow-m']=np.nansum(inflow_mass_dm)
+
+
+    #do gas calcs here
     inflow_mask=np.logical_and.reduce([selection_snap2,np.logical_not(selection_snap1),np.logical_or(gas_snap2,gas_snap1)])
     outflow_mask=np.logical_and.reduce([selection_snap1,np.logical_not(selection_snap2),np.logical_or(gas_snap2,gas_snap1)])
-    
     sfr_mask=np.logical_and.reduce([star_snap2,selection_snap2,np.logical_or(np.logical_not(selection_snap1),gas_snap1)])
 
     #### inflow
