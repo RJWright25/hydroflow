@@ -37,7 +37,7 @@ def analyse_galaxy(galaxy,pdata):
 	galaxy_reservoirs['1p00r200_gas']=np.logical_and(gas,r200)
 
 	#within ISM
-	disk=np.logical_and(rrel<=0.15*r200)
+	disk=rrel<=(0.15*calc_r200(galaxy))
 	galaxy_reservoirs['0p15r200_star']=np.logical_and(star,disk)
 	galaxy_reservoirs['0p15r200_gas']=np.logical_and(gas,disk)
 	galaxy_reservoirs['0p15r200_coolgas']=np.logical_and(galaxy_reservoirs['disk_gas'],np.logical_or(cool,sfr))
