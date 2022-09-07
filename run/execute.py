@@ -153,22 +153,22 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
             t1_g=time.time()
 
             if fitf:
-                #add outputs
+                #add galaxy outputs
                 for key in list(galaxy_properties_snapf.keys()):
                     galaxy_output.loc[0,key]=galaxy_properties_snapf[key]
-
-                ### ism
-                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4)
-                for key in list(gasflow_ism.keys()):
-                    galaxy_output.loc[0,f'ism-'+key]=gasflow_ism[key]
             else:
                 logging.info(f'Could not determine properties of galaxy')
+
+            ### ism
+            gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4)
+            for key in list(gasflow_ism.keys()):
+                galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
 
             ### r200 facs
             for fac in [0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,2]:
                 gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None)
                 for key in list(gasflow_ir200.keys()):
-                    galaxy_output.loc[0,f'{fac:.2f}r200-'+key]=gasflow_ir200[key]
+                    galaxy_output.loc[0,f'{fac:.2f}r200_gas-'+key]=gasflow_ir200[key]
 
             ### user def
             for user_radius in user_radii:
