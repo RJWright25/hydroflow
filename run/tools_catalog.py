@@ -58,6 +58,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
             else:
                 continue
             
+            print(isnap_files)
             print(f'Loading gasflow files for snap {snap} delta {depth} ({len(isnap_files)})')
             print(snapdir)
             isnap_outputs=[]
