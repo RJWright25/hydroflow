@@ -32,7 +32,6 @@ def analyse_galaxy(galaxy,pdata):
 
 	#within r200
 	r200=rrel<=calc_r200(galaxy)
-
 	galaxy_reservoirs['1p00r200_star']=np.logical_and(star,r200)
 	galaxy_reservoirs['1p00r200_gas']=np.logical_and(gas,r200)
 
@@ -40,10 +39,10 @@ def analyse_galaxy(galaxy,pdata):
 	disk=rrel<=(0.15*calc_r200(galaxy))
 	galaxy_reservoirs['0p15r200_star']=np.logical_and(star,disk)
 	galaxy_reservoirs['0p15r200_gas']=np.logical_and(gas,disk)
-	galaxy_reservoirs['0p15r200_coolgas']=np.logical_and(galaxy_reservoirs['disk_gas'],np.logical_or(cool,sfr))
+	galaxy_reservoirs['0p15r200_coolgas']=np.logical_and(galaxy_reservoirs['0p15r200_gas'],np.logical_or(cool,sfr))
 
 	#not in ism, within r200
-	halo=np.logical_and.reduce([np.logical_not(np.logical_or(galaxy_reservoirs['disk_coolgas'],galaxy_reservoirs['disk_star'])),r200])
+	halo=np.logical_and.reduce([np.logical_not(np.logical_or(galaxy_reservoirs['0p15r200_coolgas'],galaxy_reservoirs['0p15r200_star'])),r200])
 	galaxy_reservoirs['0p15r200_halostar']=np.logical_and(star,halo)
 	galaxy_reservoirs['0p15r200_halogas']=np.logical_and(gas,halo)
 
