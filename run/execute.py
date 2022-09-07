@@ -26,7 +26,7 @@ parser.add_argument('--nslice',metavar='-N',type=int,help='number of slices for 
 parser.add_argument('--ivol',metavar='-I',type=int,help='which sub-volume to consider')
 parser.add_argument('--snap',metavar='-S',type=int,help='which snapshot to consider')
 parser.add_argument('--depth',metavar='-D',type=int,help='time interval')
-parser.add_argument('--mcut',metavar='-M',type=int,help='mass limit (log stellar mass)')
+parser.add_argument('--mcut',metavar='-M',type=int,help='mass limit (log mass)')
 
 args=parser.parse_args()
 code=args.code
@@ -81,10 +81,10 @@ elif code=='eaglesnap':
 
 #metadata
 metadata=pd.read_pickle(path+'/redshifts.dat')
-snapf_mask=metadata[snap_key].values==snapf;snapf_pdata_fname=metadata.loc[snapf_mask,'path'].values[0]
-snapi_mask=metadata[snap_key].values==snapi;snapi_pdata_fname=metadata.loc[snapi_mask,'path'].values[0]
-dt=metadata.loc[snapi_mask,'lookbacktime'].values[0]-metadata.loc[snapf_mask,'lookbacktime'].values[0] #gyr
-boxsize=metadata.loc[snapf_mask,'boxsize'].values[0]
+snapf_mask=metadata[snap_key].values==snapf;snapf_pdata_fname=metadata.loc[snapf_mask,'Path'].values[0]
+snapi_mask=metadata[snap_key].values==snapi;snapi_pdata_fname=metadata.loc[snapi_mask,'Path'].values[0]
+dt=metadata.loc[snapi_mask,'LookbackTime'].values[0]-metadata.loc[snapf_mask,'LookbackTime'].values[0] #gyr
+boxsize=metadata.loc[snapf_mask,'BoxSize'].values[0]
 
 #outputs
 output_folder=f'{path}/catalogues/gasflow/{namecat}/nvol_{str(int(nslice**3)).zfill(3)}/snap{str(snapf).zfill(3)}_d{str(depth).zfill(2)}/'

@@ -48,7 +48,7 @@ def get_progidx(subcat,galid,depth):
 		if np.nansum(match_idepth_progen):
 			progens=subcat.loc[match_idepth_progen,:].copy()
 			progens.sort_values('Mass',ignore_index=True,inplace=True,ascending=False)
-			progens_mainid=progens['GalaxyID'].values[0]
+			progens_mainid=progens[galid_key].values[0]
 		else:
 			return 0,0,0
 
