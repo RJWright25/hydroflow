@@ -99,7 +99,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
         subcat_idxs=valid_idx_hydroflow_in_subcat[np.where(valid_idx_hydroflow_in_subcat>=0)]
 
         print(f'Adding depth {depth} data to subcat')
-        output_columns=[column+f'_d{str(depth).zfill(2)}' for column in list(snap_outputs.columns)]
+        output_columns=[column+f'-d{str(depth).zfill(2)}' for column in list(snap_outputs.columns)]
         subcat_masked.loc[subcat_idxs,output_columns]=snap_outputs.loc[hydroflow_idxs,:].values
 
     create_dir(outpath)
