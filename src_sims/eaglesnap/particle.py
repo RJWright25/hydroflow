@@ -22,7 +22,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     if not ptypes:
         ptypes={0:['Mass','Temperature','Metallicity','StarFormationRate'],
-                1:['Mass'],
+                1:[],
                 4:['Mass','Metallicity']}
     
     snapshot=EagleSnapshot(path)
