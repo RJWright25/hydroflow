@@ -43,9 +43,9 @@ def read_subvol(path,ivol,nslice,ptypes=None):
         if ptype==1:
             m_dm=file['Header'].attrs['MassTable'][1]*10**10/hfac
             pdata[1].loc[:,'Mass']=m_dm
-
     snapshot.close()
 
+    
     #for star particles assign a crazy temp, density
     npart_gas=pdata[0].shape[0]
     npart_dm=pdata[1].shape[0]
@@ -54,7 +54,8 @@ def read_subvol(path,ivol,nslice,ptypes=None):
         if not field in ptypes[4]:
             pdata[4][field]=np.ones(npart_star)*10**10
         if not field in ptypes[1]:
-            pdata[1][field]=np.ones(npart_dm)*np.nan
+            if not field=='Mass':
+                pdata[1][field]=np.ones(npart_dm)*np.nan
 
     #concat all pdata into one df
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
