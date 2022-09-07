@@ -148,7 +148,7 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
             t1_f=time.time()
             fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf)
             t2_f=time.time()
-            logging.info(f"Fitting: {t2_f-t1_f:.3f} sec")
+            logging.info(f"Galaxy: {t2_f-t1_f:.3f} sec")
 
             t1_g=time.time()
 
