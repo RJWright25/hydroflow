@@ -173,7 +173,12 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
 
                 gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=idm)
                 for key in list(gasflow_ir200.keys()):
-                    galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200[key]
+                    
+                    if not 'dm' in key:
+                        galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200[key]
+                    else:
+                        galaxy_output.loc[0,f'{fac:.2f}r200_dm-'.replace('.','p')+key[3:]]=gasflow_ir200[key]
+
 
             ### user def
             for user_radius in user_radii:
