@@ -172,13 +172,13 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
                 galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
 
 
-            ### kpc cuts
-            apertures=[25,50,75,100,150,200,250,300,350,400,450,500]#pkpc
-            apertures_norm=[aperture*hval/afac*10**-3 for aperture in apertures]
-            for aperture,aperture_norm in zip(apertures,apertures_norm):
-                gasflow_icut=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=aperture_norm,dt=dt,Tcut=None)
-                for key in list(gasflow_icut.keys()):
-                    galaxy_output.loc[0,f'{str(int(aperture)).zfill(3)}kpc_gas-'+key]=gasflow_icut[key]
+            # ### kpc cuts
+            # apertures=[25,50,75,100,150,200,250,300,350,400,450,500]#pkpc
+            # apertures_norm=[aperture*hval/afac*10**-3 for aperture in apertures]
+            # for aperture,aperture_norm in zip(apertures,apertures_norm):
+            #     gasflow_icut=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=aperture_norm,dt=dt,Tcut=None)
+            #     for key in list(gasflow_icut.keys()):
+            #         galaxy_output.loc[0,f'{str(int(aperture)).zfill(3)}kpc_gas-'+key]=gasflow_icut[key]
 
 
             ### r200 facs
