@@ -7,6 +7,7 @@ import os
 import time
 import logging
 import argparse
+import h5py
 import pandas as pd
 import numpy as np
 
@@ -86,6 +87,7 @@ snapi_mask=metadata[snap_key].values==snapi;snapi_pdata_fname=metadata.loc[snapi
 dt=metadata.loc[snapi_mask,'LookbackTime'].values[0]-metadata.loc[snapf_mask,'LookbackTime'].values[0] #gyr
 boxsize=metadata.loc[snapf_mask,'BoxSize'].values[0]
 
+
 #outputs
 output_folder=f'{path}/catalogues/gasflow/{namecat}/nvol_{str(int(nslice**3)).zfill(3)}/snap{str(snapf).zfill(3)}_d{str(depth).zfill(2)}/'
 outcat_fname=output_folder+f'ivol_{str(ivol).zfill(3)}.hdf5'
@@ -117,6 +119,11 @@ logging.info(f'Loading initial snap particle data: {snapi_pdata_fname} [runtime 
 pdata_snapi,kdtree_snapi=read_subvol(snapi_pdata_fname,ivol,nslice)
 logging.info(f'')
 logging.info(f'****** Entering main galaxy loop [runtime {time.time()-t1:.3f} sec] ******')
+
+file=h5py.File(snapf_pdata_fname)
+hval=file['Header'].attrs['HubbleParam']
+afac=file['Header'].attrs['ExpansionFactor']
+file.close()
 
 #main loop
 galaxy_outputs=[]
@@ -164,8 +171,18 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
             for key in list(gasflow_ism.keys()):
                 galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
 
+
+            ### kpc cuts
+            apertures=[25,50,75,100,250,500]#pkpc
+            apertures_norm=[aperture*hval/afac*10**-3 for aperture in apertures]
+            for aperture,aperture_norm in zip(apertures,apertures_norm):
+                gasflow_icut=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=aperture_norm,dt=dt,Tcut=None)
+                for key in list(gasflow_icut.keys()):
+                    galaxy_output.loc[0,f'{str(int(aperture)).zfill(3)}_gas-'+key]=gasflow_icut[key]
+
+
             ### r200 facs
-            for fac in [0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3]:
+            for fac in [0.15,0.25,0.5,0.75,1,1.5,2,2.5,3]:
                 if fac>=1:
                     idm=True
                 else:

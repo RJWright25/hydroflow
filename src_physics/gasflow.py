@@ -115,8 +115,10 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     galaxy_com_snapf=np.array([galaxy_snapf[f'CentreOfPotential_{x}'] for x in 'xyz'],ndmin=2)
     
     #get gasflow candidates
-    pidx_candidates_snapi=kdtree_snapi.query_ball_point(galaxy_com_snapi[0],3*r200)
-    pidx_candidates_snapf=kdtree_snapf.query_ball_point(galaxy_com_snapf[0],3*r200)
+    rcut=np.nanmax(np.array([3*r200,0.5]))#choose particles within rcut, which is chosen as the largest out of 300kpc or 3*r200
+
+    pidx_candidates_snapi=kdtree_snapi.query_ball_point(galaxy_com_snapi[0],rcut)
+    pidx_candidates_snapf=kdtree_snapf.query_ball_point(galaxy_com_snapf[0],rcut)
 
     pids_candidates_snapi=pdata_snapi.loc[pidx_candidates_snapi,'ParticleIDs'].values
     pids_candidates_snapf=pdata_snapf.loc[pidx_candidates_snapf,'ParticleIDs'].values
