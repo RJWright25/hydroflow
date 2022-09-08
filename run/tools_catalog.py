@@ -57,13 +57,12 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
             else:
                 continue
             
-            print(isnap_files)
             print(f'Loading gasflow files for snap {snap} delta {depth} ({len(isnap_files)})')
 
             if verbose: 
-                print('List of files found:')
                 print(snapdir)
-                
+                print(isnap_files)
+
             isnap_outputs=[]
             for iifile,file in enumerate(isnap_files):
                 ifile=pd.read_hdf(file,key='Gasflow')
