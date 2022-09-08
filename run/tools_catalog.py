@@ -9,7 +9,7 @@ import pandas as pd
 
 from hydroflow.run.tools_hpc import create_dir
 
-def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,mcut=8):
+def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,mcut=8,verbose=False):
     subcat=pd.read_hdf(path_subcat)
 
     snap_key='SnapNum'
@@ -41,7 +41,6 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
     else:
         outpath=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmin)}to{int(snapmax)}.hdf5'
 
-    print(outpath)
     for depth in depths:
 
         snapdirs=sorted(os.listdir(path_gasflow))
@@ -60,7 +59,11 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
             
             print(isnap_files)
             print(f'Loading gasflow files for snap {snap} delta {depth} ({len(isnap_files)})')
-            print(snapdir)
+
+            if verbose: 
+                print('List of files found:')
+                print(snapdir)
+                
             isnap_outputs=[]
             for iifile,file in enumerate(isnap_files):
                 ifile=pd.read_hdf(file,key='Gasflow')
