@@ -178,7 +178,7 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
             for aperture,aperture_norm in zip(apertures,apertures_norm):
                 gasflow_icut=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=aperture_norm,dt=dt,Tcut=None)
                 for key in list(gasflow_icut.keys()):
-                    galaxy_output.loc[0,f'{str(int(aperture)).zfill(3)}_gas-'+key]=gasflow_icut[key]
+                    galaxy_output.loc[0,f'{str(int(aperture)).zfill(3)}kpc_gas-'+key]=gasflow_icut[key]
 
 
             ### r200 facs
