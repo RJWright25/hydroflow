@@ -183,8 +183,7 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
 
             ### r200 facs
             for fac in [0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.25,1.5,1.75,2,2.25,2.5,2.75,3]:
-                if fac>=1:idm=True;else:idm=False
-                gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=idm)
+                gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=(fac>=1))
                 for key in list(gasflow_ir200.keys()):
                     
                     if not 'dm' in key:
