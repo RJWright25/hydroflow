@@ -173,7 +173,7 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
 
 
             ### kpc cuts
-            apertures=[25,50,75,100,250,500]#pkpc
+            apertures=[25,50,75,100,150,200,250,300,350,400,450,500]#pkpc
             apertures_norm=[aperture*hval/afac*10**-3 for aperture in apertures]
             for aperture,aperture_norm in zip(apertures,apertures_norm):
                 gasflow_icut=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=aperture_norm,dt=dt,Tcut=None)
@@ -182,7 +182,7 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
 
 
             ### r200 facs
-            for fac in [0.15,0.25,0.5,0.75,1,1.5,2,2.5,3]:
+            for fac in [0.15,0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.25,2.5,2.75,3]:
                 if fac>=1:
                     idm=True
                 else:
