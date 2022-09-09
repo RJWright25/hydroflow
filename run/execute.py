@@ -219,7 +219,8 @@ if galaxy_outputs:
     galaxy_outputs.reset_index(drop=True,inplace=True)
     galaxy_outputs.loc[:,'dt']=dt
 else:
-    print('No galaxies in this subvolume, empty output.')
+    logging.info(f'No galaxies in this subvolume, empty output [runtime {time.time()-t1:.3f} sec]')
+    logging.info(f'')
     galaxy_outputs=pd.DataFrame([])
 
 #save
