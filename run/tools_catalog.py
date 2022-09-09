@@ -106,6 +106,11 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
         subcat_masked.loc[subcat_idxs,output_columns]=snap_outputs.loc[hydroflow_idxs,:].values
 
     create_dir(outpath)
+    subcat_masked=subcat_masked.sort_values(by=['SnapNum','Mass'],ascending=[False,False],ignore_index=True)
+    subcat_masked.reset_index(inplace=True)
+
     subcat_masked.to_hdf(outpath,key='Gasflow')
+
+
     
     return subcat_masked
