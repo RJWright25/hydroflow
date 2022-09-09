@@ -214,9 +214,13 @@ logging.info(f'')
 logging.info(f'Finished with loop - concatenating output results [runtime {time.time()-t1:.3f} sec]')
 logging.info(f'')
 
-galaxy_outputs=pd.concat(galaxy_outputs,ignore_index=True)
-galaxy_outputs.reset_index(drop=True,inplace=True)
-galaxy_outputs.loc[:,'dt']=dt
+if galaxy_outputs:
+    galaxy_outputs=pd.concat(galaxy_outputs,ignore_index=True)
+    galaxy_outputs.reset_index(drop=True,inplace=True)
+    galaxy_outputs.loc[:,'dt']=dt
+else:
+    print('No galaxies in this subvolume, empty output.')
+    galaxy_outputs=pd.DataFrame([])
 
 #save
 logging.info(f'Saving output file [runtime {time.time()-t1:.3f} sec]')
