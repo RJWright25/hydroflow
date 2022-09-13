@@ -16,8 +16,8 @@ def read_subcat(path,snapidxmin=0):
     subcat_fnames=sorted([path+fname for fname in os.listdir(path) if 'hdf5' in fname])
     subhalo_dfs=[]
 
-    if os.path.exists('jobs/logs/extract_subhalo.log'):
-        os.remove('jobs/logs/extract_subhalo.log')
+    if os.path.exists('logs/extract_subhalo.log'):
+        os.remove('logs/extract_subhalo.log')
 
     t0=time.time()
 
