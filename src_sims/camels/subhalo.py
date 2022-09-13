@@ -27,7 +27,7 @@ def read_subcat(path,snapidxmin=0):
 
     for subcat_snapnum,subcat_fname in enumerate(subcat_fnames):
 
-        if subcat_snapnum>snapidxmin:
+        if subcat_snapnum>=snapidxmin:
             logging.info(f'')
             logging.info(f'***********************************************************************')
             logging.info(f'Processing snapnum {subcat_snapnum} [runtime {time.time()-t0:.2f} sec]')
