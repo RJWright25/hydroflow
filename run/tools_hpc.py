@@ -100,8 +100,7 @@ def submit_gasflow_function(repo,function,arguments,memory,time):
     with open(jobscriptfilepath,"w") as jobfile:
         jobfile.writelines(f"#!/bin/sh\n")
         jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
-        jobfile.writelines(f"#SBATCH --nodes=1\n")
-        jobfile.writelines(f"#SBATCH --ntasks-per-node={1}\n")
+        jobfile.writelines(f"#SBATCH --ntasks={1}\n")
         jobfile.writelines(f"#SBATCH --mem={memory}GB\n")
         jobfile.writelines(f"#SBATCH --time={time}\n")
         jobfile.writelines(f"#SBATCH --output=jobs/{jobname}.out\n")
