@@ -165,7 +165,7 @@ def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
 
     with open(jobscriptfilepath,"w") as jobfile:
         jobfile.writelines(f"#!/bin/sh\n")
-        jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
+        jobfile.writelines(f"#SBATCH --job-name={jobname}-{run}\n")
         jobfile.writelines(f"#SBATCH --nodes=1\n")
         jobfile.writelines(f"#SBATCH --ntasks-per-node=1\n")
         jobfile.writelines(f"#SBATCH --mem={memory}GB\n")
