@@ -184,6 +184,6 @@ def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
     jobfile.close()
 
     if partition:
-        os.system(f"sbatch {jobscriptfilepath} -p {partition} ")
+        os.system(f"sbatch -p {partition} {jobscriptfilepath}  ")
     else:
         os.system(f"sbatch {jobscriptfilepath}")
