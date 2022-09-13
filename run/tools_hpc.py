@@ -119,7 +119,6 @@ def submit_gasflow_function(repo,function,arguments,memory,time):
     os.system(f"sbatch {jobscriptfilepath}")
 
 
-
 def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
 
     cwd=os.getcwd()
@@ -186,6 +185,6 @@ def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
     jobfile.close()
 
     if partition:
-        os.system(f"sbatch {jobscriptfilepath} --p {partition} ")
+        os.system(f"sbatch {jobscriptfilepath} -p {partition} ")
     else:
         os.system(f"sbatch {jobscriptfilepath}")
