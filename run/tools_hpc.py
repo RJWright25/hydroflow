@@ -118,7 +118,6 @@ def submit_gasflow_function(repo,function,arguments,memory,time):
     jobfile.close()
     os.system(f"sbatch {jobscriptfilepath}")
 
-
 def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
 
     cwd=os.getcwd()
@@ -160,7 +159,7 @@ def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
         runfile.writelines(f"import sys\n")
         runfile.writelines(f"sys.path.append('{repo}')\n")
         runfile.writelines(f"from {funclocstr} import {funcname}\n")
-        runfile.writelines(f"{func}({argumentstring})")
+        runfile.writelines(f"{funcname}({argumentstring})")
 
     runfile.close()
 
