@@ -21,7 +21,7 @@ def read_subcat(path,snapidxmin=0):
 
     t0=time.time()
 
-    logging.basicConfig(filename='jobs/logs/extract_subhalo.log', level=logging.INFO)
+    logging.basicConfig(filename='logs/extract_subhalo.log', level=logging.INFO)
     logging.info(f'Running subhalo extraction for subhaloes after (and including) snapidx {snapidxmin} ...')
 
 
