@@ -153,7 +153,7 @@ def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
         if type(arguments[arg])==str:
             argumentstring+=f"{arg}='{arguments[arg]}',"
         else:
-            argumentstring+=f"{arg}={arguments[arg]},
+            argumentstring+=f"{arg}={arguments[arg]},"
 
     with open(runscriptfilepath,"w") as runfile:
         runfile.writelines(f"import warnings\n")
