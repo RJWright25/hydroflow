@@ -211,7 +211,7 @@ def extract_subhalo(path,mcut,snipidxmin=0):
     if os.path.exists('jobs/extract_subhalo.log'):
         os.remove('jobs/extract_subhalo.log')
 
-    logging.basicConfig(filename='jobs/extract_subhalo.log', level=logging.INFO)
+    logging.basicConfig(filename='jobs/read_subcat.log', level=logging.INFO)
     logging.info(f'Running subhalo extraction for subhaloes with mass above {mcut:.1e} after (and including) snapidx {snipidxmin} ...')
 
     subhalo_data=[];dims='xyz'
