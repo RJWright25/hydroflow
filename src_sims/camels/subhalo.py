@@ -16,12 +16,12 @@ def read_subcat(path,snapidxmin=0):
     subcat_fnames=sorted([path+fname for fname in os.listdir(path) if 'hdf5' in fname])
     subhalo_dfs=[]
 
-    if os.path.exists('jobs/extract_subhalo.log'):
-        os.remove('jobs/extract_subhalo.log')
+    if os.path.exists('jobs/logs/extract_subhalo.log'):
+        os.remove('jobs/logs/extract_subhalo.log')
 
     t0=time.time()
 
-    logging.basicConfig(filename='jobs/extract_subhalo.log', level=logging.INFO)
+    logging.basicConfig(filename='jobs/logs/extract_subhalo.log', level=logging.INFO)
     logging.info(f'Running subhalo extraction for subhaloes after (and including) snapidx {snapidxmin} ...')
 
 

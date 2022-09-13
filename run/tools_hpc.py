@@ -131,7 +131,7 @@ def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
     funclocstr=funclocstr[:-1]
     print(funclocstr)
 
-    jobname=f'{run}_{funcname}'
+    jobname=f'{funcname}'
 
     if not os.path.exists('jobs'):
         os.mkdir('jobs')
