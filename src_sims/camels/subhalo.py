@@ -79,13 +79,17 @@ def read_subcat(path,snapidxmin=0):
 
             subhalo_dfs.append(subhalo_df)
 
+    
+
     logging.info(f'')
     logging.info(f'*********************************************')
     logging.info(f'Concatenating final subhalo data structure...')
     logging.info(f'*********************************************')
 
-
-    subcat=pd.concat(subhalo_dfs)
+    if len (subhalo_dfs)>1:
+        subcat=pd.concat(subhalo_dfs)
+    else:
+        subcat=subhalo_dfs[0]
     subcat.sort_values(by=['Mass','SnapNum'],ascending=[False,False])
     subcat.reset_index(inplace=True,drop=True)
 
