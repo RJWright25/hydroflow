@@ -52,6 +52,9 @@ def read_subvol(path,ivol,nslice,ptypes=None):
                 pdata[ptype][field]=pdata_file[f'PartType{ptype}'][field][:][subvol_mask]
             else:
                 pdata[ptype][field]=pdata_file[f'PartType{ptype}'][field][:,0][subvol_mask]
+        
+        pdata[ptype]['Mass']=pdata[ptype]['Masses']
+        del pdata[ptype]['Masses']
     
     pdata_file.close()
 
@@ -65,11 +68,14 @@ def read_subvol(path,ivol,nslice,ptypes=None):
         if not field in ptypes[1]:
             pdata[1][field]=np.ones(npart_dm)*np.nan
 
+    
 
     #concat all pdata into one df
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
+
+
 
     # #conversions
     pdata=convert_pdata(path,pdata)
