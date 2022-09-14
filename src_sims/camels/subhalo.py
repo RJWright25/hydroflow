@@ -107,13 +107,12 @@ def read_subcat(path,snapidxmin=0):
 
 
 def gen_btree(path,snapidxmin=0):
-    t0=time.time()
-    logging.basicConfig(filename='logs/gen_btree.log', level=logging.INFO)
 
-    #logging
+    t0=time.time()
     if os.path.exists('logs/gen_btree.log'):
         os.remove('logs/gen_btree.log')
 
+    logging.basicConfig(filename='logs/gen_btree.log', level=logging.INFO)
     logging.info(f'Loading subhalo catalogue from {path} [runtime {time.time()-t0:.2f} sec]')
 
     subcat=pd.read_hdf(path,key='Subhalo')
