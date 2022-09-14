@@ -124,7 +124,7 @@ logging.info(f'****** Entering main galaxy loop [runtime {time.time()-t1:.3f} se
 
 file=h5py.File(snapf_pdata_fname)
 hval=file['Header'].attrs['HubbleParam']
-afac=file['Header'].attrs['ExpansionFactor']
+afac=(1/1+file['Header'].attrs['Redshift'])
 file.close()
 
 #main loop
