@@ -74,7 +74,6 @@ galid_key='GalaxyID'
 descid_key='DescendantID'
 mass_key='Mass'
 
-
 #determine sim type
 if code=='eaglesnip':#eagle snipshots
     from hydroflow.src_sims.eaglesnip.particle import read_subvol
@@ -90,7 +89,6 @@ snapf_mask=metadata[snap_key].values==snapf;snapf_pdata_fname=metadata.loc[snapf
 snapi_mask=metadata[snap_key].values==snapi;snapi_pdata_fname=metadata.loc[snapi_mask,'Path'].values[0]
 dt=metadata.loc[snapi_mask,'LookbackTime'].values[0]-metadata.loc[snapf_mask,'LookbackTime'].values[0] #gyr
 boxsize=metadata.loc[snapf_mask,'BoxSize'].values[0]
-
 
 #outputs
 output_folder=f'{path}/catalogues/gasflow/{namecat}/nvol_{str(int(nslice**3)).zfill(3)}/snap{str(snapf).zfill(3)}_d{str(depth).zfill(2)}/'
@@ -133,7 +131,7 @@ file.close()
 galaxy_outputs=[]
 for igal,galaxy_snapf in subcat_selection_final.iterrows():
     logging.info(f'')
-    logging.info(f"Galaxy {igal+1}/{subcat_selection_final.shape[0]:.0f}: subhalo mass - {galaxy_snapf[mass_key]:.1e} [runtime {time.time()-t1:.3f} sec]")
+    logging.info(f"Galaxy {igal+1}/{subcat_selection_final.shape[0]:.0f}: subhalo mass - {galaxy_snapf[mass_key]:.1e}, sgn - {galaxy_snapf['SubGroupNumber']} [runtime {time.time()-t1:.3f} sec]")
 
     nmin,nmaj,progid=get_progidx(subcat_selection,galaxy_snapf[galid_key],depth)
     
