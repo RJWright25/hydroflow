@@ -111,13 +111,12 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None,idm=False):
 def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf):
 
     r200=calc_r200(galaxy_snapf)
-    print(r200)
 
     galaxy_com_snapi=np.array([galaxy_snapi[f'CentreOfPotential_{x}'] for x in 'xyz'],ndmin=2)
     galaxy_com_snapf=np.array([galaxy_snapf[f'CentreOfPotential_{x}'] for x in 'xyz'],ndmin=2)
     
     #get gasflow candidates
-    rcut=np.nanmax(np.array([3*r200,0.1]))#choose particles within rcut, which is chosen as the largest out of 300kpc or 3*r200
+    rcut=3*r200#choose particles within rcut, which is chosen as 3*r200
 
     pidx_candidates_snapi=kdtree_snapi.query_ball_point(galaxy_com_snapi[0],rcut)
     pidx_candidates_snapf=kdtree_snapf.query_ball_point(galaxy_com_snapf[0],rcut)
@@ -135,6 +134,10 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
 
     pdata_candidates_snapi['R_rel']=np.sqrt(np.sum(np.square(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi),axis=1))
     pdata_candidates_snapf['R_rel']=np.sqrt(np.sum(np.square(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapf),axis=1))
+
+    print(rcut)
+    print(pdata_candidates_snapi['R_rel'])
+
 
     nomatch_snapi=np.logical_not(pid_allcandidates==pdata_candidates_snapi.loc[:,"ParticleIDs"].values)
     nomatch_snapf=np.logical_not(pid_allcandidates==pdata_candidates_snapf.loc[:,"ParticleIDs"].values)

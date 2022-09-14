@@ -27,6 +27,7 @@ def analyse_galaxy(galaxy,pdata):
 	gas=pdata['ParticleType'].values==0
 	star=pdata['ParticleType'].values==4
 	dm=pdata['ParticleType'].values==1
+	
 	mass=pdata['Mass'].values
 	cool=pdata['Temperature'].values<5*10**4
 	sfr=pdata['StarFormationRate'].values>0
