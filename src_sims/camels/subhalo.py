@@ -119,6 +119,8 @@ def gen_btree(path,snapidxmin=0):
     subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False])
     subcat.reset_index(inplace=True,drop=True)
 
+    subcat.loc[:,'DescendantID']=-1
+
     path_out=path.split('.h')[0]+'_btree.hdf5'
 
     ### basic matching
@@ -154,7 +156,7 @@ def gen_btree(path,snapidxmin=0):
                 for isub,subhalo in subcat_now.iterrows():
                     loc_x_match=np.abs(positions_next_x-subhalo[f'CentreOfPotential_x'])<=0.2
                     mass_offset=np.abs(np.log10(mass_next/subhalo['Group_M_Crit200']))
-                    mass_match=mass_offset<=0.1
+                    mass_match=mass_offset<=0.15
                     match=np.logical_and(loc_x_match,mass_match)
                     
                     if not np.nansum(match):
@@ -173,6 +175,8 @@ def gen_btree(path,snapidxmin=0):
             logging.info(f'Match rate = {np.nansum(desc_ids>0)/len(desc_ids)*100:.1f} \%')
 
         subcat.loc[nowmask,'DescendantID']=desc_ids
+    
+    subcat['DescendantID']=subcat['DescendantID'].values.astype(np.int64)
     
     logging.info(f'')
     logging.info(f'*********************************************')
