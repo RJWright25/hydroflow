@@ -106,7 +106,7 @@ def read_subcat(path,snapidxmin=0):
     return subcat
 
 
-def basic_tree(path,snapidxmin=0):
+def gen_btree(path,snapidxmin=0):
     t0=time.time()
     logging.basicConfig(filename='logs/gen_btree.log', level=logging.INFO)
 
