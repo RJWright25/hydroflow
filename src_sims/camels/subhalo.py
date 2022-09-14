@@ -172,7 +172,7 @@ def gen_btree(path,snapidxmin=0):
                             desc_ids[isub]=subcat_next.loc[match,'GalaxyID'].values[mass_offset_min]
 
             logging.info(f'')
-            logging.info(f'Match rate = {np.nansum(desc_ids>0)/len(desc_ids)*100:.1f} \%')
+            logging.info(f'Match rate = {np.nansum(desc_ids>0)/len(desc_ids)*100:.1f} %')
 
         subcat.loc[nowmask,'DescendantID']=desc_ids
     
