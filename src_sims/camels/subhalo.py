@@ -130,7 +130,10 @@ def gen_btree(path,snapidxmin=0):
 
     for snap in snapnums:
 
-        desc_ids=np.zeros(subcat_now.shape[0])-1
+        nowmask=np.logical_and(subcat.SnapNum==snap,subcat.SubGroupNumber==0)
+        nextmask=np.logical_and(subcat.SnapNum==(snap+1),subcat.SubGroupNumber==0)
+
+        desc_ids=np.zeros(np.nansum(nowmask))-1
 
         if snap>=snapidxmin:
 
@@ -138,9 +141,6 @@ def gen_btree(path,snapidxmin=0):
             logging.info(f'***********************************************************************')
             logging.info(f'Processing snapnum {snap} [runtime {time.time()-t0:.2f} sec]')
             logging.info(f'***********************************************************************')
-
-            nowmask=np.logical_and(subcat.SnapNum==snap,subcat.SubGroupNumber==0)
-            nextmask=np.logical_and(subcat.SnapNum==(snap+1),subcat.SubGroupNumber==0)
 
             if np.nansum(nextmask):
                 subcat_now=subcat.loc[nowmask,:].copy();subcat_now.reset_index(drop=True,inplace=True)
