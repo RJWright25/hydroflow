@@ -92,7 +92,7 @@ def convert_pdata(path,pdata):
     hfac=pdata_file['Header'].attrs['HubbleParam']
     pdata_file.close()
 
-    conversions={'Masses':1/hfac*10**10}
+    conversions={'Mass':1/hfac*10**10}
 
     for field,conversion in conversions.items():
         pdata[field]=pdata[field].values*conversion
