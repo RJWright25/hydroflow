@@ -90,7 +90,7 @@ def read_subcat(path,snapidxmin=0):
         subcat=pd.concat(subhalo_dfs)
     else:
         subcat=subhalo_dfs[0]
-    subcat.sort_values(by=['Mass','SnapNum'],ascending=[False,False])
+    subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False])
     subcat.reset_index(inplace=True,drop=True)
 
 
@@ -106,6 +106,85 @@ def read_subcat(path,snapidxmin=0):
     return subcat
 
 
+def basic_tree(path,snapidxmin=0):
+    t0=time.time()
+    logging.basicConfig(filename='logs/gen_btree.log', level=logging.INFO)
+
+    #logging
+    if os.path.exists('logs/gen_btree.log'):
+        os.remove('logs/gen_btree.log')
+
+    logging.info(f'Loading subhalo catalogue from {path} [runtime {time.time()-t0:.2f} sec]')
+
+    subcat=pd.read_hdf(path,key='Subhalo')
+    subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False])
+    subcat.reset_index(inplace=True,drop=True)
+
+    path_out=path.split('.h')[0]+'_btree.hdf5'
+
+    ### basic matching
+    snapnums=sorted(np.unique(subcat['SnapNum'].values))
+
+    logging.info(f'')
+    logging.info(f'Running btree for subhaloes after (and including) snapidx {snapidxmin} ...')
+
+    for snap in snapnums:
+
+        desc_ids=np.zeros(subcat_now.shape[0])-1
+
+        if snap>=snapidxmin:
+
+            logging.info(f'')
+            logging.info(f'***********************************************************************')
+            logging.info(f'Processing snapnum {snap} [runtime {time.time()-t0:.2f} sec]')
+            logging.info(f'***********************************************************************')
+
+            nowmask=np.logical_and(subcat.SnapNum==snap,subcat.SubGroupNumber==0)
+            nextmask=np.logical_and(subcat.SnapNum==(snap+1),subcat.SubGroupNumber==0)
+
+            if np.nansum(nextmask):
+                subcat_now=subcat.loc[nowmask,:].copy();subcat_now.reset_index(drop=True,inplace=True)
+                subcat_next=subcat.loc[nextmask,:].copy();subcat_next.reset_index(drop=True,inplace=True)
+
+                mass_next=subcat_next['Group_M_Crit200'].values
+                positions_next=subcat_next.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']].values
+                positions_next_x=positions_next[:,0]
+                positions_next_y=positions_next[:,1]
+                positions_next_z=positions_next[:,2]
+
+                for isub,subhalo in subcat_now.iterrows():
+                    loc_x_match=np.abs(positions_next_x-subhalo[f'CentreOfPotential_x'])<=0.2
+                    mass_offset=np.abs(np.log10(mass_next/subhalo['Group_M_Crit200']))
+                    mass_match=mass_offset<=0.1
+                    match=np.logical_and(loc_x_match,mass_match)
+                    
+                    if not np.nansum(match):
+                        continue
+                    elif np.nansum(match)==1:
+                        desc_ids[isub]=subcat_next.loc[match,'GalaxyID'].values[0]
+                    else:
+                        match=np.logical_and.reduce([match,np.abs(positions_next_y-subhalo[f'CentreOfPotential_y'])<=0.2,np.abs(positions_next_z-subhalo[f'CentreOfPotential_z'])<=0.2])
+                        if np.nansum(match)==1:
+                            desc_ids[isub]=subcat_next.loc[match,'GalaxyID'].values[0]
+                        elif np.nansum(match)>1:
+                            mass_offset_min=np.where(np.nanmin(mass_offset[match])==mass_offset[match])[0][0]
+                            desc_ids[isub]=subcat_next.loc[match,'GalaxyID'].values[mass_offset_min]
+
+            logging.info(f'')
+            logging.info(f'Match rate = {np.nansum(desc_ids>0)/len(desc_ids)*100:.1f} \%')
+
+        subcat.loc[nowmask,'DescendantID']=desc_ids
+    
+    logging.info(f'')
+    logging.info(f'*********************************************')
+    logging.info(f'Saving final subhalo data structure to {path_out}...')
+    logging.info(f'*********************************************')
+
+    if os.path.exists(f'{path_out}'):
+        os.remove(f'{path_out}')
+    subcat.to_hdf(f'{path_out}',key='Subhalo')
+
+    
 
 
 
