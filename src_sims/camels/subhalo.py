@@ -49,6 +49,9 @@ def read_subcat(path,snapidxmin=0):
 
                 if ('Mass' in field) or ('_M_' in field):
                     group_df[field]=group_df[field]*10**10/hfac
+                if ('_R_' in field):
+                    group_df[field]=group_df[field]*1e-2
+
 
             subhalo_df['GroupNumber']=subcat_file['Subhalo/SubhaloGrNr'][:]
             subhalo_df['Vmax']=subcat_file['Subhalo/SubhaloVmax'][:]
