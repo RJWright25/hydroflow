@@ -39,7 +39,7 @@ def read_subcat(basepath,snapnums=None):
         group_df.loc[:,'Group_R_Crit200']=groupcat['Group_R_Crit200'][:]*1e-3
         group_df.loc[:,[f'GroupCentreOfPotential_{x}' for x in 'xyz']]=groupcat['GroupPos'][:]*1e-3
         group_df.loc[:,'GroupNumber']=np.array(list(range(group_df.shape[0]))).astype(np.uint64)
-        group_df=subhalo_df.loc[group_df['Mass'].values>=1e10,:].copy()
+        group_df=subhalo_df.loc[group_df['GroupMass'].values>=1e10,:].copy()
         group_df.reset_index(drop=True,inplace=True)
 
 
