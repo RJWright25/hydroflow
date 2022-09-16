@@ -64,7 +64,7 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df.loc[:,'SubhaloIndex']=np.int64(list(range(subhalo_df.shape[0])))
         subhalo_df.loc[:,'SubhaloIDRaw']=np.int64(10**12*snapnum+subhalo_df.loc[:,'SubhaloIndex'].values)
 
-        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut,:].copy()
+        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut/10,:].copy()
         subhalo_df.reset_index(drop=True,inplace=True)
 
         logging.info(f'Matching groups... [runtime {time.time()-t0:.2f} sec]')
@@ -78,6 +78,10 @@ def read_subcat(basepath,snapnums=None):
             for key in groupkeys:
                 subhalo_df.loc[groupmatch,key]=group[key]
             subhalo_df.loc[groupmatch,'SubGroupNumber']=np.argsort(np.argsort(-subhalo_df.loc[groupmatch,'Mass'].values))
+
+        subhalo_df=subhalo_df.loc[subhalo_df['GroupMass'].values>=mcut,:].copy()
+        subhalo_df.reset_index(drop=True,inplace=True)
+
 
         logging.info(f'')
         logging.info(f'Adding trees... [runtime {time.time()-t0:.2f} sec]')
