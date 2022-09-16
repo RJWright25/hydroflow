@@ -38,6 +38,10 @@ def read_subcat(basepath,snapnums=None):
         group_df.loc[:,'Group_M_Crit200']=groupcat['Group_M_Crit200'][:]*10**10/hfac
         group_df.loc[:,'Group_R_Crit200']=groupcat['Group_R_Crit200'][:]*1e-3
         group_df.loc[:,[f'GroupCentreOfPotential_{x}' for x in 'xyz']]=groupcat['GroupPos'][:]*1e-3
+        group_df.loc[:,'GroupNumber']=np.array(list(range(group_df.shape[0]))).astype(np.uint64)
+        group_df=subhalo_df.loc[group_df['Mass'].values>=1e10,:].copy()
+        group_df.reset_index(drop=True,inplace=True)
+
 
         ### subhalo data
         subhalo_df['GroupNumber']=subcat['SubhaloGrNr'][:]
@@ -58,19 +62,20 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df.loc[:,'SubhaloIndex']=np.int64(list(range(subhalo_df.shape[0])))
         subhalo_df.loc[:,'SubhaloIDRaw']=np.int64(10**12*snapnum+subhalo_df.loc[:,'SubhaloIndex'].values)
 
-        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=5e9,:].copy()
+        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=1e9,:].copy()
         subhalo_df.reset_index(drop=True,inplace=True)
 
         logging.info(f'Matching groups... [runtime {time.time()-t0:.2f} sec]')
         numgroups=group_df.shape[0]
         groupkeys=list(group_df.keys())[1:]
-        for groupnum in list(range(numgroups)):
-            if not groupnum%1000:
-                logging.info(f'{groupnum/numgroups*100:.1f}% done with groups [runtime {time.time()-t0:.2f} sec]')
+        for igroup,group in group_df.iterrows():
+            if not igroup%1000:
+                logging.info(f'{igroup/numgroups*100:.1f}% done with groups [runtime {time.time()-t0:.2f} sec]')
 
-            groupmatch=subhalo_df['GroupNumber'].values==groupnum
-            subhalo_df.loc[groupmatch,groupkeys]=group_df.iloc[groupnum].to_numpy()[1:]
-            subhalo_df.loc[groupmatch,'SubGroupNumber']=np.argsort(np.argsort(-subhalo_df.loc[groupmatch,'Mass'].values)).astype(int)
+            groupmatch=subhalo_df['GroupNumber'].values==group['GroupNumber']
+            for key in groupkeys:
+                subhalo_df.loc[groupmatch,key]=group[key]
+            subhalo_df.loc[groupmatch,'SubGroupNumber']=np.argsort(np.argsort(-subhalo_df.loc[groupmatch,'Mass'].values))
 
         logging.info(f'')
         logging.info(f'Adding trees... [runtime {time.time()-t0:.2f} sec]')
