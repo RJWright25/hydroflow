@@ -33,13 +33,15 @@ def read_subcat(basepath,snapnums=None):
         group_df=pd.DataFrame()
         subhalo_df=pd.DataFrame()
 
+        mcut=1e12
+
         ### group data
         group_df.loc[:,'GroupMass']=groupcat['GroupMass'][:]*10**10/hfac
         group_df.loc[:,'Group_M_Crit200']=groupcat['Group_M_Crit200'][:]*10**10/hfac
         group_df.loc[:,'Group_R_Crit200']=groupcat['Group_R_Crit200'][:]*1e-3
         group_df.loc[:,[f'GroupCentreOfPotential_{x}' for x in 'xyz']]=groupcat['GroupPos'][:]*1e-3
         group_df.loc[:,'GroupNumber']=np.array(list(range(group_df.shape[0]))).astype(np.uint64)
-        group_df=group_df.loc[group_df.GroupMass>=1e10,:].copy()
+        group_df=group_df.loc[group_df.GroupMass>=mcut,:].copy()
         group_df.reset_index(drop=True,inplace=True)
 
 
@@ -62,7 +64,7 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df.loc[:,'SubhaloIndex']=np.int64(list(range(subhalo_df.shape[0])))
         subhalo_df.loc[:,'SubhaloIDRaw']=np.int64(10**12*snapnum+subhalo_df.loc[:,'SubhaloIndex'].values)
 
-        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=7e9,:].copy()
+        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut,:].copy()
         subhalo_df.reset_index(drop=True,inplace=True)
 
         logging.info(f'Matching groups... [runtime {time.time()-t0:.2f} sec]')
