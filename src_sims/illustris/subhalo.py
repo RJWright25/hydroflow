@@ -33,7 +33,7 @@ def read_subcat(basepath,snapnums=None):
         group_df=pd.DataFrame()
         subhalo_df=pd.DataFrame()
 
-        mcut=1e12
+        mcut=1e10
 
         ### group data
         group_df.loc[:,'GroupMass']=groupcat['GroupMass'][:]*10**10/hfac
@@ -125,7 +125,7 @@ def read_subcat(basepath,snapnums=None):
         subcat=pd.concat(subhalo_dfs)
     else:
         subcat=subhalo_dfs[0]
-    subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False])
+    subcat.sort_values(by='SnapNum',ascending=False)
     subcat.reset_index(inplace=True,drop=True)
 
     outname=f'catalogues/catalogue_subhalo_{str(int(snapnums[0])).zfill(3)}_to_{str(int(snapnums[-1])).zfill(3)}.hdf5'
