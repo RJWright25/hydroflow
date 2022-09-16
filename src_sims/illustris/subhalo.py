@@ -67,7 +67,7 @@ def read_subcat(basepath,snapnums=None):
             if not groupnum%1000:
                 logging.info(f'{groupnum/numgroups*100:.1f}% done with groups [runtime {time.time()-t0:.2f} sec]')
 
-            groupmatch=subhalo_df['GroupNumber']==groupnum
+            groupmatch=subhalo_df['GroupNumber'].values==groupnum
             subhalo_df.loc[groupmatch,list(group_df.keys())[1:]]=group_df.iloc[groupnum].to_numpy()[1:]
             subhalo_df.loc[groupmatch,'SubGroupNumber']=np.argsort(np.argsort(-subhalo_df.loc[groupmatch,'Mass'].values)).astype(int)
 
