@@ -69,7 +69,7 @@ def read_subcat(basepath,snapnums=None):
 
         logging.info(f'Matching groups... [runtime {time.time()-t0:.2f} sec]')
         numgroups=group_df.shape[0]
-        groupkeys=list(group_df.keys())[1:]
+        groupkeys=list(group_df.keys())
         for igroup,group in group_df.iterrows():
             if not igroup%1000:
                 logging.info(f'{igroup/numgroups*100:.1f}% done with groups [runtime {time.time()-t0:.2f} sec]')
