@@ -62,11 +62,16 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df.reset_index(drop=True,inplace=True)
 
         logging.info(f'Matching groups... [runtime {time.time()-t0:.2f} sec]')
-        for groupnum in list(range(group_df.shape[0])):
+        numgroups=group_df.shape[0]
+        for groupnum in list(range(numgroups)):
+            if not groupnum%1000:
+                logging.info(f'{groupnum/numgroups*100:.1f}% done with groups [runtime {time.time()-t0:.2f} sec]')
+
             groupmatch=subhalo_df['GroupNumber']==groupnum
             subhalo_df.loc[groupmatch,list(group_df.keys())[1:]]=group_df.iloc[groupnum].to_numpy()[1:]
             subhalo_df.loc[groupmatch,'SubGroupNumber']=np.argsort(np.argsort(-subhalo_df.loc[groupmatch,'Mass'].values)).astype(int)
 
+        logging.info(f'')
         logging.info(f'Adding trees... [runtime {time.time()-t0:.2f} sec]')
 
         n=subhalo_df.shape[0]
@@ -76,6 +81,9 @@ def read_subcat(basepath,snapnums=None):
         progmass=np.zeros(n)-1        
         
         for isub,subhalo in subhalo_df.iterrows():
+            if not isub%1000:
+                logging.info(f'{isub/n*100:.1f}% done with trees [runtime {time.time()-t0:.2f} sec]')
+
             subhalo_idx=int(subhalo['SubhaloIndex'])
             subhalo_tree=tng_tools.sublink.loadTree(basepath,snapNum=subhalo['SnapNum'],id=subhalo_idx,onlyMPB=True,fields=['SubhaloID','SubhaloIDRaw','DescendantID','Mass'])
             
