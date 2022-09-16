@@ -117,8 +117,7 @@ def read_subcat(basepath,snapnums=None):
     subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False])
     subcat.reset_index(inplace=True,drop=True)
 
-
-    outname='catalogues/catalogue_subhalo.hdf5'
+    outname=f'catalogues/catalogue_subhalo_{str(int(snapnums[0])).zfill(3)}_to_{str(int(snapnums[-1])).zfill(3)}.hdf5'
     logging.info(f'')
     logging.info(f'*********************************************')
     logging.info(f'Saving final subhalo data structure to {outname}...')
