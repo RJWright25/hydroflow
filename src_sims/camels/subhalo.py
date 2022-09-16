@@ -50,7 +50,7 @@ def read_subcat(path,snapidxmin=0):
                 if ('Mass' in field) or ('_M_' in field):
                     group_df[field]=group_df[field]*10**10/hfac
                 if ('_R_' in field):
-                    group_df[field]=group_df[field]*1e-2
+                    group_df[field]=group_df[field]*1e-3
 
 
             subhalo_df['GroupNumber']=subcat_file['Subhalo/SubhaloGrNr'][:]
@@ -63,7 +63,7 @@ def read_subcat(path,snapidxmin=0):
             subhalo_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=subcat_file['Subhalo/SubhaloPos'][:]*1e-3
             subhalo_df.loc[:,[f'CentreOfMass_{x}' for x in 'xyz']]=subcat_file['Subhalo/SubhaloCM'][:]*1e-3
             subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=subcat_file['Subhalo/SubhaloVel'][:]
-            subhalo_df.loc[:,[f'Spin_{x}' for x in 'xyz']]=s=subcat_file['Subhalo/SubhaloSpin'][:]
+            subhalo_df.loc[:,[f'Spin_{x}' for x in 'xyz']]=subcat_file['Subhalo/SubhaloSpin'][:]
 
             subhalo_df.loc[:,'SnapNum']=subcat_snapnum
             subhalo_df.loc[:,'Redshift']=zval
