@@ -16,12 +16,13 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']
     hval=pdata_file['Header'].attrs['HubbleParam']
+    masstable=pdata_file['Header'].attrs['MassTable']
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     snapnum=int(path.split('snapdir_')[-1][:3])
 
     if not ptypes:
         ptypes={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
-                1:['Masses'],
+                1:[],
                 4:['Masses','Metallicity']}
 
     ptype_keys={0:'gas',1:'dm',4:'stars'}
@@ -53,9 +54,13 @@ def read_subvol(path,ivol,nslice,ptypes=None):
             print(f'Loading {field}')
             pdata[ptype][field]=illustris_python.snapshot.loadSubset(path.split('snapdir')[0],snapnum,ptype_keys[ptype],[field])[subvol_mask]
         
-        pdata[ptype]['Mass']=pdata[ptype]['Masses']*10**10/hval;del pdata[ptype]['Masses']
-        pdata[ptype]['Metallicity']=pdata[ptype]['GFM_Metallicity'];del pdata[ptype]['GFM_Metallicity']
-        
+        if not ptype==1:
+            pdata[ptype]['Mass']=pdata[ptype]['Masses']*10**10/hval;del pdata[ptype]['Masses']
+            pdata[ptype]['Metallicity']=pdata[ptype]['GFM_Metallicity'];del pdata[ptype]['GFM_Metallicity']
+        else:
+            pdata[ptype].loc[:,'Mass']=masstable[ptype]
+
+            
         pdata[ptype].sort_values(by="ParticleIDs",inplace=True)
         pdata[ptype].reset_index(inplace=True,drop=True)
 
