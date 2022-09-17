@@ -20,7 +20,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     snapnum=int(path.split('snapdir_')[-1][:3])
 
     if not ptypes:
-        ptypes={0:['Masses','Density','InternalEnergy','ElectronAbundance','Metallicity','StarFormationRate'],
+        ptypes={0:['Masses','Density','Temperature','GFM_Metallicity','StarFormationRate'],
                 1:['Masses'],
                 4:['Masses','Metallicity']}
 
