@@ -44,7 +44,6 @@ def read_subvol(path,ivol,nslice,ptypes=None):
         print('Loading IDs')
         pdata_pids=illustris_python.snapshot.loadSubset(path.split('snapdir')[0],snapnum,ptype_keys[ptype],['ParticleIDs'])[subvol_mask]
         pdata[ptype]=pd.DataFrame(data=pdata_pids,columns=['ParticleIDs'])
-        pdata[ptype].loc[:,'ParticleType']=ptype
 
         for idim,dim in enumerate('xyz'):
             pdata_itype_idim=illustris_python.snapshot.loadSubset(path.split('snapdir')[0],snapnum,ptype_keys[ptype],['Coordinates'],mdi=[idim])[subvol_mask]*1e-3
@@ -83,6 +82,8 @@ def read_subvol(path,ivol,nslice,ptypes=None):
             tracer_df['CellIDs']=tracer_df['ParentIDs'].values
 
             pdata[0]=tracer_df;del tracer_df
+        
+        [ptype].loc[:,'ParticleType']=ptype
 
     pdata_file.close()
 
