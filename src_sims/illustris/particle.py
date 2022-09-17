@@ -73,16 +73,18 @@ def read_subvol(path,ivol,nslice,ptypes=None):
             print(np.nanmean(present))
             print(np.nansum(present))
             tracer_df=tracer_df.loc[present,:].copy();tracer_df.reset_index(inplace=True,drop=True)
-            
+
             ### step 2 -- collect parent info for tracers
             parentcell_expected_idx=parentcell_expected_idx_if_present[present]
             for field in list(pdata[ptype].keys()):
                 if not field=='ParticleIDs':
                     tracer_df[field]=pdata[ptype][field].values[(parentcell_expected_idx,)]
+            
             tracer_df['ParticleIDs']=tracer_df['TracerID'].values
             tracer_df['CellIDs']=tracer_df['ParentID'].values
 
-            pdata[0]=tracer_df;del tracer_df
+            pdata[ptype]=tracer_df;del tracer_df
+            pdata[ptype].loc[:,'ParticleType']=ptype
 
             #temperature
             ne     = pdata[0]['ElectronAbundance'].values
@@ -91,11 +93,10 @@ def read_subvol(path,ivol,nslice,ptypes=None):
             Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
             Temp *= (1.67262178e-24/ 1.38065e-16  )
             pdata[0]['Temperature']=Temp
-            del pdata['InternalEnergy']
-            del pdata['ElectronAbundance']
+            del pdata[0]['InternalEnergy']
+            del pdata[0]['ElectronAbundance']
 
         
-        [ptype].loc[:,'ParticleType']=ptype
 
     pdata_file.close()
 
