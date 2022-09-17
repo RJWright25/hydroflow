@@ -66,6 +66,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
             ### step 1 - mask out the tracers with parents not in region
             parentcell_expected_idx_if_present=pdata[ptype]['ParticleIDs'].searchsorted(tracer_df['ParentID'].values)
+            print(parentcell_expected_idx_if_present)
             parentcell_expected_ID_if_present=pdata[ptype]['ParticleIDs'].values[parentcell_expected_idx_if_present]
             present=tracer_df['ParentID'].values==parentcell_expected_ID_if_present
 
