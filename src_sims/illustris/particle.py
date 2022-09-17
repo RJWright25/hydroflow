@@ -23,7 +23,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     if not ptypes:
         ptypes={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
                 1:[],
-                4:['Masses','Metallicity']}
+                4:['Masses','GFM_Metallicity']}
 
     ptype_keys={0:'gas',1:'dm',4:'stars'}
  
