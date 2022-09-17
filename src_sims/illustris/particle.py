@@ -37,7 +37,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
         for idim,dim in enumerate('xyz'):
             print(f'Masking subvolume for dim {dim}')
             lims_idim=lims[2*idim:(2*idim+2)]
-            pdata_itype_idim=illustris_python.snapshot.loadSubset(path.split('snapdir')[0],snapnum,ptype_keys[ptype],['Coordinates'],mdi=[idim])*1e-3
+            pdata_itype_idim=illustris_python.snapshot.loadSubset(path.split('snapdir')[0],snapnum,ptype_keys[ptype],['Coordinates'],mdi=[idim])
             idim_mask=np.logical_and(pdata_itype_idim>=lims_idim[0],pdata_itype_idim<=lims_idim[1])
             subvol_mask=np.logical_and(subvol_mask,idim_mask)
 
