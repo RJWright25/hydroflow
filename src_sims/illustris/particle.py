@@ -62,12 +62,12 @@ def read_subvol(path,ivol,nslice,ptypes=None):
         if ptype==0:
             print('Loading tracers')
             tracer_df=pd.DataFrame(illustris_python.snapshot.loadSubset(path.split('snapdir')[0],snapnum,3,['ParentID','TracerID']))
-            tracer_df.sort_values(by='ParentIDs',inplace=True);tracer_df.reset_index(inplace=True,drop=True)
+            tracer_df.sort_values(by='ParentID',inplace=True);tracer_df.reset_index(inplace=True,drop=True)
 
             ### step 1 - mask out the tracers with parents not in region
-            parentcell_expected_idx_if_present=pdata[ptype]['ParticleIDs'].searchsorted(tracer_df['ParentIDs'].values)
+            parentcell_expected_idx_if_present=pdata[ptype]['ParticleIDs'].searchsorted(tracer_df['ParentID'].values)
             parentcell_expected_ID_if_present=pdata[ptype]['ParticleIDs'].values[parentcell_expected_idx_if_present]
-            present=tracer_df['ParentIDs'].values==parentcell_expected_ID_if_present
+            present=tracer_df['ParentID'].values==parentcell_expected_ID_if_present
 
             print(np.nanmean(present))
             print(np.nansum(present))
@@ -78,8 +78,8 @@ def read_subvol(path,ivol,nslice,ptypes=None):
             for field in list(pdata[ptype].keys()):
                 if not field=='ParticleIDs':
                     tracer_df[field]=pdata[ptype][field].values[(parentcell_expected_idx,)]
-            tracer_df['ParticleIDs']=tracer_df['TracerIDs'].values
-            tracer_df['CellIDs']=tracer_df['ParentIDs'].values
+            tracer_df['ParticleIDs']=tracer_df['TracerID'].values
+            tracer_df['CellIDs']=tracer_df['ParentID'].values
 
             pdata[0]=tracer_df;del tracer_df
 
