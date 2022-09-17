@@ -65,10 +65,10 @@ def read_subvol(path,ivol,nslice,ptypes=None):
             tracer_df.sort_values(by='ParentID',inplace=True);tracer_df.reset_index(inplace=True,drop=True)
 
             ### step 1 - mask out the tracers with parents not in region
-            parentcell_expected_idx_if_present=pdata[ptype]['ParticleIDs'].searchsorted(tracer_df['ParentID'].values)
+            parentcell_expected_idx_if_present=np.searchsorted(pdata_pids,tracer_df['ParentID'].values)
 
-            print(np.nanmin(pdata[ptype]['ParticleIDs'].values))
-            print(np.nanmax(pdata[ptype]['ParticleIDs'].values))
+            print(np.nanmin(pdata_pids))
+            print(np.nanmax(pdata_pids))
 
             print(np.nanmin(tracer_df['ParentID'].values))
             print(np.nanmax(tracer_df['ParentID'].values))
