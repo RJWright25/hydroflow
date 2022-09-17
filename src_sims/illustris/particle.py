@@ -20,7 +20,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     snapnum=int(path.split('snapdir_')[-1][:3])
 
     if not ptypes:
-        ptypes={0:['Masses','Density','Temperature','GFM_Metallicity','StarFormationRate'],
+        ptypes={0:['Masses','Density','InternalEnergy','ElectronAbundance','Metallicity','StarFormationRate'],
                 1:['Masses'],
                 4:['Masses','Metallicity']}
 
@@ -82,6 +82,17 @@ def read_subvol(path,ivol,nslice,ptypes=None):
             tracer_df['CellIDs']=tracer_df['ParentIDs'].values
 
             pdata[0]=tracer_df;del tracer_df
+
+            #temperature
+            ne     = pdata[0]['ElectronAbundance'].values
+            energy = pdata[0]['InternalEnergy'].values
+            yhelium = 0.0789
+            Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
+            Temp *= (1.67262178e-24/ 1.38065e-16  )
+            pdata[0]['Temperature']=Temp
+            del pdata['InternalEnergy']
+            del pdata['ElectronAbundance']
+
         
         [ptype].loc[:,'ParticleType']=ptype
 
