@@ -19,6 +19,7 @@ def ivol_idx(ivol,nslice):
     iz=int(ivol%nslice)
     iy=int((ivol-ix*nslice**2-iz)/nslice)
     return (ix,iy,iz)
+ 
 
 def get_limits(ivol,nslice,boxsize,buffer=0.1):
     subvol_ix,subvol_iy,subvol_iz=ivol_idx(ivol,nslice)
