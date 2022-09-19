@@ -69,7 +69,7 @@ def read_subvol(path,ivol,nslice):
             else:
                 pdata[ptype][ifile].loc[:,'Mass']=masstable[ptype]            
 
-            for field in ptypes[ptype]:
+            for field in ptype_fields[ptype]:
                 print(f'Loading {field}')
                 pdata[ptype][ifile][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
 
