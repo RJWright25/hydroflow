@@ -90,14 +90,13 @@ def read_subvol(path,ivol,nslice):
         #baryons in the volume for this ifile
         pdata_ifile_baryons=pdata[ifile].loc[np.logical_not(pdata[ifile]['ParticleType'].values==1),:].copy();pdata_ifile_baryons.reset_index(inplace=True,drop=True)
         pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
-        pdata_ifile_baryons_IDs_forsearch=np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])
 
         #all tracers in this file
         pdata_tracer_IDs=pdata_tracers_ifile['TracerID'].values
         pdata_tracer_parentIDs=pdata_tracers_ifile['ParentID'].values
 
         expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tracer_parentIDs)
-        tracer_match_1=pdata_tracer_parentIDs==pdata_ifile_baryons_IDs_forsearch[(expected_idx_of_tracer_in_pdata,)]
+        tracer_match_1=pdata_tracer_parentIDs==np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])[(expected_idx_of_tracer_in_pdata,)]
 
         pdata_tracer_IDs_invol=pdata_tracer_IDs[tracer_match_1]
         pdata_tracer_parentIDs_invol=pdata_tracer_parentIDs[tracer_match_1]
