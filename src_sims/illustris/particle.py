@@ -80,7 +80,9 @@ def read_subvol(path,ivol,nslice):
         ################# tracers #################
         print('Loading tracers')
         t0=time.time()
+        print(list(pdata_ifile['PartType3'].keys()))
         pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
+        pdata_tracers_ifile.sort_values(by='ParentID',inplace=True);pdata_tracers_ifile.reset_index(inplace=True,drop=True)
 
         #baryons in the volume for this ifile
         pdata_ifile_baryons=pdata[ifile].loc[np.logical_not(pdata[ifile]['ParticleType'].values==1),:].copy();pdata_ifile_baryons.reset_index(inplace=True,drop=True)
