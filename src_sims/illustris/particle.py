@@ -78,7 +78,7 @@ def read_subvol(path,ivol,nslice):
 
             pdata_ifile.close()
 
-        pdata[ptype]=pd.concat(pdata[ptype])
+        pdata[ptype]=pd.concat([pdata[ptype] for ptype in pdata])
         pdata[ptype].loc[:,'ParticleType']=ptype
         pdata[ptype].sort_values(by="ParticleIDs",inplace=True)
         pdata[ptype].reset_index(inplace=True,drop=True)
