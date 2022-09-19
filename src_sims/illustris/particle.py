@@ -1,5 +1,6 @@
 # src_sims/illustris/particle.py: routines to read and convert particle data from TNG snapshot outputs.
 
+from weakref import ProxyType
 import numpy as np
 import pandas as pd
 import h5py 
@@ -124,10 +125,10 @@ def read_subvol(path,ivol,nslice):
     # for star & DM particles assign a nan temp, density
     npart_dm=pdata[1].shape[0]
     npart_star=pdata[4].shape[0]
-    for field in ptypes[0]:
-        if not field in ptypes[4]:
+    for field in ptype_fields[0]:
+        if not field in ptype_fields[4]:
             pdata[4][field]=np.ones(npart_star)*np.nan
-        if not field in ptypes[1]:
+        if not field in ptype_fields[1]:
             pdata[1][field]=np.ones(npart_dm)*np.nan
 
     #concat all pdata into one df
