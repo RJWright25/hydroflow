@@ -30,7 +30,7 @@ def read_subvol(path,ivol,nslice):
 
 
     ptype_fields={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
-                  1:[]}
+                  1:['Potential']}
 
     pdata={ptype:{ifile:{} for ifile in range(numfiles)} for ptype in ptype_fields}
     pdata_tracers=[ifile for ifile in range(numfiles)]
