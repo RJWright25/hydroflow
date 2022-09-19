@@ -63,7 +63,7 @@ def read_subvol(path,ivol,nslice):
 
                 # print('Loading masses')
                 if not ptype==1:
-                    pdata[ifile][ptype]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][subvol_mask]*10**10/hval
+                    pdata[ifile][ptype]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*10**10/hval
                 else:
                     pdata[ifile][ptype].loc[:,'Mass']=masstable[ptype]*10**10/hval        
 
@@ -107,7 +107,7 @@ def read_subvol(path,ivol,nslice):
 
         tf=time.time()
 
-        print(f'Matched tracers for ifile {ifile+1} ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of tracers in ivol {ivol+1}/{nslice**3}) in {tf-t0:.3f}')
+        print(f'Matched tracers for ifile {ifile+1}in {tf-t0:.3f} sec({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of tracers in ivol {ivol+1}/{nslice**3})')
         pdata_ifile.close()
 
 
