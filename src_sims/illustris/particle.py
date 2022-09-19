@@ -52,25 +52,28 @@ def read_subvol(path,ivol,nslice):
                 idim_mask=np.logical_and(pdata_itype_idim>=lims_idim[0],pdata_itype_idim<=lims_idim[1])
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
 
-            subvol_mask=np.where(subvol_mask)
+            if np.nansum(subvol_mask):
+                subvol_mask=np.where(subvol_mask)
 
-            # print('Loading IDs')
-            pdata[ifile][ptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
-            
-            for idim,dim in enumerate('xyz'):
-                pdata[ifile][ptype].loc[:,f'Coordinates_{dim}']=pdata_ifile[f'PartType{ptype}']['Coordinates'][:,idim][subvol_mask]*1e-3
+                # print('Loading IDs')
+                pdata[ifile][ptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
+                
+                for idim,dim in enumerate('xyz'):
+                    pdata[ifile][ptype].loc[:,f'Coordinates_{dim}']=pdata_ifile[f'PartType{ptype}']['Coordinates'][:,idim][subvol_mask]*1e-3
 
-            # print('Loading masses')
-            if not ptype==1:
-                pdata[ifile][ptype]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][subvol_mask]*10**10/hval
+                # print('Loading masses')
+                if not ptype==1:
+                    pdata[ifile][ptype]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][subvol_mask]*10**10/hval
+                else:
+                    pdata[ifile][ptype].loc[:,'Mass']=masstable[ptype]*10**10/hval        
+
+                for field in ptype_fields[ptype]:
+                    # print(f'Loading {field}')
+                    pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
+
+                pdata[ifile][ptype].loc[:,'ParticleType']=ptype
             else:
-                pdata[ifile][ptype].loc[:,'Mass']=masstable[ptype]*10**10/hval        
-
-            for field in ptype_fields[ptype]:
-                # print(f'Loading {field}')
-                pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
-
-            pdata[ifile][ptype].loc[:,'ParticleType']=ptype
+                pdata[ifile][ptype]=pd.DataFrame([])
 
         pdata[ifile]=pd.concat(pdata[ifile])
         pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
