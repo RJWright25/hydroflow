@@ -73,6 +73,7 @@ def read_subvol(path,ivol,nslice):
                 pdata[ifile][ptype].loc[:,'ParticleType']=ptype
 
             else:
+                print('Empty ifile for this vol?')
                 pdata[ifile][ptype]=pd.DataFrame([])
 
         ################# tracers #################
