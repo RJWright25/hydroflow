@@ -20,7 +20,7 @@ def read_subvol(path,ivol,nslice):
     masstable=pdata_file['Header'].attrs['MassTable']
     pdata_file.close()
 
-    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])
+    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])[:3]
     numfiles=len(flist)
     print(f'Loading from {numfiles} files')
 
@@ -31,14 +31,15 @@ def read_subvol(path,ivol,nslice):
                   4:['Masses','GFM_Metallicity'],
                   5:['Masses']}
 
-    pdata={ptype:[ifile for ifile in range(numfiles)] for ptype in ptype_fields}
+    pdata=[{ptype:[] for ptype in ptype_fields} for ifile in range(numfiles)]
     pdata_tracers=[ifile for ifile in range(numfiles)]
 
-    for iptype,ptype in enumerate(ptype_fields):
-        print(f'Loading data for ptype {ptype}')
-        for ifile,ifname in enumerate(flist[:2]):
-            pdata_ifile=h5py.File(ifname,'r')
-            # print(f'Loading data for ifile {ifile+1}/{numfiles}')
+    for ifile,ifname in enumerate(flist):
+        pdata_ifile=h5py.File(ifname,'r')
+
+        print(f'Loading data for ifile {ifile+1}/{numfiles}')
+        for iptype,ptype in enumerate(ptype_fields):
+            print(f'Loading data for ptype {ptype}')
 
             #mask for subvolume
             npart_itype=pdata_ifile['Header'].attrs['NumPart_ThisFile'][ptype]
@@ -54,22 +55,22 @@ def read_subvol(path,ivol,nslice):
             subvol_mask=np.where(subvol_mask)
 
             # print('Loading IDs')
-            pdata[ptype][ifile]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
-            pdata[ptype][ifile].loc[:,'ifile']=ifile
-
-            # print('Loading coordinates')
+            pdata[ifile][ptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
+            pdata[ifile][ptype].loc[:,'ifile']=ifile
+            pdata[ifile][ptype].loc[:,'ParticleType']=ptype
+            
             for idim,dim in enumerate('xyz'):
-                pdata[ptype][ifile].loc[:,f'Coordinates_{dim}']=pdata_ifile[f'PartType{ptype}']['Coordinates'][:,idim][subvol_mask]*1e-3
+                pdata[ifile][ptype].loc[:,f'Coordinates_{dim}']=pdata_ifile[f'PartType{ptype}']['Coordinates'][:,idim][subvol_mask]*1e-3
 
             # print('Loading masses')
             if not ptype==1:
-                pdata[ptype][ifile]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][subvol_mask]*10**10/hval
+                pdata[ifile][ptype]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][subvol_mask]*10**10/hval
             else:
-                pdata[ptype][ifile].loc[:,'Mass']=masstable[ptype]            
+                pdata[ifile][ptype].loc[:,'Mass']=masstable[ptype]            
 
             for field in ptype_fields[ptype]:
                 # print(f'Loading {field}')
-                pdata[ptype][ifile][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
+                pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
 
             ################# tracers if needed #################
             if ptype==0:
@@ -79,27 +80,15 @@ def read_subvol(path,ivol,nslice):
 
             pdata_ifile.close()
 
-        pdata[ptype]=pd.concat(pdata[ptype][:2])
-        pdata[ptype].loc[:,'ParticleType']=ptype
-        pdata[ptype].sort_values(by="ParticleIDs",inplace=True)
-        pdata[ptype].reset_index(inplace=True,drop=True)
+        pdata[ifile]=pd.concat(pdata[ifile])
+        pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
+        pdata[ifile].reset_index(inplace=True,drop=True)
 
     print('Successfully loaded')
 
-    pdata_tracers=pd.concat(pdata_tracers[:2])
+    pdata_tracers=pd.concat(pdata_tracers)
     pdata_tracers.sort_values(by="ParentID",inplace=True)
     pdata_tracers.reset_index(inplace=True,drop=True)
-
-    #temperature
-    ne     = pdata[0]['ElectronAbundance'].values
-    energy = pdata[0]['InternalEnergy'].values
-    yhelium = 0.0789
-    Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
-    Temp *= (1.67262178e-24/ 1.38065e-16  )
-    pdata[0]['Temperature']=Temp
-    del pdata[0]['InternalEnergy']
-    del pdata[0]['ElectronAbundance']
-
 
     # for star & DM particles assign a nan temp, density
     npart_dm=pdata[1].shape[0]
@@ -114,6 +103,16 @@ def read_subvol(path,ivol,nslice):
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
+
+    #temperature
+    ne     = pdata['ElectronAbundance'].values
+    energy = pdata['InternalEnergy'].values
+    yhelium = 0.0789
+    Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
+    Temp *= (1.67262178e-24/ 1.38065e-16  )
+    pdata['Temperature']=Temp
+    del pdata['InternalEnergy']
+    del pdata['ElectronAbundance']
 
     pdata['Metallicity']=pdata['GFM_Metallicity'].values
     del pdata['GFM_Metallicity']
