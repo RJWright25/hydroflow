@@ -47,7 +47,7 @@ def read_subvol(path,ivol,nslice):
             subvol_mask=np.ones(npart_itype)
             
             for idim,dim in enumerate('xyz'):
-                print(f'Masking subvolume for dim {dim}')
+                # print(f'Masking subvolume for dim {dim}')
                 lims_idim=lims[2*idim:(2*idim+2)]
                 pdata_itype_idim=pdata_ifile[f'PartType{ptype}']['Coordinates'][:,idim]
                 idim_mask=np.logical_and(pdata_itype_idim>=lims_idim[0],pdata_itype_idim<=lims_idim[1])
@@ -55,28 +55,28 @@ def read_subvol(path,ivol,nslice):
 
             subvol_mask=np.where(subvol_mask)
 
-            print('Loading IDs')
+            # print('Loading IDs')
             pdata[ptype][ifile]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
             pdata[ptype][ifile].loc[:,'ifile']=ifile
 
-            print('Loading coordinates')
+            # print('Loading coordinates')
             for idim,dim in enumerate('xyz'):
                 pdata[ptype][ifile].loc[:,f'Coordinates_{dim}']=pdata_ifile[f'PartType{ptype}']['Coordinates'][:,idim][subvol_mask]*1e-3
 
-            print('Loading masses')
+            # print('Loading masses')
             if not ptype==1:
                 pdata[ptype][ifile]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][subvol_mask]*10**10/hval
             else:
                 pdata[ptype][ifile].loc[:,'Mass']=masstable[ptype]            
 
             for field in ptype_fields[ptype]:
-                print(f'Loading {field}')
+                # print(f'Loading {field}')
                 pdata[ptype][ifile][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
 
 
             ################# tracers if needed #################
             if ptype==0:
-                print('Loading tracers')
+                # print('Loading tracers')
                 pdata_tracers[ifile]=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),['ParentID','TracerID'])
                 pdata_tracers[ifile].loc[:,'ifile']=ifile
 
