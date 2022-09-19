@@ -83,14 +83,15 @@ def read_subvol(path,ivol,nslice):
         pdata_tracers_ifile.reset_index(inplace=True,drop=True)
         
         pdata_ifile.close()#housekeeping
-        del pdata[ifile][0] #can delete loaded gas props now 
-        del pdata[ifile][5] #dont need bh props
+
 
         #baryons in the volume for this ifile
         pdata_ifile_baryons=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5]])
         pdata_ifile_baryons.sort_values(by='ParticleIDs',inplace=True)
         pdata_ifile_baryons.reset_index(inplace=True,drop=True)
         pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
+
+        del pdata[ifile][0]; del pdata[ifile][5] #can delete loaded gas props now; dont need bh props
 
         #all tracers in this file
         pdata_tracer_IDs=pdata_tracers_ifile['TracerID'].values
