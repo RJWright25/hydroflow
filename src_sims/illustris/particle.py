@@ -18,7 +18,6 @@ def read_subvol(path,ivol,nslice):
     boxsize=pdata_file['Header'].attrs['BoxSize']
     hval=pdata_file['Header'].attrs['HubbleParam']
     masstable=pdata_file['Header'].attrs['MassTable']
-    nparttable=pdata_file['Header'].attrs['NumPart_Total']
     pdata_file.close()
 
     flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])
@@ -27,10 +26,9 @@ def read_subvol(path,ivol,nslice):
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     snapnum=int(path.split('snapdir_')[-1][:3])
-
-
     ptype_fields={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
-                  1:['Potential']}
+                  1:['Potential'],
+                  4:['Masses','GFM_Metallicity']}
 
     pdata={ptype:{ifile:{} for ifile in range(numfiles)} for ptype in ptype_fields}
     pdata_tracers=[ifile for ifile in range(numfiles)]
@@ -85,9 +83,11 @@ def read_subvol(path,ivol,nslice):
         pdata[ptype].sort_values(by="ParticleIDs",inplace=True)
         pdata[ptype].reset_index(inplace=True,drop=True)
 
+    print('Successfully loaded')
+
     pdata_tracers=pd.concat(pdata_tracers)
-    pdata_tracers[ptype].sort_values(by="ParentID",inplace=True)
-    pdata_tracers[ptype].reset_index(inplace=True,drop=True)
+    pdata_tracers.sort_values(by="ParentID",inplace=True)
+    pdata_tracers.reset_index(inplace=True,drop=True)
 
     #temperature
     ne     = pdata[0]['ElectronAbundance'].values
@@ -100,19 +100,22 @@ def read_subvol(path,ivol,nslice):
     del pdata[0]['ElectronAbundance']
 
 
-    # # for star & DM particles assign a nan temp, density
-    # npart_dm=pdata[1].shape[0]
-    # npart_star=pdata[4].shape[0]
-    # for field in ptype_fields[0]:
-    #     if not field in ptype_fields[4]:
-    #         pdata[4][field]=np.ones(npart_star)*np.nan
-    #     if not field in ptype_fields[1]:
-    #         pdata[1][field]=np.ones(npart_dm)*np.nan
+    # for star & DM particles assign a nan temp, density
+    npart_dm=pdata[1].shape[0]
+    npart_star=pdata[4].shape[0]
+    for field in ptype_fields[0]:
+        if not field in ptype_fields[4]:
+            pdata[4][field]=np.ones(npart_star)*np.nan
+        if not field in ptype_fields[1]:
+            pdata[1][field]=np.ones(npart_dm)*np.nan
 
-    # #concat all pdata into one df
-    # pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
-    # pdata.sort_values(by="ParticleIDs",inplace=True)
-    # pdata.reset_index(inplace=True,drop=True)
+    #concat all pdata into one df
+    pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
+    pdata.sort_values(by="ParticleIDs",inplace=True)
+    pdata.reset_index(inplace=True,drop=True)
+
+    pdata['Metallicity']=pdata['GFM_Metallicity'].values
+    del pdata['GFM_Metallicity']
 
     #generate KDtree
     # pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
