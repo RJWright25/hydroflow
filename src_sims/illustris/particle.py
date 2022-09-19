@@ -11,7 +11,7 @@ import illustris_python
 
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,ptypes=None):
+def read_subvol(path,ivol,nslice):
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']
@@ -22,7 +22,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     flist=[path+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname]
     numfiles=len(flist)
-    print(f'Loading from {numfiles}')
+    print(f'Loading from {numfiles} files')
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     snapnum=int(path.split('snapdir_')[-1][:3])
@@ -35,7 +35,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     pdata={ptype:[ifile for ifile in range(numfiles)] for ptype in ptype_fields}
     pdata_tracers=[ifile for ifile in range(numfiles)]
 
-    for iptype,ptype in enumerate(ptypes):
+    for iptype,ptype in enumerate(ptype_fields):
         print(f'Loading data for ptype {ptype}')
         for ifile,ifname in enumerate(flist):
             pdata_ifile=h5py.File(ifname,'r')
