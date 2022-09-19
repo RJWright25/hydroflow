@@ -77,7 +77,7 @@ def read_subvol(path,ivol,nslice):
             ################# tracers if needed #################
             if ptype==0:
                 # print('Loading tracers')
-                pdata_tracers[ifile]=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),colums=['ParentID','TracerID'])
+                pdata_tracers[ifile]=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
                 pdata_tracers[ifile].loc[:,'ifile']=ifile
 
             pdata_ifile.close()
