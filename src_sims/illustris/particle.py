@@ -109,10 +109,10 @@ def read_subvol(path,ivol,nslice):
     #     if not field in ptype_fields[1]:
     #         pdata[1][field]=np.ones(npart_dm)*np.nan
 
-    #concat all pdata into one df
-    pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
-    pdata.sort_values(by="ParticleIDs",inplace=True)
-    pdata.reset_index(inplace=True,drop=True)
+    # #concat all pdata into one df
+    # pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
+    # pdata.sort_values(by="ParticleIDs",inplace=True)
+    # pdata.reset_index(inplace=True,drop=True)
 
     #generate KDtree
     # pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
