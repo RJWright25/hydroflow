@@ -40,7 +40,7 @@ def read_subvol(path,ivol,nslice):
         print(f'Loading data for ptype {ptype}')
         for ifile,ifname in enumerate(flist):
             pdata_ifile=h5py.File(ifname,'r')
-            print(f'Loading data for ifile {ifile+1}/{numfiles}')
+            # print(f'Loading data for ifile {ifile+1}/{numfiles}')
 
             #mask for subvolume
             npart_itype=pdata_ifile['Header'].attrs['NumPart_ThisFile'][ptype]
