@@ -154,7 +154,7 @@ def read_subvol(path,ivol,nslice):
     #generate KDtree
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
 
-    return pdata, True
+    return pdata, pdata_kdtree
 
 
 
