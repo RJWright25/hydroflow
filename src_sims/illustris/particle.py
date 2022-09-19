@@ -98,12 +98,8 @@ def read_subvol(path,ivol,nslice):
 
         expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tracer_parentIDs)
         tracer_match_1=pdata_tracer_parentIDs==np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])[(expected_idx_of_tracer_in_pdata,)]
-
         pdata_tracer_IDs_invol=pdata_tracer_IDs[tracer_match_1]
-        pdata_tracer_parentIDs_invol=pdata_tracer_parentIDs[tracer_match_1]
-
         expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1]
-        tracer_match_2=pdata_tracer_parentIDs_invol==pdata_ifile_baryons_IDs[(expected_idx_of_tracer_in_pdata,)]
 
         parent_data=pdata_ifile_baryons.loc[expected_idx_of_tracer_in_pdata,:]
         parent_data['ParentID']=parent_data['ParticleIDs'].values
@@ -113,7 +109,7 @@ def read_subvol(path,ivol,nslice):
 
         #save the matched tracers as the gas data
         pdata[ifile][0]=parent_data.reset_index(drop=True,inplace=True)
-        print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
+        # print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
 
         pdata[ifile]=pd.concat([pdata[ifile][ptype] for ptype in pdata[ifile]])
         pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
