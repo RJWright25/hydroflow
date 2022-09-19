@@ -93,6 +93,8 @@ def read_subvol(path,ivol,nslice):
         pdata_ifile_baryons.reset_index(inplace=True,drop=True)
         pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
 
+        print(pdata_ifile_baryons)
+
         del pdata[ifile][0]; del pdata[ifile][5] #can delete loaded gas props now; dont need bh props
 
         #all tracers in this file
