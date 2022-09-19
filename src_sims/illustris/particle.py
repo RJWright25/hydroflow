@@ -36,14 +36,14 @@ def read_subvol(path,ivol,nslice):
 
     for ifile,ifname in enumerate(flist):
         pdata_ifile=h5py.File(ifname,'r')
+        npart_ifile=pdata_ifile['Header'].attrs['NumPart_ThisFile']
 
         print(f'Loading data for ifile {ifile+1}/{numfiles}')
         for iptype,ptype in enumerate(ptype_fields):
             print(f'Loading data for ptype {ptype}')
 
             #mask for subvolume
-            npart_itype=pdata_ifile['Header'].attrs['NumPart_ThisFile'][ptype]
-            subvol_mask=np.ones(npart_itype)
+            subvol_mask=np.ones(npart_ifile[ptype])
             
             for idim,dim in enumerate('xyz'):
                 # print(f'Masking subvolume for dim {dim}')
@@ -78,11 +78,11 @@ def read_subvol(path,ivol,nslice):
                 pdata_tracers[ifile]=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
                 pdata_tracers[ifile].loc[:,'ifile']=ifile
 
-            pdata_ifile.close()
 
         pdata[ifile]=pd.concat(pdata[ifile])
         pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
         pdata[ifile].reset_index(inplace=True,drop=True)
+        pdata_ifile.close()
 
     print('Successfully loaded')
 
