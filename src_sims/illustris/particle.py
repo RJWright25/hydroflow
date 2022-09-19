@@ -108,7 +108,7 @@ def read_subvol(path,ivol,nslice):
         parent_data['CellID']=parent_data['ParticleIDs'].values
         parent_data['ParticleIDs']=pdata_tracer_IDs_invol
 
-        print(f"Tracer breakdown: {np.nanmean(parent_data['ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(parent_data['ParticleType'].values==4)*100:.2f}% in stars, {np.nanmean(parent_data['ParticleType'].values==5)*100:.2f}% in BH")
+        print(f"Tracer breakdown: {np.nanmean(parent_data['ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(parent_data['ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(parent_data['ParticleType'].values==5)*100:.2f}% in BH")
 
         tf=time.time()
 
