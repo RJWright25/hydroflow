@@ -20,7 +20,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     nparttable=pdata_file['Header'].attrs['NumPart_Total']
     pdata_file.close()
 
-    flist=[path+fname for fname in os.listdir(path.split('snap_'))[0] if '.hdf5' in fname]
+    flist=[path+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname]
     numfiles=len(flist)
     print(f'Loading from {numfiles}')
 
