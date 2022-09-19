@@ -75,7 +75,6 @@ def read_subvol(path,ivol,nslice):
         pdata[ifile]=pd.concat(pdata[ifile])
         pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
         pdata[ifile].reset_index(inplace=True,drop=True)
-        pdata_ifile.close()
 
         ################# tracers #################
         print('Loading tracers')
@@ -103,6 +102,7 @@ def read_subvol(path,ivol,nslice):
         tf=time.time()
 
         print(f'Matched tracers for ifile {ifile+1} in {tf-t0:.3f}')
+        pdata_ifile.close()
 
 
     print('Successfully loaded')
