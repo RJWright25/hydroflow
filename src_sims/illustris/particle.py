@@ -104,14 +104,14 @@ def read_subvol(path,ivol,nslice):
     del pdata[0]['ElectronAbundance']
 
 
-    # for star & DM particles assign a nan temp, density
-    npart_dm=pdata[1].shape[0]
-    npart_star=pdata[4].shape[0]
-    for field in ptype_fields[0]:
-        if not field in ptype_fields[4]:
-            pdata[4][field]=np.ones(npart_star)*np.nan
-        if not field in ptype_fields[1]:
-            pdata[1][field]=np.ones(npart_dm)*np.nan
+    # # for star & DM particles assign a nan temp, density
+    # npart_dm=pdata[1].shape[0]
+    # npart_star=pdata[4].shape[0]
+    # for field in ptype_fields[0]:
+    #     if not field in ptype_fields[4]:
+    #         pdata[4][field]=np.ones(npart_star)*np.nan
+    #     if not field in ptype_fields[1]:
+    #         pdata[1][field]=np.ones(npart_dm)*np.nan
 
     #concat all pdata into one df
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
