@@ -82,7 +82,7 @@ def read_subvol(path,ivol,nslice):
         pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
         pdata_tracers_ifile.reset_index(inplace=True,drop=True)
         
-        pdata_ifile.close()
+        pdata_ifile.close()#housekeeping
         del pdata[ifile][0] #can delete loaded gas props now 
         del pdata[ifile][5] #dont need bh props
 
@@ -114,8 +114,6 @@ def read_subvol(path,ivol,nslice):
         #save the matched tracers as the gas data
         pdata[ifile][0]=parent_data.reset_index(drop=True,inplace=True)
         print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
-        print(f"Tracer breakdown: {np.nanmean(parent_data['ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(parent_data['ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(parent_data['ParticleType'].values==5)*100:.2f}% in BH")
-
 
         pdata[ifile]=pd.concat([pdata[ifile][ptype] for ptype in pdata[ifile]])
         pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
@@ -137,6 +135,11 @@ def read_subvol(path,ivol,nslice):
     pdata=pd.concat(pdata,ignore_index=True,)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
+
+    tracermask=pdata.ParticleType==0
+
+    print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'TracerType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'TracerType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'TracerType'].values==5)*100:.2f}% in BH")
+
 
     #temperature
     gas_mask=pdata['ParticleType'].values==0
