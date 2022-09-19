@@ -39,7 +39,7 @@ def read_subvol(path,ivol,nslice):
 
         print(f'Loading data for ifile {ifile+1}/{numfiles}')
         for iptype,ptype in enumerate(ptype_fields):
-            print(f'Loading data for ptype {ptype}')
+            # print(f'Loading data for ptype {ptype}')
 
             #mask for subvolume
             subvol_mask=np.ones(npart_ifile[ptype])
@@ -76,7 +76,7 @@ def read_subvol(path,ivol,nslice):
                 pdata[ifile][ptype]=pd.DataFrame([])
 
         ################# tracers #################
-        print('Loading tracers')
+        # print('Loading tracers')
         t0=time.time()
         pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
         pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
