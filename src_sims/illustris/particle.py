@@ -41,7 +41,6 @@ def read_subvol(path,ivol,nslice):
 
         print(f'Loading data for ifile {ifile+1}/{numfiles}')
         for iptype,ptype in enumerate(ptype_fields):
-            # print(f'Loading data for ptype {ptype}')
 
             #mask for subvolume
             subvol_mask=np.ones(npart_ifile[ptype])
@@ -54,6 +53,8 @@ def read_subvol(path,ivol,nslice):
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
 
             if np.nansum(subvol_mask):
+                print(f'There are {np.nansum(subvol_mask)} ivol ptype {ptype} particles in this file')
+
                 subvol_mask=np.where(subvol_mask)
 
                 # print('Loading IDs')
