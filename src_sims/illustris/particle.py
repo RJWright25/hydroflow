@@ -32,7 +32,6 @@ def read_subvol(path,ivol,nslice):
                   5:['Masses']}
 
     pdata=[{ptype:[] for ptype in ptype_fields} for ifile in range(numfiles)]
-    pdata_tracers=[ifile for ifile in range(numfiles)]
 
     for ifile,ifname in enumerate(flist):
         pdata_ifile=h5py.File(ifname,'r')
@@ -82,6 +81,10 @@ def read_subvol(path,ivol,nslice):
         pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
         pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
         pdata_tracers_ifile.reset_index(inplace=True,drop=True)
+        
+        pdata_ifile.close()
+        del pdata[ifile][0] #can delete loaded gas props now 
+        del pdata[ifile][5] #dont need bh props
 
         #baryons in the volume for this ifile
         pdata_ifile_baryons=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5]])
@@ -103,19 +106,18 @@ def read_subvol(path,ivol,nslice):
         tracer_match_2=pdata_tracer_parentIDs_invol==pdata_ifile_baryons_IDs[(expected_idx_of_tracer_in_pdata,)]
 
         parent_data=pdata_ifile_baryons.loc[expected_idx_of_tracer_in_pdata,:]
-        
-        # parent_data['ParentID']=pdata_tracer_parentIDs_invol
-        parent_data['CellID']=parent_data['ParticleIDs'].values
-        parent_data['ParticleIDs']=pdata_tracer_IDs_invol
+        parent_data['ParentID']=parent_data['ParticleIDs'].values
+        parent_data['ParticleIDs']=pdata_tracer_IDs_invol #set particle IDs as the tracer IDs
+        parent_data.loc[:,'TracerType']=parent_data['ParticleType'] #record the tracer type
+        parent_data.loc[:,'ParticleType']=0 # set tracers as gas
 
+        #save the matched tracers as the gas data
+        pdata[ifile][0]=parent_data.reset_index(drop=True,inplace=True)
+        print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
         print(f"Tracer breakdown: {np.nanmean(parent_data['ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(parent_data['ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(parent_data['ParticleType'].values==5)*100:.2f}% in BH")
 
-        tf=time.time()
 
-        print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {tf-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of tracers in ivol {ivol+1}/{nslice**3})')
-        pdata_ifile.close()
-
-        pdata[ifile]=pd.concat(pdata[ifile])
+        pdata[ifile]=pd.concat([pdata[ifile][ptype] for ptype in pdata[ifile]])
         pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
         pdata[ifile].reset_index(inplace=True,drop=True)
         pdata[ifile].loc[:,'ifile']=ifile
