@@ -110,7 +110,7 @@ def read_subvol(path,ivol,nslice):
         pdata[ifile][0]=parent_data.reset_index(drop=True,inplace=True)
         # print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
 
-        pdata[ifile]=pd.concat([pdata[ifile][ptype] for ptype in pdata[ifile]])
+        pdata[ifile]=pd.concat([pdata[ifile][ptype] for ptype in [0,1,4]])
         print(pdata[ifile])
 
         print(list(pdata[ifile].keys()))
