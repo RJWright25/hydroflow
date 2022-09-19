@@ -35,7 +35,7 @@ def read_subvol(path,ivol,nslice):
 
     for iptype,ptype in enumerate(ptype_fields):
         print(f'Loading data for ptype {ptype}')
-        for ifile,ifname in enumerate(flist):
+        for ifile,ifname in enumerate(flist[:2]):
             pdata_ifile=h5py.File(ifname,'r')
             # print(f'Loading data for ifile {ifile+1}/{numfiles}')
 
