@@ -93,8 +93,6 @@ def read_subvol(path,ivol,nslice):
         pdata_ifile_baryons.reset_index(inplace=True,drop=True)
         pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
 
-        # del pdata[ifile][0]; del pdata[ifile][5] #can delete loaded gas props now; dont need bh props
-
         #all tracers in this file
         pdata_tracer_IDs=pdata_tracers_ifile['TracerID'].values
         pdata_tracer_parentIDs=pdata_tracers_ifile['ParentID'].values
@@ -109,9 +107,10 @@ def read_subvol(path,ivol,nslice):
         parent_data['ParticleIDs']=pdata_tracer_IDs_invol #set particle IDs as the tracer IDs
         parent_data.loc[:,'TracerType']=parent_data['ParticleType'] #record the tracer type
         parent_data.loc[:,'ParticleType']=0 # set tracers as gas
-
+        parent_data.reset_index(drop=True,inplace=True)
         #save the matched tracers as the gas data
-        pdata[ifile][0]=parent_data.reset_index(drop=True,inplace=True)
+
+        pdata[ifile][0]=parent_data
         # print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
 
         pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1,4] if not pdata[ifile][ptype].shape[0]==0)
