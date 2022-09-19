@@ -20,7 +20,7 @@ def read_subvol(path,ivol,nslice):
     masstable=pdata_file['Header'].attrs['MassTable']
     pdata_file.close()
 
-    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])[:4]
+    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])
     numfiles=len(flist)
     print(f'Loading from {numfiles} files')
 
@@ -56,8 +56,6 @@ def read_subvol(path,ivol,nslice):
 
             # print('Loading IDs')
             pdata[ifile][ptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
-            pdata[ifile][ptype].loc[:,'ifile']=ifile
-            pdata[ifile][ptype].loc[:,'ParticleType']=ptype
             
             for idim,dim in enumerate('xyz'):
                 pdata[ifile][ptype].loc[:,f'Coordinates_{dim}']=pdata_ifile[f'PartType{ptype}']['Coordinates'][:,idim][subvol_mask]*1e-3
@@ -66,15 +64,18 @@ def read_subvol(path,ivol,nslice):
             if not ptype==1:
                 pdata[ifile][ptype]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][subvol_mask]*10**10/hval
             else:
-                pdata[ifile][ptype].loc[:,'Mass']=masstable[ptype]            
+                pdata[ifile][ptype].loc[:,'Mass']=masstable[ptype]*10**10/hval        
 
             for field in ptype_fields[ptype]:
                 # print(f'Loading {field}')
                 pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
 
+            pdata[ifile][ptype].loc[:,'ParticleType']=ptype
+
         pdata[ifile]=pd.concat(pdata[ifile])
         pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
         pdata[ifile].reset_index(inplace=True,drop=True)
+        pdata[ifile].loc[:,'ifile']=ifile
 
         ################# tracers #################
         print('Loading tracers')
