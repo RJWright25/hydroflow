@@ -30,6 +30,8 @@ def read_subvol(path,ivol,nslice):
                   1:['Potential'],
                   4:['Masses','GFM_Metallicity'],
                   5:['Masses']}
+    
+    allkeys=ptype_fields[0]
 
     pdata=[{ptype:[] for ptype in ptype_fields} for ifile in range(numfiles)]
 
@@ -74,7 +76,7 @@ def read_subvol(path,ivol,nslice):
 
             else:
                 print('Empty ifile for this vol?')
-                pdata[ifile][ptype]=pd.DataFrame([])
+                pdata[ifile][ptype]=pd.DataFrame([],columns=ptype_fields[0])
 
         ################# tracers #################
         # print('Loading tracers')
