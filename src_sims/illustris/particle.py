@@ -90,14 +90,14 @@ def read_subvol(path,ivol,nslice):
     pdata_tracers.sort_values(by="ParentID",inplace=True)
     pdata_tracers.reset_index(inplace=True,drop=True)
 
-    # for star & DM particles assign a nan temp, density
-    npart_dm=pdata[1].shape[0]
-    npart_star=pdata[4].shape[0]
-    for field in ptype_fields[0]:
-        if not field in ptype_fields[4]:
-            pdata[4][field]=np.ones(npart_star)*np.nan
-        if not field in ptype_fields[1]:
-            pdata[1][field]=np.ones(npart_dm)*np.nan
+    # # for star & DM particles assign a nan temp, density
+    # npart_dm=pdata[1].shape[0]
+    # npart_star=pdata[4].shape[0]
+    # for field in ptype_fields[0]:
+    #     if not field in ptype_fields[4]:
+    #         pdata[4][field]=np.ones(npart_star)*np.nan
+    #     if not field in ptype_fields[1]:
+    #         pdata[1][field]=np.ones(npart_dm)*np.nan
 
     #concat all pdata into one df
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
@@ -105,12 +105,13 @@ def read_subvol(path,ivol,nslice):
     pdata.reset_index(inplace=True,drop=True)
 
     #temperature
-    ne     = pdata['ElectronAbundance'].values
-    energy = pdata['InternalEnergy'].values
+    gas_mask=pdata['ParticleType'].values==0
+    ne     = pdata.loc[gas_mask,'ElectronAbundance'].values
+    energy = pdata.loc[gas_mask,'InternalEnergy'].values
     yhelium = 0.0789
     Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
     Temp *= (1.67262178e-24/ 1.38065e-16  )
-    pdata['Temperature']=Temp
+    pdata.loc[gas_mask,'Temperature']=Temp
     del pdata['InternalEnergy']
     del pdata['ElectronAbundance']
 
