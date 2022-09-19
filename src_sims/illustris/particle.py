@@ -25,7 +25,6 @@ def read_subvol(path,ivol,nslice):
     print(f'Loading from {numfiles} files')
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
-    snapnum=int(path.split('snapdir_')[-1][:3])
     ptype_fields={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
                   1:['Potential'],
                   4:['Masses','GFM_Metallicity'],
@@ -53,7 +52,7 @@ def read_subvol(path,ivol,nslice):
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
 
             if np.nansum(subvol_mask):
-                print(f'There are {np.nansum(subvol_mask)} ivol ptype {ptype} particles in this file')
+                # print(f'There are {np.nansum(subvol_mask)} ivol ptype {ptype} particles in this file')
 
                 subvol_mask=np.where(subvol_mask)
 
@@ -76,7 +75,7 @@ def read_subvol(path,ivol,nslice):
                 pdata[ifile][ptype].loc[:,'ParticleType']=ptype
 
             else:
-                print(f'No ivol ptype {ptype} particles in this file!')
+                # print(f'No ivol ptype {ptype} particles in this file!')
                 pdata[ifile][ptype]=pd.DataFrame([])
 
         ################# tracers #################
