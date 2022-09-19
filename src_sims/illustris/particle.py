@@ -92,24 +92,22 @@ def read_subvol(path,ivol,nslice):
         pdata_tracer_parentIDs=pdata_tracers_ifile['ParentID'].values
 
         expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tracer_parentIDs)
-        tracer_match=np.where(pdata_tracer_parentIDs==pdata_ifile_baryons_IDs[(expected_idx_of_tracer_in_pdata,)])
+        tracer_match_1=pdata_tracer_parentIDs==pdata_ifile_baryons_IDs[(expected_idx_of_tracer_in_pdata,)]
 
-        pdata_tracer_IDs_invol=pdata_tracer_IDs[tracer_match]
-        pdata_tracer_parentIDs_invol=pdata_tracer_parentIDs[tracer_match]
+        pdata_tracer_IDs_invol=pdata_tracer_IDs[tracer_match_1]
+        pdata_tracer_parentIDs_invol=pdata_tracer_parentIDs[tracer_match_1]
 
-        expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match]
-        tracer_match=pdata_tracer_parentIDs_invol==pdata_ifile_baryons_IDs[(expected_idx_of_tracer_in_pdata,)]
+        expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1]
+        tracer_match_2=pdata_tracer_parentIDs_invol==pdata_ifile_baryons_IDs[(expected_idx_of_tracer_in_pdata,)]
+        # print(np.nanmean)
+
         tf=time.time()
 
-        print(f'Matched tracers for ifile {ifile+1} in {tf-t0:.3f}')
+        print(f'Matched tracers for ifile {ifile+1} ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f} of tracers in ivol {ivol}) in {tf-t0:.3f}')
         pdata_ifile.close()
 
 
     print('Successfully loaded')
-
-    pdata_tracers=pd.concat(pdata_tracers)
-    pdata_tracers.sort_values(by="ParentID",inplace=True)
-    pdata_tracers.reset_index(inplace=True,drop=True)
 
     # # for star & DM particles assign a nan temp, density
     # npart_dm=pdata[1].shape[0]
