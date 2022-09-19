@@ -72,22 +72,21 @@ def read_subvol(path,ivol,nslice):
                     pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
 
                 pdata[ifile][ptype].loc[:,'ParticleType']=ptype
+
             else:
                 pdata[ifile][ptype]=pd.DataFrame([])
-
-        pdata[ifile]=pd.concat(pdata[ifile])
-        pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
-        pdata[ifile].reset_index(inplace=True,drop=True)
-        pdata[ifile].loc[:,'ifile']=ifile
 
         ################# tracers #################
         print('Loading tracers')
         t0=time.time()
         pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
-        pdata_tracers_ifile.sort_values(by='ParentID',inplace=True);pdata_tracers_ifile.reset_index(inplace=True,drop=True)
+        pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
+        pdata_tracers_ifile.reset_index(inplace=True,drop=True)
 
         #baryons in the volume for this ifile
-        pdata_ifile_baryons=pdata[ifile].loc[np.logical_not(pdata[ifile]['ParticleType'].values==1),:].copy();pdata_ifile_baryons.reset_index(inplace=True,drop=True)
+        pdata_ifile_baryons=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5]])
+        pdata_ifile_baryons.sort_values(by='ParticleIDs',inplace=True)
+        pdata_ifile_baryons.reset_index(inplace=True,drop=True)
         pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
 
         #all tracers in this file
@@ -104,16 +103,22 @@ def read_subvol(path,ivol,nslice):
         tracer_match_2=pdata_tracer_parentIDs_invol==pdata_ifile_baryons_IDs[(expected_idx_of_tracer_in_pdata,)]
 
         parent_data=pdata_ifile_baryons.loc[expected_idx_of_tracer_in_pdata,:]
-        parent_data['ParentID']=pdata_tracer_parentIDs_invol
+        
+        # parent_data['ParentID']=pdata_tracer_parentIDs_invol
+        parent_data['CellID']=parent_data['ParticleIDs'].values
+        parent_data['ParticleIDs']=pdata_tracer_IDs_invol
 
-        print(parent_data.loc[:,['ParticleIDs','ParentID']])
-        print(np.nanmean(parent_data['ParticleIDs'].values==parent_data['ParentID'].values))
+        print(f"Tracer breakdown: {np.nanmean(parent_data['ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(parent_data['ParticleType'].values==4)*100:.2f}% in stars, {np.nanmean(parent_data['ParticleType'].values==5)*100:.2f}% in BH")
 
         tf=time.time()
 
-        print(f'Matched tracers for ifile {ifile+1}in {tf-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of tracers in ivol {ivol+1}/{nslice**3})')
+        print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {tf-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of tracers in ivol {ivol+1}/{nslice**3})')
         pdata_ifile.close()
 
+        pdata[ifile]=pd.concat(pdata[ifile])
+        pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
+        pdata[ifile].reset_index(inplace=True,drop=True)
+        pdata[ifile].loc[:,'ifile']=ifile
 
     print('Successfully loaded')
 
