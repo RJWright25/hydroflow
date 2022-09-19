@@ -85,7 +85,7 @@ def read_subvol(path,ivol,nslice):
 
     print('Successfully loaded')
 
-    pdata_tracers=pd.concat(pdata_tracers)
+    pdata_tracers=pd.concat(pdata_tracers[:2])
     pdata_tracers.sort_values(by="ParentID",inplace=True)
     pdata_tracers.reset_index(inplace=True,drop=True)
 
