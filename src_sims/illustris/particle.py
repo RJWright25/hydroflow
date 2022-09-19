@@ -88,7 +88,7 @@ def read_subvol(path,ivol,nslice):
         pdata_ifile.close()#housekeeping
 
         #baryons in the volume for this ifile
-        pdata_ifile_baryons=pd.concat([pdata_df for pdata_df in [pdata[ifile][ptype] for ptype in [0,4,5]] if not pdata_df.shape[0]==0])
+        pdata_ifile_baryons=pd.concat(pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0)
         pdata_ifile_baryons.sort_values(by='ParticleIDs',inplace=True)
         pdata_ifile_baryons.reset_index(inplace=True,drop=True)
         pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
@@ -114,7 +114,7 @@ def read_subvol(path,ivol,nslice):
         pdata[ifile][0]=parent_data.reset_index(drop=True,inplace=True)
         # print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
 
-        pdata[ifile]=pd.concat([pdata_df for pdata_df in [pdata[ifile][ptype] for ptype in [0,1,4]] if not pdata_df.shape[0]==0])
+        pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1,4] if not pdata[ifile][ptype].shape[0]==0)
         print(pdata[ifile])
 
         print(list(pdata[ifile].keys()))
