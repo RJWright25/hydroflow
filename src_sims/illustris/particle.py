@@ -81,12 +81,12 @@ def read_subvol(path,ivol,nslice):
         pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
         pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
         pdata_tracers_ifile.reset_index(inplace=True,drop=True)
-        
         pdata_ifile.close()#housekeeping
-
 
         #baryons in the volume for this ifile
         pdata_ifile_baryons=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5]])
+        print(list(pdata_ifile_baryons.keys()))
+
         pdata_ifile_baryons.sort_values(by='ParticleIDs',inplace=True)
         pdata_ifile_baryons.reset_index(inplace=True,drop=True)
         pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
