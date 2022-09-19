@@ -1,10 +1,10 @@
 # src_sims/illustris/particle.py: routines to read and convert particle data from TNG snapshot outputs.
 
-from weakref import ProxyType
 import numpy as np
 import pandas as pd
 import h5py 
 import os
+import time
 
 from scipy.spatial import cKDTree
 from hydroflow.src_physics.utils import get_limits
@@ -72,17 +72,36 @@ def read_subvol(path,ivol,nslice):
                 # print(f'Loading {field}')
                 pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
 
-            ################# tracers if needed #################
-            if ptype==0:
-                # print('Loading tracers')
-                pdata_tracers[ifile]=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
-                pdata_tracers[ifile].loc[:,'ifile']=ifile
-
-
         pdata[ifile]=pd.concat(pdata[ifile])
         pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
         pdata[ifile].reset_index(inplace=True,drop=True)
         pdata_ifile.close()
+
+        ################# tracers #################
+        print('Loading tracers')
+        t0=time.time()
+        pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
+
+        #baryons in the volume for this ifile
+        pdata_ifile_baryons=pdata[ifile].loc[np.logical_not(pdata[ifile]['ParticleType'].values==1),:].copy();pdata_ifile_baryons.reset_index(inplace=True,drop=True)
+        pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
+
+        #all tracers in this file
+        pdata_tracer_IDs=pdata_tracers_ifile['TracerID'].values
+        pdata_tracer_parentIDs=pdata_tracers_ifile['ParentID'].values
+
+        expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tracer_parentIDs)
+        tracer_match=np.where(pdata_tracer_parentIDs==pdata_ifile_baryons_IDs[(expected_idx_of_tracer_in_pdata,)])
+
+        pdata_tracer_IDs_invol=pdata_tracer_IDs[tracer_match]
+        pdata_tracer_parentIDs_invol=pdata_tracer_parentIDs[tracer_match]
+
+        expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match]
+        tracer_match=pdata_tracer_parentIDs_invol==pdata_ifile_baryons_IDs[(expected_idx_of_tracer_in_pdata,)]
+        tf=time.time()
+
+        print(f'Matched tracers for ifile {ifile+1} in {tf-t0:.3f}')
+
 
     print('Successfully loaded')
 
@@ -121,7 +140,7 @@ def read_subvol(path,ivol,nslice):
     #generate KDtree
     # pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
 
-    return pdata, pdata_tracers
+    return pdata, True
 
 
 
