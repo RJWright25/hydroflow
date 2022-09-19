@@ -20,7 +20,7 @@ def read_subvol(path,ivol,nslice):
     masstable=pdata_file['Header'].attrs['MassTable']
     pdata_file.close()
 
-    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])[:3]
+    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])[:4]
     numfiles=len(flist)
     print(f'Loading from {numfiles} files')
 
