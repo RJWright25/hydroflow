@@ -41,7 +41,8 @@ def read_subvol(path,ivol,nslice,ptypes=None):
         print('Loading IDs')
         pdata[ptype]=pd.DataFrame(data=pdata_file[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
         pdata[ptype].loc[:,'ParticleType']=ptype
-
+        
+        print('Loading coordinates')
         for idim,dim in enumerate('xyz'):
             pdata[ptype].loc[:,f'Coordinates_{dim}']=pdata_file[f'PartType{ptype}']['Coordinates'][:,idim][subvol_mask]*1e-3
 

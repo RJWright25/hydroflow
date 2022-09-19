@@ -1,9 +1,9 @@
 # src_sims/illustris/particle.py: routines to read and convert particle data from TNG snapshot outputs.
 
-from turtle import tracer
 import numpy as np
 import pandas as pd
 import h5py 
+import os
 
 from scipy.spatial import cKDTree
 from hydroflow.src_physics.utils import get_limits
@@ -17,93 +17,109 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     boxsize=pdata_file['Header'].attrs['BoxSize']
     hval=pdata_file['Header'].attrs['HubbleParam']
     masstable=pdata_file['Header'].attrs['MassTable']
+    nparttable=pdata_file['Header'].attrs['NumPart_Total']
+    pdata_file.close()
+
+    flist=[path+fname for fname in os.listdir(path.split('snap_'))[0] if '.hdf5' in fname]
+    numfiles=len(flist)
+    print(f'Loading from {numfiles}')
+
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     snapnum=int(path.split('snapdir_')[-1][:3])
 
-    if not ptypes:
-        ptypes={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
-                1:[],
-                4:['Masses','GFM_Metallicity']}
 
-    ptype_keys={0:'gas',1:'dm',4:'stars'}
- 
-    pdata={}
+    ptype_fields={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
+                  1:[],
+                  4:['Masses','GFM_Metallicity']}
+
+    pdata={ptype:[ifile for ifile in range(numfiles)] for ptype in ptype_fields}
+    pdata_tracers=[ifile for ifile in range(numfiles)]
+
     for iptype,ptype in enumerate(ptypes):
         print(f'Loading data for ptype {ptype}')
+        for ifile,ifname in enumerate(flist):
+            pdata_ifile=h5py.File(ifname,'r')
+            print(f'Loading data for ifile {ifile+1}/{numfiles}')
 
-        #mask for subvolume
-        npart_itype=pdata_file['Header'].attrs['NumPart_Total'][ptype]
-        subvol_mask=np.ones(npart_itype)
-        
-        for idim,dim in enumerate('xyz'):
-            print(f'Masking subvolume for dim {dim}')
-            lims_idim=lims[2*idim:(2*idim+2)]
-            pdata_itype_idim=illustris_python.snapshot.loadSubset(path.split('snapdir')[0],snapnum,ptype_keys[ptype],['Coordinates'],mdi=[idim])
-            idim_mask=np.logical_and(pdata_itype_idim>=lims_idim[0],pdata_itype_idim<=lims_idim[1])
-            subvol_mask=np.logical_and(subvol_mask,idim_mask)
-
-        print('Loading IDs')
-        pdata_pids=illustris_python.snapshot.loadSubset(path.split('snapdir')[0],snapnum,ptype_keys[ptype],['ParticleIDs'])[subvol_mask]
-        pdata[ptype]=pd.DataFrame(data=pdata_pids,columns=['ParticleIDs'])
-
-        for idim,dim in enumerate('xyz'):
-            pdata_itype_idim=illustris_python.snapshot.loadSubset(path.split('snapdir')[0],snapnum,ptype_keys[ptype],['Coordinates'],mdi=[idim])[subvol_mask]*1e-3
-            pdata[ptype].loc[:,f'Coordinates_{dim}']=pdata_itype_idim
-
-        for field in ptypes[ptype]:
-            print(f'Loading {field}')
-            pdata[ptype][field]=illustris_python.snapshot.loadSubset(path.split('snapdir')[0],snapnum,ptype_keys[ptype],[field])[subvol_mask]
-        
-        if not ptype==1:
-            pdata[ptype]['Mass']=pdata[ptype]['Masses']*10**10/hval;del pdata[ptype]['Masses']
-            pdata[ptype]['Metallicity']=pdata[ptype]['GFM_Metallicity'];del pdata[ptype]['GFM_Metallicity']
-        else:
-            pdata[ptype].loc[:,'Mass']=masstable[ptype]
-
+            #mask for subvolume
+            npart_itype=pdata_ifile['Header'].attrs['NumPart_ThisFile'][ptype]
+            subvol_mask=np.ones(npart_itype)
             
+            for idim,dim in enumerate('xyz'):
+                print(f'Masking subvolume for dim {dim}')
+                lims_idim=lims[2*idim:(2*idim+2)]
+                pdata_itype_idim=pdata_ifile[f'PartType{ptype}']['Coordinates'][:,idim]
+                idim_mask=np.logical_and(pdata_itype_idim>=lims_idim[0],pdata_itype_idim<=lims_idim[1])
+                subvol_mask=np.logical_and(subvol_mask,idim_mask)
+
+            subvol_mask=np.where(subvol_mask)
+
+            print('Loading IDs')
+            pdata[ptype][ifile]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
+            pdata[ptype][ifile].loc[:,'ifile']=ifile
+
+            print('Loading coordinates')
+            for idim,dim in enumerate('xyz'):
+                pdata[ptype][ifile].loc[:,f'Coordinates_{dim}']=pdata_ifile[f'PartType{ptype}']['Coordinates'][:,idim][subvol_mask]*1e-3
+
+            print('Loading masses')
+            if not ptype==1:
+                pdata[ptype][ifile]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][subvol_mask]*10**10/hval
+            else:
+                pdata[ptype][ifile].loc[:,'Mass']=masstable[ptype]            
+
+            for field in ptypes[ptype]:
+                print(f'Loading {field}')
+                pdata[ptype][ifile][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
+
+
+            ################# tracers if needed #################
+            if ptype==0:
+                print('Loading tracers')
+                pdata_tracers[ifile]=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType{ptype}']['TracerID'][:]]),['ParentID','TracerID'])
+                pdata_tracers[ifile].sort_values(by='ParentID',inplace=True);pdata_tracers[ifile].reset_index(inplace=True,drop=True)
+
+
+                pdata_ifile.close()
+
+            # ### step 1 - mask out the tracers with parents not in region
+            # parentcell_expected_idx_if_present=np.searchsorted(pdata_pids,tracer_df['ParentID'].values)
+            # tester=np.concatenate([pdata_pids,[-1]])
+            # parentcell_expected_ID_if_present=tester[parentcell_expected_idx_if_present]
+            # present=tracer_df['ParentID'].values==parentcell_expected_ID_if_present
+
+            # print(np.nanmean(present))
+            # print(np.nansum(present))
+            # tracer_df=tracer_df.loc[present,:].copy();tracer_df.reset_index(inplace=True,drop=True)
+
+            # ### step 2 -- collect parent info for tracers
+            # parentcell_expected_idx=parentcell_expected_idx_if_present[present]
+            # for field in list(pdata[ptype].keys()):
+            #     if not field=='ParticleIDs':
+            #         tracer_df[field]=pdata[ptype][field].values[(parentcell_expected_idx,)]
+            
+            # tracer_df['ParticleIDs']=tracer_df['TracerID'].values
+            # tracer_df['CellIDs']=tracer_df['ParentID'].values
+
+            # pdata[ptype]=tracer_df;del tracer_df
+            # pdata[ptype].loc[:,'ParticleType']=ptype
+
+
+        pdata[ptype]=pd.concat(pdata[ptype])
+        pdata[ptype].loc[:,'ParticleType']=ptype
         pdata[ptype].sort_values(by="ParticleIDs",inplace=True)
         pdata[ptype].reset_index(inplace=True,drop=True)
 
-        if ptype==0:
-            print('Loading tracers')
-            tracer_df=pd.DataFrame(illustris_python.snapshot.loadSubset(path.split('snapdir')[0],snapnum,3,['ParentID','TracerID']))
-            tracer_df.sort_values(by='ParentID',inplace=True);tracer_df.reset_index(inplace=True,drop=True)
+    #temperature
+    ne     = pdata[0]['ElectronAbundance'].values
+    energy = pdata[0]['InternalEnergy'].values
+    yhelium = 0.0789
+    Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
+    Temp *= (1.67262178e-24/ 1.38065e-16  )
+    pdata[0]['Temperature']=Temp
+    del pdata[0]['InternalEnergy']
+    del pdata[0]['ElectronAbundance']
 
-            ### step 1 - mask out the tracers with parents not in region
-            parentcell_expected_idx_if_present=np.searchsorted(pdata_pids,tracer_df['ParentID'].values)
-            tester=np.concatenate([pdata_pids,[-1]])
-            parentcell_expected_ID_if_present=tester[parentcell_expected_idx_if_present]
-            present=tracer_df['ParentID'].values==parentcell_expected_ID_if_present
-
-            print(np.nanmean(present))
-            print(np.nansum(present))
-            tracer_df=tracer_df.loc[present,:].copy();tracer_df.reset_index(inplace=True,drop=True)
-
-            ### step 2 -- collect parent info for tracers
-            parentcell_expected_idx=parentcell_expected_idx_if_present[present]
-            for field in list(pdata[ptype].keys()):
-                if not field=='ParticleIDs':
-                    tracer_df[field]=pdata[ptype][field].values[(parentcell_expected_idx,)]
-            
-            tracer_df['ParticleIDs']=tracer_df['TracerID'].values
-            tracer_df['CellIDs']=tracer_df['ParentID'].values
-
-            pdata[ptype]=tracer_df;del tracer_df
-            pdata[ptype].loc[:,'ParticleType']=ptype
-
-            #temperature
-            ne     = pdata[0]['ElectronAbundance'].values
-            energy = pdata[0]['InternalEnergy'].values
-            yhelium = 0.0789
-            Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
-            Temp *= (1.67262178e-24/ 1.38065e-16  )
-            pdata[0]['Temperature']=Temp
-            del pdata[0]['InternalEnergy']
-            del pdata[0]['ElectronAbundance']
-
-        
-
-    pdata_file.close()
 
     # for star & DM particles assign a nan temp, density
     npart_dm=pdata[1].shape[0]
@@ -120,9 +136,9 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     pdata.reset_index(inplace=True,drop=True)
 
     #generate KDtree
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
+    # pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
 
-    return pdata, pdata_kdtree
+    return pdata, pdata_tracers
 
 
 
