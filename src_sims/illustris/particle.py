@@ -75,8 +75,8 @@ def read_subvol(path,ivol,nslice):
                 pdata[ifile][ptype].loc[:,'ParticleType']=ptype
 
             else:
-                print('Empty ifile for this vol?')
-                pdata[ifile][ptype]=pd.DataFrame([],columns=ptype_fields[0])
+                print(f'No ivol ptype {ptype} particles in this file!')
+                pdata[ifile][ptype]=None
 
         ################# tracers #################
         # print('Loading tracers')
@@ -87,7 +87,7 @@ def read_subvol(path,ivol,nslice):
         pdata_ifile.close()#housekeeping
 
         #baryons in the volume for this ifile
-        pdata_ifile_baryons=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5]])
+        pdata_ifile_baryons=pd.concat([pdata_df for pdata_df in [pdata[ifile][ptype] for ptype in [0,1,4]] if pdata])
         pdata_ifile_baryons.sort_values(by='ParticleIDs',inplace=True)
         pdata_ifile_baryons.reset_index(inplace=True,drop=True)
         pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
