@@ -21,7 +21,7 @@ def read_subvol(path,ivol,nslice):
     nparttable=pdata_file['Header'].attrs['NumPart_Total']
     pdata_file.close()
 
-    flist=[path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname]
+    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])
     numfiles=len(flist)
     print(f'Loading from {numfiles} files')
 
@@ -77,39 +77,21 @@ def read_subvol(path,ivol,nslice):
             ################# tracers if needed #################
             if ptype==0:
                 print('Loading tracers')
-                pdata_tracers[ifile]=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType{ptype}']['TracerID'][:]]),['ParentID','TracerID'])
-                pdata_tracers[ifile].sort_values(by='ParentID',inplace=True);pdata_tracers[ifile].reset_index(inplace=True,drop=True)
+                pdata_tracers[ifile]=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),['ParentID','TracerID'])
+                pdata_tracers[ifile].loc[:,'ifile']=ifile
 
+            pdata_ifile.close()
 
-                pdata_ifile.close()
-
-            # ### step 1 - mask out the tracers with parents not in region
-            # parentcell_expected_idx_if_present=np.searchsorted(pdata_pids,tracer_df['ParentID'].values)
-            # tester=np.concatenate([pdata_pids,[-1]])
-            # parentcell_expected_ID_if_present=tester[parentcell_expected_idx_if_present]
-            # present=tracer_df['ParentID'].values==parentcell_expected_ID_if_present
-
-            # print(np.nanmean(present))
-            # print(np.nansum(present))
-            # tracer_df=tracer_df.loc[present,:].copy();tracer_df.reset_index(inplace=True,drop=True)
-
-            # ### step 2 -- collect parent info for tracers
-            # parentcell_expected_idx=parentcell_expected_idx_if_present[present]
-            # for field in list(pdata[ptype].keys()):
-            #     if not field=='ParticleIDs':
-            #         tracer_df[field]=pdata[ptype][field].values[(parentcell_expected_idx,)]
-            
-            # tracer_df['ParticleIDs']=tracer_df['TracerID'].values
-            # tracer_df['CellIDs']=tracer_df['ParentID'].values
-
-            # pdata[ptype]=tracer_df;del tracer_df
-            # pdata[ptype].loc[:,'ParticleType']=ptype
 
 
         pdata[ptype]=pd.concat(pdata[ptype])
         pdata[ptype].loc[:,'ParticleType']=ptype
         pdata[ptype].sort_values(by="ParticleIDs",inplace=True)
         pdata[ptype].reset_index(inplace=True,drop=True)
+
+    pdata_tracers=pd.concat(pdata_tracers)
+    pdata_tracers[ptype].sort_values(by="ParentID",inplace=True)
+    pdata_tracers[ptype].reset_index(inplace=True,drop=True)
 
     #temperature
     ne     = pdata[0]['ElectronAbundance'].values
