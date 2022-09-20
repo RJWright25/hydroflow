@@ -131,20 +131,11 @@ def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
     funclocstr=funclocstr[:-1]
     print(funclocstr)
 
-    jobname=f'{funcname}'
 
     if not os.path.exists('jobs'):
         os.mkdir('jobs')
     if not os.path.exists('logs'):
         os.mkdir('logs')
-
-    
-    runscriptfilepath=f'{cwd}/jobs/{jobname}-run.py'
-    jobscriptfilepath=f'{cwd}/jobs/{jobname}-submit.slurm'
-    if os.path.exists(runscriptfilepath):
-        os.remove(runscriptfilepath)
-    if os.path.exists(jobscriptfilepath):
-        os.remove(jobscriptfilepath)
 
     argumentstring=''
     for arg in arguments:
@@ -152,6 +143,17 @@ def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
             argumentstring+=f"{arg}='{arguments[arg]}',"
         else:
             argumentstring+=f"{arg}={arguments[arg]},"
+    
+    argumentstring_fname=argumentstring.replace('=','eq')
+    
+    jobname=f'{funcname}_{argumentstring_fname}'
+    runscriptfilepath=f'{cwd}/jobs/{jobname}-run.py'
+    jobscriptfilepath=f'{cwd}/jobs/{jobname}-submit.slurm'
+    if os.path.exists(runscriptfilepath):
+        os.remove(runscriptfilepath)
+    if os.path.exists(jobscriptfilepath):
+        os.remove(jobscriptfilepath)
+
 
     with open(runscriptfilepath,"w") as runfile:
         runfile.writelines(f"import warnings\n")
