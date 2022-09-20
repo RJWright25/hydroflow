@@ -4,6 +4,7 @@
 # run/execute.py: script to submit job array.
 
 import os
+import sys
 import time
 import logging
 import argparse
@@ -14,15 +15,10 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from datetime import datetime
-
-from hydroflow.run.tools_hpc import create_dir
-from hydroflow.src_physics.utils import get_limits,get_progidx
-from hydroflow.src_physics.galaxy import analyse_galaxy,calc_r200
-from hydroflow.src_physics.gasflow import candidates_gasflow,analyse_gasflow
-
 #arguments
 
 parser=argparse.ArgumentParser()
+parser.add_argument('--repo',metavar='-R',type=str,help='where is repo')
 parser.add_argument('--code',metavar='-C',type=str,help='which simulation (from hydroflow.src_sims)')
 parser.add_argument('--path',metavar='-P',type=str,help='path to subhalo catalogue')
 parser.add_argument('--nslice',metavar='-N',type=int,help='number of slices for simulation sub-boxes')
@@ -32,6 +28,7 @@ parser.add_argument('--depth',metavar='-D',type=int,help='time interval')
 parser.add_argument('--mcut',metavar='-M',type=float,help='mass limit (log mass)')
 
 args=parser.parse_args()
+repo=args.repo
 code=args.code
 pathcat=args.path
 path=pathcat.split('cat')[0]
@@ -41,6 +38,13 @@ snapf=int(args.snap)
 depth=int(args.depth)
 snapi=int(snapf-depth)
 mcut=10**(args.mcut)
+
+sys.path.append(f"{repo.split('hydroflow')[0]}")
+
+from hydroflow.run.tools_hpc import create_dir
+from hydroflow.src_physics.utils import get_limits,get_progidx
+from hydroflow.src_physics.galaxy import analyse_galaxy,calc_r200
+from hydroflow.src_physics.gasflow import candidates_gasflow,analyse_gasflow
 
 #subhalo catalogue
 namecat=pathcat.split('/')[-1][:-5]
