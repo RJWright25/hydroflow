@@ -56,7 +56,6 @@ def read_subvol(path,ivol,nslice):
                 if lims_idim[1]>boxsize and nslice>1:#check for periodic
                     otherside2=coordinates[:,idim]<=(lims_idim[1]-boxsize)
 
-                print(lims_idim[0])
                 idim_mask=np.logical_and(np.logical_or(coordinates[:,idim]>=lims_idim[0],otherside1),np.logical_or(coordinates[:,idim]<=lims_idim[1],otherside2))
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
 
@@ -133,7 +132,7 @@ def read_subvol(path,ivol,nslice):
         numdm=pdata[ifile][1].shape[0]
 
         if numbar and numdm:
-            pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1,4] if not pdata[ifile][ptype].shape[0]==0)
+            pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1,4,5] if not pdata[ifile][ptype].shape[0]==0)
             pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
             pdata[ifile].reset_index(inplace=True,drop=True)
             pdata[ifile].loc[:,'ifile']=ifile
