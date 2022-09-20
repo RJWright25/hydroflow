@@ -127,8 +127,8 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     pid_allcandidates=np.unique(np.concatenate([pids_candidates_snapi,pids_candidates_snapf]))
 
     try:
-        pdata_candidates_snapi=pdata_snapi.loc[pdata_snapi['ParticleIDs'].searchsorted(pid_allcandidates),:]
-        pdata_candidates_snapf=pdata_snapf.loc[pdata_snapf['ParticleIDs'].searchsorted(pid_allcandidates),:]
+        pdata_candidates_snapi=np.searchsorted(pdata_snapi['ParticleIDs'].values,pid_allcandidates)
+        pdata_candidates_snapf=np.searchsorted(pdata_snapf['ParticleIDs'].values,pid_allcandidates)
     except:
         raise
         return False,None,None
