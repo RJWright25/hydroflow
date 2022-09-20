@@ -40,6 +40,7 @@ def read_subvol(path,ivol,nslice):
 
         print(f'Loading data for ifile {ifile+1}/{numfiles}')
         for iptype,ptype in enumerate(ptype_fields):
+            t0=time.time()
 
             #mask for subvolume
             subvol_mask=np.ones(npart_ifile[ptype])
@@ -72,10 +73,14 @@ def read_subvol(path,ivol,nslice):
                     pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
 
                 pdata[ifile][ptype].loc[:,'ParticleType']=ptype
+            
 
             else:
                 print(f'No ivol ptype {ptype} particles in this file!')
                 pdata[ifile][ptype]=pd.DataFrame([])
+
+            print(f'Loaded itype {ptype} for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
+
 
         ################# tracers #################
         numgas=pdata[ifile][0].shape[0]
@@ -113,7 +118,7 @@ def read_subvol(path,ivol,nslice):
             #save the matched tracers as the gas data
 
             pdata[ifile][0]=parent_data
-            # print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
+            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
         else:
             print('No baryons in ifile for desired volume, will not match tracers')
 
