@@ -165,7 +165,7 @@ def read_subvol(path,ivol,nslice):
     del pdata['GFM_Metallicity']
 
     #generate KDtree
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize*1e-3)
+    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
 
     return pdata, pdata_kdtree
 
