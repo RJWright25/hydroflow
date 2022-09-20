@@ -123,45 +123,37 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     pids_candidates_snapf=pdata_snapf.loc[pidx_candidates_snapf,'ParticleIDs'].values
     
     pid_allcandidates=np.unique(np.concatenate([pids_candidates_snapi,pids_candidates_snapf]))
-
     bad=False
     try:
         pdata_candidates_idx_snapi=np.searchsorted(pdata_snapi['ParticleIDs'].values,pid_allcandidates)
         pdata_candidates_snapi=pdata_snapi.iloc[pdata_candidates_idx_snapi,:]
 
     except:
-        print('Couldnt get all initial particles')
-        print(np.nanmean(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
-        print(galaxy_com_snapi)
-        print(rcut)
+        print('Couldnt get all initial particle candidates')
         bad=True
-
     try:
         pdata_candidates_idx_snapf=np.searchsorted(pdata_snapf['ParticleIDs'].values,pid_allcandidates)
         pdata_candidates_snapf=pdata_snapi.iloc[pdata_candidates_idx_snapf,:]
-
     except:
-        print('Couldnt get all final particles')
-        print(np.nanmean(pdata_candidates_idx_snapf==np.nanmax(pdata_candidates_idx_snapf)))
-        print(galaxy_com_snapi)
-        print(rcut)
+        print('Couldnt get all final particle candidates')
         bad=True
 
-    if bad:
-        return False,None,None
-    else:
+    if not bad:
         print('NO PROBLEM')
 
-    print(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi)
-    print(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi)
+        print(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi)
+        print(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi)
 
-    pdata_candidates_snapi['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi),axis=1))
-    pdata_candidates_snapf['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapf),axis=1))
+        pdata_candidates_snapi['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi),axis=1))
+        pdata_candidates_snapf['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapf),axis=1))
 
-    nomatch_snapi=np.logical_not(pid_allcandidates==pdata_candidates_snapi.loc[:,"ParticleIDs"].values)
-    nomatch_snapf=np.logical_not(pid_allcandidates==pdata_candidates_snapf.loc[:,"ParticleIDs"].values)
+        nomatch_snapi=np.logical_not(pid_allcandidates==pdata_candidates_snapi.loc[:,"ParticleIDs"].values)
+        nomatch_snapf=np.logical_not(pid_allcandidates==pdata_candidates_snapf.loc[:,"ParticleIDs"].values)
 
-    pdata_candidates_snapi.loc[nomatch_snapi,['Coordinates_x','Coordinates_y','Coordinates_z','Temperature','Density','Mass','ParticleIDs','Metallicity','R_rel']]=np.nan
-    pdata_candidates_snapf.loc[nomatch_snapf,['Coordinates_x','Coordinates_y','Coordinates_z','Temperature','Density','Mass','ParticleIDs','Metallicity','R_rel']]=np.nan
+        pdata_candidates_snapi.loc[nomatch_snapi,['Coordinates_x','Coordinates_y','Coordinates_z','Temperature','Density','Mass','ParticleIDs','Metallicity','R_rel']]=np.nan
+        pdata_candidates_snapf.loc[nomatch_snapf,['Coordinates_x','Coordinates_y','Coordinates_z','Temperature','Density','Mass','ParticleIDs','Metallicity','R_rel']]=np.nan
 
-    return True,pdata_candidates_snapi,pdata_candidates_snapf
+        return True,pdata_candidates_snapi,pdata_candidates_snapf
+        
+    else:
+        return False,None,None
