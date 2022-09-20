@@ -93,7 +93,7 @@ def read_subvol(path,ivol,nslice):
         numgas=pdata[ifile][0].shape[0]
         numbar=np.nansum([pdata[ifile][ptype].shape[0] for ptype in [0,4,5]])
 
-        if numgas and numbar:
+        if numbar:
             t0=time.time()
             pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
             pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
