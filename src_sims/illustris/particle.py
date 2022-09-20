@@ -24,7 +24,7 @@ def read_subvol(path,ivol,nslice):
     numfiles=len(flist)
     print(f'Loading from {numfiles} files')
 
-    lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
+    lims=get_limits(ivol,nslice,boxsize,buffer=0.2)
     ptype_fields={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
                   1:[],
                   4:['Masses','GFM_Metallicity'],
@@ -53,11 +53,11 @@ def read_subvol(path,ivol,nslice):
                 lims_idim=lims[2*idim:(2*idim+2)]
                 if lims_idim[0]<0 and nslice>1:#check for periodic
                     otherside1=np.logical_and(coordinates[:,idim]>=boxsize+lims_idim[0],coordinates[:,idim]<=boxsize)
-                    print(np.nanmean(otherside1), ' frac of particles at other (end) side')
+                    print(boxsize+lims_idim[0],np.nanmean(otherside1), ' frac of particles at other (end) side')
 
                 if lims_idim[1]>boxsize and nslice>1:#check for periodic
                     otherside2=np.logical_and(coordinates[:,idim]>=0,coordinates[:,idim]<=(lims_idim[1]-boxsize))
-                    print(np.nanmean(otherside2), ' frac of particles at other (start) side')
+                    print(lims_idim[1]-boxsize,np.nanmean(otherside2), ' frac of particles at other (start) side')
 
                 idim_mask=np.logical_and(np.logical_or(coordinates[:,idim]>=lims_idim[0],otherside1),np.logical_or(coordinates[:,idim]<=lims_idim[1],otherside2))
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
