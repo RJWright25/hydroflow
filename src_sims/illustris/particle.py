@@ -52,13 +52,11 @@ def read_subvol(path,ivol,nslice):
                 otherside2=np.zeros(npart_ifile[ptype])
                 lims_idim=lims[2*idim:(2*idim+2)]
                 if lims_idim[0]<0 and nslice>1:#check for periodic
-                    otherside1=np.logical_and(coordinates[:,idim]>=boxsize+lims_idim[0],coordinates[:,idim]<=boxsize)
-                    print(boxsize+lims_idim[0],np.nanmean(otherside1), ' frac of particles at other (end) side')
-
+                    otherside1=coordinates[:,idim]>=boxsize+lims_idim[0]
                 if lims_idim[1]>boxsize and nslice>1:#check for periodic
-                    otherside2=np.logical_and(coordinates[:,idim]>=0,coordinates[:,idim]<=(lims_idim[1]-boxsize))
-                    print(lims_idim[1]-boxsize,np.nanmean(otherside2), ' frac of particles at other (start) side')
+                    otherside2=coordinates[:,idim]<=(lims_idim[1]-boxsize)
 
+                print(lims_idim[0])
                 idim_mask=np.logical_and(np.logical_or(coordinates[:,idim]>=lims_idim[0],otherside1),np.logical_or(coordinates[:,idim]<=lims_idim[1],otherside2))
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
 
