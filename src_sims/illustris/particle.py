@@ -48,15 +48,18 @@ def read_subvol(path,ivol,nslice):
             
             for idim,dim in enumerate('xyz'):
                 # print(f'Masking subvolume for dim {dim}')
+                otherside1=np.zeros(npart_ifile[ptype])
+                otherside2=np.zeros(npart_ifile[ptype])
                 lims_idim=lims[2*idim:(2*idim+2)]
                 if lims_idim[0]<0 and nslice>1:#check for periodic
-                    otherside=np.logical_and(coordinates[:,idim]>=boxsize+lims_idim[0],coordinates[:,idim]<=boxsize)
-                    coordinates[:,idim][otherside]=coordinates[:,idim][otherside]-boxsize
-                if lims_idim[1]>boxsize and nslice>1:#check for periodic
-                    otherside=np.logical_and(coordinates[:,idim]>=0,coordinates[:,idim]<=(lims_idim[1]-boxsize))
-                    coordinates[:,idim][otherside]=coordinates[:,idim][otherside]+boxsize
+                    otherside1=np.logical_and(coordinates[:,idim]>=boxsize+lims_idim[0],coordinates[:,idim]<=boxsize)
+                    print(np.nanmean(otherside1), ' frac of particles at other (end) side')
 
-                idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
+                if lims_idim[1]>boxsize and nslice>1:#check for periodic
+                    otherside2=np.logical_and(coordinates[:,idim]>=0,coordinates[:,idim]<=(lims_idim[1]-boxsize))
+                    print(np.nanmean(otherside2), ' frac of particles at other (start) side')
+
+                idim_mask=np.logical_and(np.logical_or(coordinates[:,idim]>=lims_idim[0],otherside1),np.logical_or(coordinates[:,idim]<=lims_idim[1],otherside2))
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
 
             if np.nansum(subvol_mask):
@@ -165,7 +168,7 @@ def read_subvol(path,ivol,nslice):
     del pdata['GFM_Metallicity']
 
     #generate KDtree
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
+    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize*1e-3)
 
     return pdata, pdata_kdtree
 
