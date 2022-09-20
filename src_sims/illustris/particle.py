@@ -52,11 +52,13 @@ def read_subvol(path,ivol,nslice):
                 otherside2=np.zeros(npart_ifile[ptype])
                 lims_idim=lims[2*idim:(2*idim+2)]
                 if lims_idim[0]<0 and nslice>1:#check for periodic
-                    otherside1=coordinates[:,idim]>=boxsize+lims_idim[0]
+                    otherside=coordinates[:,idim]>=boxsize+lims_idim[0]
+                    coordinates[:,idim][otherside1]=coordinates[:,idim][otherside]-boxsize
                 if lims_idim[1]>boxsize and nslice>1:#check for periodic
-                    otherside2=coordinates[:,idim]<=(lims_idim[1]-boxsize)
+                    otherside=coordinates[:,idim]<=(lims_idim[1]-boxsize)
+                    coordinates[:,idim][otherside2]=coordinates[:,idim][otherside]+boxsize
 
-                idim_mask=np.logical_and(np.logical_or(coordinates[:,idim]>=lims_idim[0],otherside1),np.logical_or(coordinates[:,idim]<=lims_idim[1],otherside2))
+                idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
 
             if np.nansum(subvol_mask):
@@ -125,7 +127,7 @@ def read_subvol(path,ivol,nslice):
             #save the matched tracers as the gas data
 
             pdata[ifile][0]=parent_data
-            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
+            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.4f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
         else:
             print('No baryons in ifile for desired volume, will not match tracers')
 
@@ -165,8 +167,8 @@ def read_subvol(path,ivol,nslice):
     del pdata['GFM_Metallicity']
 
     #generate KDtree
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize*1e-3)
-
+    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
+    
     return pdata, pdata_kdtree
 
 
