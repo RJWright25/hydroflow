@@ -90,7 +90,13 @@ def read_subvol(path,ivol,nslice):
         pdata_ifile.close()#housekeeping
 
         #baryons in the volume for this ifile
-        pdata_ifile_baryons=pd.concat(pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0)
+        try:
+            pdata_ifile_baryons=pd.concat(pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0)
+        except:
+            print('No baryons in ifile for desired volume, will not match tracers')
+            pdata[ifile]=pd.DataFrame([])
+            continue
+
         pdata_ifile_baryons.sort_values(by='ParticleIDs',inplace=True)
         pdata_ifile_baryons.reset_index(inplace=True,drop=True)
         pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
