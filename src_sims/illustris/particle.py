@@ -48,15 +48,13 @@ def read_subvol(path,ivol,nslice):
             
             for idim,dim in enumerate('xyz'):
                 # print(f'Masking subvolume for dim {dim}')
-                otherside1=np.zeros(npart_ifile[ptype])
-                otherside2=np.zeros(npart_ifile[ptype])
                 lims_idim=lims[2*idim:(2*idim+2)]
                 if lims_idim[0]<0 and nslice>1:#check for periodic
                     otherside=coordinates[:,idim]>=boxsize+lims_idim[0]
-                    coordinates[:,idim][otherside1]=coordinates[:,idim][otherside]-boxsize
+                    coordinates[:,idim][otherside]=coordinates[:,idim][otherside]-boxsize
                 if lims_idim[1]>boxsize and nslice>1:#check for periodic
                     otherside=coordinates[:,idim]<=(lims_idim[1]-boxsize)
-                    coordinates[:,idim][otherside2]=coordinates[:,idim][otherside]+boxsize
+                    coordinates[:,idim][otherside]=coordinates[:,idim][otherside]+boxsize
 
                 idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
