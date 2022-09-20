@@ -126,25 +126,34 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     
     pid_allcandidates=np.unique(np.concatenate([pids_candidates_snapi,pids_candidates_snapf]))
 
+    bad=False
     try:
         pdata_candidates_idx_snapi=np.searchsorted(pdata_snapi['ParticleIDs'].values,pid_allcandidates)
-        pdata_candidates_idx_snapf=np.searchsorted(pdata_snapf['ParticleIDs'].values,pid_allcandidates)
-
         pdata_candidates_snapi=pdata_snapi.iloc[pdata_candidates_idx_snapi,:]
-        pdata_candidates_snapf=pdata_snapf.iloc[pdata_candidates_idx_snapf,:]
-        print('NO PROBLEM')
 
     except:
-        print('Couldnt get all particles')
-        print(galaxy_com_snapi)
-        print(galaxy_com_snapf)
-        print(rcut)
+        print('Couldnt get all initial particles')
         print(np.nanmean(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
-        print(np.nansum(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
-        
-        
+        print(galaxy_com_snapi)
+        print(rcut)
+        bad=True
 
+    try:
+        pdata_candidates_idx_snapf=np.searchsorted(pdata_snapf['ParticleIDs'].values,pid_allcandidates)
+        pdata_candidates_snapf=pdata_snapi.iloc[pdata_candidates_idx_snapf,:]
+
+    except:
+        print('Couldnt get all final particles')
+        print(np.nanmean(pdata_candidates_idx_snapf==np.nanmax(pdata_candidates_idx_snapf)))
+        print(galaxy_com_snapi)
+        print(rcut)
+        bad=True
+
+    if bad:
         return False,None,None
+    else:
+        print('NO PROBLEM')
+
 
     pdata_candidates_snapi['R_rel']=np.sqrt(np.sum(np.square(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi),axis=1))
     pdata_candidates_snapf['R_rel']=np.sqrt(np.sum(np.square(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapf),axis=1))
