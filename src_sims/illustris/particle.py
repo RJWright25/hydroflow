@@ -118,7 +118,7 @@ def read_subvol(path,ivol,nslice):
             #save the matched tracers as the gas data
 
             pdata[ifile][0]=parent_data
-            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
+            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
         else:
             print('No baryons in ifile for desired volume, will not match tracers')
 
