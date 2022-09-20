@@ -144,7 +144,10 @@ def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
         else:
             argumentstring+=f"{arg}={arguments[arg]},"
     
-    argumentstring_fname=argumentstring.replace('=','eq')
+    if func=='hydroflow.src_sims.illustris.subhalo.read_subcat'
+        argumentstring_fname=arguments['snapnums'][-1]
+    else:
+        argumentstring_fname='x'
     
     jobname=f'{funcname}_{argumentstring_fname}'
     runscriptfilepath=f'{cwd}/jobs/{jobname}-run.py'
