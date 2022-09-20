@@ -135,13 +135,14 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         print('NO PROBLEM')
 
     except:
-        print('Couldnt get all tracers')
+        print('Couldnt get all particles')
         print(galaxy_com_snapi)
         print(galaxy_com_snapf)
         print(rcut)
         print(np.nanmean(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
         print(np.nansum(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
-        print(rcut)
+        
+        
 
         return False,None,None
 
