@@ -30,6 +30,7 @@ parser.add_argument('--mcut',metavar='-M',type=float,help='mass limit (log mass)
 args=parser.parse_args()
 repo=args.repo
 code=args.code
+print(code)
 pathcat=args.path
 path=pathcat.split('cat')[0]
 nslice=int(args.nslice)
