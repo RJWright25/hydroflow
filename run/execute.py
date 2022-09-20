@@ -125,10 +125,15 @@ for key in list(subcat_selection_final.keys()):
 #load pdata
 logging.info(f'Loading final snap particle data: {snapf_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
 pdata_snapf,kdtree_snapf=read_subvol(snapf_pdata_fname,ivol,nslice)
+print(np.nanmin(pdata_snapf['Coordinates_x'].values))
+print(np.nanmax(pdata_snapf['Coordinates_x'].values))
+
 # pdata_snapf.sort_values("ParticleIDs",inplace=True)
 # pdata_snapf.reset_index(inplace=True,drop=True)
 logging.info(f'Loading initial snap particle data: {snapi_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
 pdata_snapi,kdtree_snapi=read_subvol(snapi_pdata_fname,ivol,nslice)
+print(np.nanmin(pdata_snapf['Coordinates_x'].values))
+print(np.nanmax(pdata_snapf['Coordinates_x'].values))
 # pdata_snapf.sort_values("ParticleIDs",inplace=True)
 # pdata_snapf.reset_index(inplace=True,drop=True)
 logging.info(f'')
