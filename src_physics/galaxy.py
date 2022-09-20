@@ -32,7 +32,6 @@ def analyse_galaxy(galaxy,pdata):
 	cool=pdata['Temperature'].values<5*10**4
 	sfr=pdata['StarFormationRate'].values>0
 	rrel=pdata['R_rel'].values
-	print(rrel)
 
 	#within r200
 	r200=rrel<=calc_r200(galaxy)
