@@ -43,27 +43,23 @@ def read_subvol(path,ivol,nslice):
 
             #mask for subvolume
             subvol_mask=np.ones(npart_ifile[ptype])
-            pdata_itype_coords=[idim for idim in range(3)]
+            coordinates=pdata_ifile[f'PartType{ptype}']['Coordinates'][:]
+            
             for idim,dim in enumerate('xyz'):
                 # print(f'Masking subvolume for dim {dim}')
                 lims_idim=lims[2*idim:(2*idim+2)]
-                pdata_itype_coords[idim]=pdata_ifile[f'PartType{ptype}']['Coordinates'][:,idim]
-                idim_mask=np.logical_and(pdata_itype_coords[idim]>=lims_idim[0],pdata_itype_coords[idim]<=lims_idim[1])
+                idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
 
             if np.nansum(subvol_mask):
                 print(f'There are {np.nansum(subvol_mask)} ivol ptype {ptype} particles in this file')
-
                 subvol_mask=np.where(subvol_mask)
 
                 # print('Loading IDs')
                 pdata[ifile][ptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
-            
-                for idim,dim in enumerate('xyz'):
-                    pdata_itype_coords[idim]=pdata_itype_coords[idim][subvol_mask]
-                    pdata_itype_coords=np.column_stack(pdata_itype_coords)
 
-                pdata[ifile][ptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=pdata_itype_coords*1e-3
+                # print('Loading IDs')
+                pdata[ifile][ptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates[subvol_mask]
 
                 # print('Loading masses')
                 if not ptype==1:
