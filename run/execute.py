@@ -141,6 +141,7 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
     logging.info(f"Galaxy {igal+1}/{subcat_selection_final.shape[0]:.0f}: subhalo mass - {galaxy_snapf[mass_key]:.1e}, sgn - {galaxy_snapf['SubGroupNumber']} [runtime {time.time()-t1:.3f} sec]")
 
     nmin,nmaj,progid=get_progidx(subcat_selection,galaxy_snapf[galid_key],depth)
+
     
     galaxy_output=pd.DataFrame([])
     galaxy_output.loc[0,'HydroflowID']=galaxy_snapf[galid_key]
@@ -160,6 +161,7 @@ for igal,galaxy_snapf in subcat_selection_final.iterrows():
         t2_c=time.time()
         logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
 
+        print()
 
         if success:
             t1_f=time.time()

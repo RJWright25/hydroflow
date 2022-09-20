@@ -60,7 +60,7 @@ def read_subvol(path,ivol,nslice):
                 pdata[ifile][ptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
 
                 # print('Loading IDs')
-                pdata[ifile][ptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates[subvol_mask]
+                pdata[ifile][ptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates[subvol_mask]*1e-3
 
                 # print('Loading masses')
                 if not ptype==1:
