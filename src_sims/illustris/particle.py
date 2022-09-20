@@ -79,7 +79,7 @@ def read_subvol(path,ivol,nslice):
 
         ################# tracers #################
         numgas=pdata[ifile][0].shape[0]
-        numbar=np.nansum([pdata[ifile][ptype] for ptype in [0,4,5]])
+        numbar=np.nansum([pdata[ifile][ptype].shape[0] for ptype in [0,4,5]])
 
         if numgas and numbar:
             t0=time.time()
@@ -129,7 +129,7 @@ def read_subvol(path,ivol,nslice):
             pdata[ifile]=pd.DataFrame([])
 
     print('Successfully loaded')
-    
+
     #concat all pdata into one df
     pdata=pd.concat(pdata,ignore_index=True,)
     pdata.sort_values(by="ParticleIDs",inplace=True)
