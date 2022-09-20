@@ -8,6 +8,7 @@ import sys
 import time
 import logging
 import argparse
+from unittest import TestSuite
 import h5py
 import pandas as pd
 import numpy as np
@@ -124,8 +125,12 @@ for key in list(subcat_selection_final.keys()):
 #load pdata
 logging.info(f'Loading final snap particle data: {snapf_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
 pdata_snapf,kdtree_snapf=read_subvol(snapf_pdata_fname,ivol,nslice)
+# pdata_snapf.sort_values("ParticleIDs",inplace=True)
+# pdata_snapf.reset_index(inplace=True,drop=True)
 logging.info(f'Loading initial snap particle data: {snapi_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
 pdata_snapi,kdtree_snapi=read_subvol(snapi_pdata_fname,ivol,nslice)
+# pdata_snapf.sort_values("ParticleIDs",inplace=True)
+# pdata_snapf.reset_index(inplace=True,drop=True)
 logging.info(f'')
 logging.info(f'****** Entering main galaxy loop [runtime {time.time()-t1:.3f} sec] ******')
 

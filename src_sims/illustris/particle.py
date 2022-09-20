@@ -136,12 +136,12 @@ def read_subvol(path,ivol,nslice):
     print('Successfully loaded')
 
     #concat all pdata into one df
-    pdata=pd.concat(pdata,ignore_index=True,)
+    pdata=pd.concat(pdata)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
+
     tracermask=pdata.ParticleType==0
     print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'TracerType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'TracerType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'TracerType'].values==5)*100:.2f}% in BH")
-
 
     #temperature
     gas_mask=pdata['ParticleType'].values==0
