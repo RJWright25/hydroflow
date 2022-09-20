@@ -90,7 +90,6 @@ def read_subvol(path,ivol,nslice):
 
 
         ################# tracers #################
-        numgas=pdata[ifile][0].shape[0]
         numbar=np.nansum([pdata[ifile][ptype].shape[0] for ptype in [0,4,5]])
 
         if numbar:
@@ -131,7 +130,7 @@ def read_subvol(path,ivol,nslice):
 
         numdm=pdata[ifile][1].shape[0]
 
-        if numbar and numdm:
+        if numbar or numdm:
             pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1,4,5] if not pdata[ifile][ptype].shape[0]==0)
             pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
             pdata[ifile].reset_index(inplace=True,drop=True)
