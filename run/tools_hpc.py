@@ -52,7 +52,7 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
         jobfile.writelines(f"date\n")
         jobfile.writelines(f"echo CPU DETAILS\n")
         jobfile.writelines(f"lscpu\n")
-        jobfile.writelines(f"python {runscriptfilepath} --repo {repo}--code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut} --ivol $SLURM_ARRAY_TASK_ID \n")
+        jobfile.writelines(f"python {runscriptfilepath} --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut} --ivol $SLURM_ARRAY_TASK_ID \n")
         jobfile.writelines(f"echo JOB END TIME\n")
         jobfile.writelines(f"date\n")
 
