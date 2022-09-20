@@ -26,7 +26,7 @@ def read_subvol(path,ivol,nslice):
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     ptype_fields={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
-                  1:['Potential'],
+                  1:[],
                   4:['Masses','GFM_Metallicity'],
                   5:['Masses']}
     
