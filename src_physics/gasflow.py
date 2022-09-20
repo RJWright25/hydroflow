@@ -152,9 +152,10 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     else:
         print('NO PROBLEM')
 
+    print(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi)
 
-    pdata_candidates_snapi['R_rel']=np.sqrt(np.sum(np.square(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi),axis=1))
-    pdata_candidates_snapf['R_rel']=np.sqrt(np.sum(np.square(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapf),axis=1))
+    pdata_candidates_snapi['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi),axis=1))
+    pdata_candidates_snapf['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapf),axis=1))
 
     nomatch_snapi=np.logical_not(pid_allcandidates==pdata_candidates_snapi.loc[:,"ParticleIDs"].values)
     nomatch_snapf=np.logical_not(pid_allcandidates==pdata_candidates_snapf.loc[:,"ParticleIDs"].values)
