@@ -42,47 +42,52 @@ def read_subvol(path,ivol,nslice):
         for iptype,ptype in enumerate(ptype_fields):
             t0=time.time()
 
-            #mask for subvolume
-            subvol_mask=np.ones(npart_ifile[ptype])
-            coordinates=pdata_ifile[f'PartType{ptype}']['Coordinates'][:]
-            
-            for idim,dim in enumerate('xyz'):
-                # print(f'Masking subvolume for dim {dim}')
-                lims_idim=lims[2*idim:(2*idim+2)]
-                if lims_idim[0]<0 and nslice>1:#check for periodic
-                    otherside=coordinates[:,idim]>=boxsize+lims_idim[0]
-                    coordinates[:,idim][otherside]=coordinates[:,idim][otherside]-boxsize
-                if lims_idim[1]>boxsize and nslice>1:#check for periodic
-                    otherside=coordinates[:,idim]<=(lims_idim[1]-boxsize)
-                    coordinates[:,idim][otherside]=coordinates[:,idim][otherside]+boxsize
+            if npart_ifile[ptype]:
 
-                idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
-                subvol_mask=np.logical_and(subvol_mask,idim_mask)
+                #mask for subvolume
+                subvol_mask=np.ones(npart_ifile[ptype])
+                coordinates=pdata_ifile[f'PartType{ptype}']['Coordinates'][:]
+                
+                for idim,dim in enumerate('xyz'):
+                    # print(f'Masking subvolume for dim {dim}')
+                    lims_idim=lims[2*idim:(2*idim+2)]
+                    if lims_idim[0]<0 and nslice>1:#check for periodic
+                        otherside=coordinates[:,idim]>=boxsize+lims_idim[0]
+                        coordinates[:,idim][otherside]=coordinates[:,idim][otherside]-boxsize
+                    if lims_idim[1]>boxsize and nslice>1:#check for periodic
+                        otherside=coordinates[:,idim]<=(lims_idim[1]-boxsize)
+                        coordinates[:,idim][otherside]=coordinates[:,idim][otherside]+boxsize
 
-            if np.nansum(subvol_mask):
-                print(f'There are {np.nansum(subvol_mask)} ivol ptype {ptype} particles in this file')
-                subvol_mask=np.where(subvol_mask)
+                    idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
+                    subvol_mask=np.logical_and(subvol_mask,idim_mask)
 
-                # print('Loading IDs')
-                pdata[ifile][ptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
+                if np.nansum(subvol_mask):
+                    print(f'There are {np.nansum(subvol_mask)} ivol ptype {ptype} particles in this file')
+                    subvol_mask=np.where(subvol_mask)
 
-                # print('Loading IDs')
-                pdata[ifile][ptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates[subvol_mask]*1e-3
+                    # print('Loading IDs')
+                    pdata[ifile][ptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
 
-                # print('Loading masses')
-                if not ptype==1:
-                    pdata[ifile][ptype]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*10**10/hval
-                else:
-                    pdata[ifile][ptype].loc[:,'Mass']=masstable[ptype]*10**10/hval        
+                    # print('Loading IDs')
+                    pdata[ifile][ptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates[subvol_mask]*1e-3
 
-                for field in ptype_fields[ptype]:
-                    # print(f'Loading {field}')
-                    pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
+                    # print('Loading masses')
+                    if not ptype==1:
+                        pdata[ifile][ptype]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*10**10/hval
+                    else:
+                        pdata[ifile][ptype].loc[:,'Mass']=masstable[ptype]*10**10/hval        
 
-                pdata[ifile][ptype].loc[:,'ParticleType']=ptype
+                    for field in ptype_fields[ptype]:
+                        # print(f'Loading {field}')
+                        pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
+
+                    pdata[ifile][ptype].loc[:,'ParticleType']=ptype
         
+                else:
+                    print(f'No ivol ptype {ptype} particles in this file!')
+                    pdata[ifile][ptype]=pd.DataFrame([])
             else:
-                print(f'No ivol ptype {ptype} particles in this file!')
+                print(f'No ptype {ptype} particles in this file!')
                 pdata[ifile][ptype]=pd.DataFrame([])
 
             print(f'Loaded itype {ptype} for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
