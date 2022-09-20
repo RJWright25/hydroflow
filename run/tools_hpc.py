@@ -144,7 +144,7 @@ def submit_serial_job(func,memory,time,arguments={},partition=None,repo=None):
         else:
             argumentstring+=f"{arg}={arguments[arg]},"
     
-    if func=='hydroflow.src_sims.illustris.subhalo.read_subcat'
+    if func=='hydroflow.src_sims.illustris.subhalo.read_subcat':
         argumentstring_fname=arguments['snapnums'][-1]
     else:
         argumentstring_fname='x'
