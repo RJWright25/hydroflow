@@ -139,6 +139,9 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapf=pdata_snapf.iloc[pdata_candidates_idx_snapf,:]
 
     except:
+        print(galaxy_com_snapi)
+        print(galaxy_com_snapf)
+        print(rcut)
         raise
 
         return False,None,None
