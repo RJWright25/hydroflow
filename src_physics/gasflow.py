@@ -129,20 +129,19 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     try:
         pdata_candidates_idx_snapi=np.searchsorted(pdata_snapi['ParticleIDs'].values,pid_allcandidates)
         pdata_candidates_idx_snapf=np.searchsorted(pdata_snapf['ParticleIDs'].values,pid_allcandidates)
-        print(pdata_snapi)
-        print(np.nanmax(pdata_candidates_idx_snapi))
-        print(np.nanmean(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
-        print(np.nansum(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
-        print(pdata_snapf)
-        print(np.nanmax(pdata_candidates_idx_snapf))
+
         pdata_candidates_snapi=pdata_snapi.iloc[pdata_candidates_idx_snapi,:]
         pdata_candidates_snapf=pdata_snapf.iloc[pdata_candidates_idx_snapf,:]
+        print('NO PROBLEM')
 
     except:
+        print('Couldnt get all tracers')
         print(galaxy_com_snapi)
         print(galaxy_com_snapf)
         print(rcut)
-        raise
+        print(np.nanmean(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
+        print(np.nansum(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
+        print(rcut)
 
         return False,None,None
 
