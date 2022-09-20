@@ -91,8 +91,8 @@ def read_subvol(path,ivol,nslice):
 
         ################# tracers #################
         numbar=np.nansum([pdata[ifile][ptype].shape[0] for ptype in [0,4,5]])
-
-
+        numtracers=pdata_ifile[f'PartType3']['ParentID'].shape[0]
+        
         if numbar:
             t0=time.time()
             pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
@@ -147,7 +147,7 @@ def read_subvol(path,ivol,nslice):
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
 
-    tracermask=pdata.ParticleType==0
+    tracermask=np.logical_noy(pdata.ParticleType==1)
     print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'TracerType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'TracerType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'TracerType'].values==5)*100:.2f}% in BH")
 
     #temperature
