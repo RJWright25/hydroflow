@@ -92,6 +92,7 @@ def read_subvol(path,ivol,nslice):
         ################# tracers #################
         numbar=np.nansum([pdata[ifile][ptype].shape[0] for ptype in [0,4,5]])
 
+
         if numbar:
             t0=time.time()
             pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
@@ -119,7 +120,7 @@ def read_subvol(path,ivol,nslice):
             parent_data['ParentID']=parent_data['ParticleIDs'].values
             parent_data['ParticleIDs']=pdata_tracer_IDs_invol #set particle IDs as the tracer IDs
             parent_data.loc[:,'TracerType']=parent_data['ParticleType'] #record the tracer type
-            parent_data.loc[:,'ParticleType']=0 # set tracers as gas
+            # parent_data.loc[:,'ParticleType']=0 # set tracers as gas
             parent_data.reset_index(drop=True,inplace=True)
             #save the matched tracers as the gas data
 
@@ -131,7 +132,7 @@ def read_subvol(path,ivol,nslice):
         numdm=pdata[ifile][1].shape[0]
 
         if numbar or numdm:
-            pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1,4,5] if not pdata[ifile][ptype].shape[0]==0)
+            pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1] if not pdata[ifile][ptype].shape[0]==0)
             pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
             pdata[ifile].reset_index(inplace=True,drop=True)
             pdata[ifile].loc[:,'ifile']=ifile

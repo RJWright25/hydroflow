@@ -106,8 +106,6 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,Tcut=None,idm=False):
 
     return gasflow_output
 
-
-
 def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf):
 
     r200=calc_r200(galaxy_snapf)
