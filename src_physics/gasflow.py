@@ -131,6 +131,8 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_idx_snapf=np.searchsorted(pdata_snapf['ParticleIDs'].values,pid_allcandidates)
         print(pdata_snapi)
         print(np.nanmax(pdata_candidates_idx_snapi))
+        print(np.nanmean(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
+        print(np.nansum(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
         print(pdata_snapf)
         print(np.nanmax(pdata_candidates_idx_snapf))
         pdata_candidates_snapi=pdata_snapi.iloc[pdata_candidates_idx_snapi,:]
