@@ -34,7 +34,7 @@ def read_subcat(basepath,snapnums=None):
         group_df=pd.DataFrame()
         subhalo_df=pd.DataFrame()
 
-        mcut=1e10
+        mcut=3e10
 
         ### group data
         group_df.loc[:,'GroupMass']=groupcat['GroupMass'][:]*10**10/hfac
