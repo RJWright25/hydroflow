@@ -74,66 +74,62 @@ def read_subvol(path,ivol,nslice):
                 pdata[ifile][ptype].loc[:,'ParticleType']=ptype
 
             else:
-                # print(f'No ivol ptype {ptype} particles in this file!')
+                print(f'No ivol ptype {ptype} particles in this file!')
                 pdata[ifile][ptype]=pd.DataFrame([])
 
         ################# tracers #################
-        # print('Loading tracers')
-        t0=time.time()
-        pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
-        pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
-        pdata_tracers_ifile.reset_index(inplace=True,drop=True)
-        pdata_ifile.close()#housekeeping
+        numgas=pdata[ifile][0].shape[0]
+        numbar=np.nansum([pdata[ifile][ptype] for ptype in [0,4,5]])
 
-        #baryons in the volume for this ifile
-        try:
+        if numgas and numbar:
+            t0=time.time()
+            pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
+            pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
+            pdata_tracers_ifile.reset_index(inplace=True,drop=True)
+            pdata_ifile.close()#housekeeping
+
+            #baryons in the volume for this ifile
             pdata_ifile_baryons=pd.concat(pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0)
-        except:
+
+            pdata_ifile_baryons.sort_values(by='ParticleIDs',inplace=True)
+            pdata_ifile_baryons.reset_index(inplace=True,drop=True)
+            pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
+
+            #all tracers in this file
+            pdata_tracer_IDs=pdata_tracers_ifile['TracerID'].values
+            pdata_tracer_parentIDs=pdata_tracers_ifile['ParentID'].values
+
+            expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tracer_parentIDs)
+            tracer_match_1=pdata_tracer_parentIDs==np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])[(expected_idx_of_tracer_in_pdata,)]
+            pdata_tracer_IDs_invol=pdata_tracer_IDs[tracer_match_1]
+            expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1]
+
+            parent_data=pdata_ifile_baryons.loc[expected_idx_of_tracer_in_pdata,:]
+            parent_data['ParentID']=parent_data['ParticleIDs'].values
+            parent_data['ParticleIDs']=pdata_tracer_IDs_invol #set particle IDs as the tracer IDs
+            parent_data.loc[:,'TracerType']=parent_data['ParticleType'] #record the tracer type
+            parent_data.loc[:,'ParticleType']=0 # set tracers as gas
+            parent_data.reset_index(drop=True,inplace=True)
+            #save the matched tracers as the gas data
+
+            pdata[ifile][0]=parent_data
+            # print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
+        else:
             print('No baryons in ifile for desired volume, will not match tracers')
+
+        numdm=pdata[ifile][1].shape[0]
+
+        if numbar and numdm:
+            pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1,4] if not pdata[ifile][ptype].shape[0]==0)
+            pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
+            pdata[ifile].reset_index(inplace=True,drop=True)
+            pdata[ifile].loc[:,'ifile']=ifile
+        else:
+            print('No particles in ifile for desired volume')
             pdata[ifile]=pd.DataFrame([])
-            continue
-
-        pdata_ifile_baryons.sort_values(by='ParticleIDs',inplace=True)
-        pdata_ifile_baryons.reset_index(inplace=True,drop=True)
-        pdata_ifile_baryons_IDs=pdata_ifile_baryons['ParticleIDs'].values
-
-        #all tracers in this file
-        pdata_tracer_IDs=pdata_tracers_ifile['TracerID'].values
-        pdata_tracer_parentIDs=pdata_tracers_ifile['ParentID'].values
-
-        expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tracer_parentIDs)
-        tracer_match_1=pdata_tracer_parentIDs==np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])[(expected_idx_of_tracer_in_pdata,)]
-        pdata_tracer_IDs_invol=pdata_tracer_IDs[tracer_match_1]
-        expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1]
-
-        parent_data=pdata_ifile_baryons.loc[expected_idx_of_tracer_in_pdata,:]
-        parent_data['ParentID']=parent_data['ParticleIDs'].values
-        parent_data['ParticleIDs']=pdata_tracer_IDs_invol #set particle IDs as the tracer IDs
-        parent_data.loc[:,'TracerType']=parent_data['ParticleType'] #record the tracer type
-        parent_data.loc[:,'ParticleType']=0 # set tracers as gas
-        parent_data.reset_index(drop=True,inplace=True)
-        #save the matched tracers as the gas data
-
-        pdata[ifile][0]=parent_data
-        # print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_2)*100:.2f}% matched, {np.nanmean(tracer_match_1)*100:.2f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
-        
-        pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1,4] if not pdata[ifile][ptype].shape[0]==0)
-
-        pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
-        pdata[ifile].reset_index(inplace=True,drop=True)
-        pdata[ifile].loc[:,'ifile']=ifile
 
     print('Successfully loaded')
-
-    # # for star & DM particles assign a nan temp, density
-    # npart_dm=pdata[1].shape[0]
-    # npart_star=pdata[4].shape[0]
-    # for field in ptype_fields[0]:
-    #     if not field in ptype_fields[4]:
-    #         pdata[4][field]=np.ones(npart_star)*np.nan
-    #     if not field in ptype_fields[1]:
-    #         pdata[1][field]=np.ones(npart_dm)*np.nan
-
+    
     #concat all pdata into one df
     pdata=pd.concat(pdata,ignore_index=True,)
     pdata.sort_values(by="ParticleIDs",inplace=True)
