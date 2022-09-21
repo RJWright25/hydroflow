@@ -290,7 +290,7 @@ def loadSubset(basePath, snapNum, partType, fields=None, subset=None, mdi=None, 
     wOffset = 0
     origNumToRead = numToRead
 
-    while numToRead and fileNum<=20:
+    while numToRead and fileNum<=10:
 
         f = h5py.File(snapPath(basePath, snapNum, fileNum), 'r')
         if not fileNum%10:
