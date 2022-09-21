@@ -73,9 +73,9 @@ def read_subvol(path,ivol,nslice):
         
         #everything else
         if len(ptype_fields[ptype]):
-            pdata[ptype].loc[:,ptype_fields[ptype]]=loadSubset(basepath,snapnum,ptype,fields=ptype_fields[ptype],subset=subvol_mask,float32=True)
-
-        # print(f'Loading ptype {ptype}')
+            pdata_rest=loadSubset(basepath,snapnum,ptype,fields=ptype_fields[ptype],subset=subvol_mask,float32=True)
+            for field in pdata_rest:
+                pdata[ptype][field]=pdata_rest[field];del pdata_rest[field]
 
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
     return pdata, pdata_kdtree
