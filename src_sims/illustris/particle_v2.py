@@ -63,8 +63,8 @@ def read_subvol(path,ivol,nslice):
         if not ptype==1:
             pdata_idmass=loadSubset(basepath,snapnum,ptype,fields=['ParticleIDs','Masses'],subset=subvol_mask,float32=False)
             print(pdata_idmass['ParticleIDs'].shape[0])
-            pdata[ptype]['ParticleIDs']=pdata_idmass['ParticleIDs'];del pdata_idmass['ParticleIDs']
-            pdata[ptype]['Mass']=pdata_idmass['Mass']; del pdata_idmass['Mass']
+            pdata[ptype]['ParticleIDs']=pdata_idmass['ParticleIDs']
+            pdata[ptype].loc[,:'Mass']=pdata_idmass['Mass']
             
         else:
             pdata[ptype]['ParticleIDs']=loadSubset(basepath,snapnum,ptype,fields=['ParticleIDs'],subset=subvol_mask,float32=False)
