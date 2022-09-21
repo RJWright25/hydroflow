@@ -292,7 +292,9 @@ def loadSubset(basePath, snapNum, partType, fields=None, subset=None, mdi=None, 
     # only a single field? then return the array instead of a single item dict
     if subset:
         for field in fields:
+            print(f'Compressing {field}: n = {result[field].shape[0]}')
             result[field]=result[field][subset]
+            print(f'Now n = {result[field].shape[0]}')
 
     if sq and len(fields) == 1:
         if subset:
