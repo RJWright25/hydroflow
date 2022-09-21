@@ -71,7 +71,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                     subvol_mask=np.where(subvol_mask)
 
                     #ptypes
-                    pdata[ifile][ptype][f'ParticleType']=np.ones(npart,dtype=np.float16)*ptype
+                    pdata[ifile][ptype][f'ParticleType']=np.ones(npart,dtype=np.uint8)*ptype
 
                     #pids
                     pdata[ifile][ptype][f'ParticleIDs']=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask]
