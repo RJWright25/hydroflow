@@ -129,9 +129,9 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             pdata_tracer_tracerIDs=pdata_tracer_tracerIDs[tracer_match_1]
             expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1]
 
-            pdata[0]=pdata[0].loc[expected_idx_of_tracer_in_pdata,:]
-            pdata[0].reset_index(inplace=True,drop=True)
-            pdata[0]['ParticleIDs']=pdata_tracer_tracerIDs #set particle IDs as the tracer IDs
+            pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:]
+            pdata[ifile][0].reset_index(inplace=True,drop=True)
+            pdata[ifile][0]['ParticleIDs']=pdata_tracer_tracerIDs #set particle IDs as the tracer IDs
 
             print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.4f}% of the tracers in this file were in the desired ivol {ivol}/{nslice**3})')
         
