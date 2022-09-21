@@ -78,7 +78,7 @@ def read_subvol(path,ivol,nslice):
                     pdata[ptype][field]=pdata_rest[field];del pdata_rest[field]
             else:
                 field=ptype_fields[ptype][0]
-                pdata[ptype][field]=pdata_rest;del pdata_rest[field]
+                pdata[ptype][field]=pdata_rest;del pdata_rest
             
     #concat all pdata into one df
     pdata=pd.concat(pdata)
