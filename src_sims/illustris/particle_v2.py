@@ -107,7 +107,6 @@ def read_subvol(path,ivol,nslice):
 
 """ Illustris Simulation: Public Data Release.
 snapshot.py: File I/O related to the snapshot files. """
-from __future__ import print_function
 
 import numpy as np
 import h5py
