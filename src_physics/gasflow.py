@@ -131,6 +131,8 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     except:
         print('Couldnt get all initial particle candidates')
         bad=True
+        raise
+
     try:
         pdata_candidates_idx_snapf=np.searchsorted(pdata_snapf['ParticleIDs'].values,pid_allcandidates)
         pdata_candidates_snapf=pdata_snapf.iloc[pdata_candidates_idx_snapf,:]
