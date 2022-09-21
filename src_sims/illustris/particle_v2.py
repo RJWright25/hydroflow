@@ -329,8 +329,8 @@ def loadSubset(basePath, snapNum, partType, fields=None, subset=None, mdi=None, 
         f.close()
 
     # verify we read the correct number
-    if origNumToRead != wOffset:
-        raise Exception("Read ["+str(wOffset)+"] particles, but was expecting ["+str(origNumToRead)+"]")
+    # if origNumToRead != wOffset:
+    #     raise Exception("Read ["+str(wOffset)+"] particles, but was expecting ["+str(origNumToRead)+"]")
 
     # only a single field? then return the array instead of a single item dict
     if subset:
