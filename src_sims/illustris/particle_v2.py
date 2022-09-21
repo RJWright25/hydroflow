@@ -90,11 +90,7 @@ def read_subvol(path,ivol,nslice):
     numtracers=np.nansum([nparttable[ptype]for ptype in [3]])
     t0=time.time()
     if numbar and numtracers:
-        tracerdata=loadSubset(basepath,snapnum,3,subset=None,fields=['ParentID','TracerID'],float32=True)
-        pdata_tracers_ifile=pd.DataFrame(tracerdata);del tracerdata
-        # pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
-        # pdata_tracers_ifile.reset_index(inplace=True,drop=True)
-        
+        tracerdata=loadSubset(basepath,snapnum,3,subset=None,fields=['ParentID','TracerID'],float32=True)        
         pdata_tracer_parentIDs=tracerdata['ParentID'];del tracerdata['ParentID']
         pdata_tracer_tracerIDs=tracerdata['TracerID'];del tracerdata['TracerID']
         pdata_ifile_baryons_IDs=pdata[0]['ParticleIDs'].values
