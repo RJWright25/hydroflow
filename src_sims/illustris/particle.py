@@ -82,10 +82,14 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                     else:
                         pdata[ifile][ptype][f'Mass']=np.ones(npart,dtype=np.float16)*masstable[ptype]*1e10/hval        
 
+
                     #rest
                     for field in ptype_fields[ptype]:
                         pdata[ifile][ptype][field]=np.float16(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
-                        
+
+                    del subvol_mask
+
+                    #temperature
                     if ptype==0:
                         ne     = pdata[ifile][ptype].ElectronAbundance; del pdata[ifile][ptype]['ElectronAbundance']
                         energy = pdata[ifile][ptype].InternalEnergy; del pdata[ifile][ptype]['InternalEnergy']
@@ -128,13 +132,14 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             tracer_match_1=pdata_tracer_parentIDs==np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])[(expected_idx_of_tracer_in_pdata,)]
             pdata_tracer_tracerIDs=pdata_tracer_tracerIDs[tracer_match_1]
             expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1]
+            del tracer_match_1
             # tracer_match_2=pdata_tracer_parentIDs[tracer_match_1]==pdata_ifile_baryons_IDs[(expected_idx_of_tracer_in_pdata,)]
 
             pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:]
             pdata[ifile][0]['ParticleIDs']=pdata_tracer_tracerIDs #set particle IDs as the tracer IDs
             pdata[ifile][0].reset_index(inplace=True,drop=True)
 
-            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.4f}% of the tracers in this file were in the desired ivol {ivol}/{nslice**3})')
+            # print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.4f}% of the tracers in this file were in the desired ivol {ivol}/{nslice**3})')
             # print(f'Success: {np.nanmean(tracer_match_2)*100:.4f}%')
         
         else:
