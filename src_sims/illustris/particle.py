@@ -121,7 +121,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
         if numbar and numtcr:
             pdata_tracer_parentIDs=np.float32(pdata_ifile[f'PartType3']['ParentID'][:])
             pdata_tracer_tracerIDs=np.float32(pdata_ifile[f'PartType3']['TracerID'][:])
-            pdata_ifile_baryons_IDs=pdata[0]['ParticleIDs'].values
+            pdata_ifile_baryons_IDs=pdata[ifile][0]['ParticleIDs'].values
 
             # #all tracers in this file
             expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tracer_parentIDs)
