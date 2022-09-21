@@ -248,8 +248,9 @@ def loadSubset(basePath, snapNum, partType, fields=None, subset=None, mdi=None, 
     origNumToRead = numToRead
 
     while numToRead:
-        f = h5py.File(snapPath(basePath, snapNum, fileNum), 'r')
 
+        f = h5py.File(snapPath(basePath, snapNum, fileNum), 'r')
+        print('chunk ', fileNum)
         # no particles of requested type in this file chunk?
         if gName not in f:
             f.close()
