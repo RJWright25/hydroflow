@@ -28,7 +28,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
     numfiles=len(flist)
     print(f'Loading from {numfiles} files')
 
-    lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
+    lims=get_limits(ivol,nslice,boxsize,buffer=0.2)
     ptype_fields={0:['InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
                   1:[],
                   4:['GFM_Metallicity'],
