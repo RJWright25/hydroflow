@@ -28,10 +28,10 @@ def read_subvol(path,ivol,nslice,nchunks=None):
     print(f'Loading from {numfiles} files')
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
-    ptype_fields={0:['Masses','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
+    ptype_fields={0:['InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
                   1:[],
-                  4:['Masses','GFM_Metallicity'],
-                  5:['Masses']}
+                  4:['GFM_Metallicity'],
+                  5:[]}
     
     pdata=[{ptype:pd.DataFrame([]) for ptype in ptype_fields} for ifile in range(numfiles)]
 
@@ -84,7 +84,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                     #rest
                     for field in ptype_fields[ptype]:
                         pdata[ifile][ptype][field]=np.float16(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
-                    
+                        
                     if ptype==0:
                         ne     = pdata[ifile][ptype].ElectronAbundance; del pdata[ifile][ptype]['ElectronAbundance']
                         energy = pdata[ifile][ptype].InternalEnergy; del pdata[ifile][ptype]['InternalEnergy']
@@ -92,7 +92,11 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                         Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
                         Temp *= (1.67262178e-24/ 1.38065e-16  )
                         pdata[ifile][ptype]['Temperature']=Temp
-
+                    else:
+                        for field in ['Temperature','GFM_Metallicity','StarFormationRate']:
+                            if field not in ptype_fields[ptype]:
+                                pdata[ifile][ptype][field]=np.zeros(npart,dtype=np.float16)+np.nan
+                    
                 else:
                     print(f'No ivol ptype {ptype} particles in this file!')
             else:
@@ -147,8 +151,9 @@ def read_subvol(path,ivol,nslice,nchunks=None):
     print('Concatenating results...')
     pdata=pd.concat(pdata)
     pdata.reset_index(inplace=True,drop=True)
-    # tracermask=np.logical_not(pdata.ParticleType==1)
-    # print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
+
+    tracermask=np.logical_not(pdata.ParticleType==1)
+    print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
     print('KDtree ...')
 
     #generate KDtree
