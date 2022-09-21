@@ -18,6 +18,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
     boxsize=pdata_file['Header'].attrs['BoxSize']
     hval=pdata_file['Header'].attrs['HubbleParam']
     masstable=pdata_file['Header'].attrs['MassTable']
+    nparttable=pdata_file['Header'].attrs['NumPart_Total']
     pdata_file.close()
     
     flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0])])
@@ -113,25 +114,26 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
         ################# tracers #################
 
-        numbar=pdata[ifile][0].shape[0]
-        numtcr=pdata_ifile[f'PartType3']['ParentID'].shape[0]
-        baryon_pids=pdata[ifile][0]['ParticleIDs'].values
-        baryon_pids=np.concatenate([baryon_pids,[np.nan]])
-
+        numbar=np.nansum([nparttable[ptype]for ptype in [0,4,5]])
+        numtcr=np.nansum([nparttable[ptype]for ptype in [3]])
+        t0=time.time()
+        
         if numbar and numtcr:
-            t0=time.time()
-            pdata_parid_ifile=pdata_ifile[f'PartType3']['ParentID'][:]
-            expected_idx_of_tcr_in_pdata=np.searchsorted(baryon_pids,pdata_parid_ifile)
-            tracer_match_1=pdata_parid_ifile==baryon_pids[(expected_idx_of_tcr_in_pdata,)]
-            pdata_tcrid_ifile=pdata_ifile[f'PartType3']['TracerID'][:][tracer_match_1]
-            expected_idx_of_tcr_in_pdata=expected_idx_of_tcr_in_pdata[tracer_match_1]
-            print(np.nanmean(tracer_match_1))
-    
-            pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tcr_in_pdata,:]
-            pdata[ifile][0]['ParticleIDs']=pdata_tcrid_ifile
-            pdata[ifile][0].reset_index(inplace=True,drop=True)
+            pdata_tracer_parentIDs=np.float32(pdata_ifile[f'PartType3']['ParentID'][:])
+            pdata_tracer_tracerIDs=np.float32(pdata_ifile[f'PartType3']['TracerID'][:])
+            pdata_ifile_baryons_IDs=pdata[0]['ParticleIDs'].values
 
-            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
+            # #all tracers in this file
+            expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tracer_parentIDs)
+            tracer_match_1=pdata_tracer_parentIDs==np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])[(expected_idx_of_tracer_in_pdata,)]
+            pdata_tracer_tracerIDs=pdata_tracer_tracerIDs[tracer_match_1]
+            expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1]
+
+            pdata[0]=pdata[0].loc[expected_idx_of_tracer_in_pdata,:]
+            pdata[0].reset_index(inplace=True,drop=True)
+            pdata[0]['ParticleIDs']=pdata_tracer_tracerIDs #set particle IDs as the tracer IDs
+
+            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.4f}% of the tracers in this file were in the desired ivol {ivol}/{nslice**3})')
         
         else:
             print('No baryons in ifile for desired volume, will not match tracers')
