@@ -52,13 +52,6 @@ def read_subvol(path,ivol,nslice):
                 otherside=coordinates[:,idim]<=(lims_idim[1]-boxsize)
                 coordinates[:,idim][otherside]=coordinates[:,idim][otherside]+boxsize
             idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
-
-            try:
-                print(coordinates.shape[0])
-                print(subvol_mask.shape[0])
-            except:
-                pass
-
             subvol_mask=np.logical_and(subvol_mask,idim_mask)
         
         subvol_mask=np.where(subvol_mask)
