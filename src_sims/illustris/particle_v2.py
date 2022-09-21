@@ -32,7 +32,7 @@ def read_subvol(path,ivol,nslice):
                   4:['GFM_Metallicity'],
                   5:[]}
     
-    pdata={ptype:pd.DataFrame([]) for ptype in ptype_fields}
+    pdata={ptype:{} for ptype in ptype_fields}
 
     for ptype in pdata:
         print(f'Loading ptype {ptype}')
@@ -53,8 +53,10 @@ def read_subvol(path,ivol,nslice):
             subvol_mask=np.logical_and(subvol_mask,idim_mask)
         
         subvol_mask=np.where(subvol_mask)
+        coordinates=coordinates[subvol_mask]*1e-3
+        
         #coordinates
-        pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=coordinates[subvol_mask]*1e-3
+        pdata[ptype]=pd.DataFrame(coordinates,columns=[f'Coordinates_{x}' for x in 'xyz'])
         del coordinates
 
         #ID and mass
