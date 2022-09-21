@@ -62,10 +62,8 @@ def read_subvol(path,ivol,nslice):
         #ID and mass
         if not ptype==1:
             pdata_idmass=loadSubset(basepath,snapnum,ptype,fields=['ParticleIDs','Masses'],subset=subvol_mask,float32=False)
-            print(pdata_idmass['ParticleIDs'].shape[0])
-            pdata[ptype]['ParticleIDs']=pdata_idmass['ParticleIDs']
-            pdata[ptype].loc[:,'Mass']=pdata_idmass['Mass']
-            
+            pdata[ptype]['ParticleIDs']=pdata_idmass['ParticleIDs'];del pdata_idmass['ParticleIDs']
+            pdata[ptype].loc[:,'Mass']=pdata_idmass['Masses'];del pdata_idmass['Masses']
         else:
             pdata[ptype]['ParticleIDs']=loadSubset(basepath,snapnum,ptype,fields=['ParticleIDs'],subset=subvol_mask,float32=False)
             pdata[ptype].loc[:,'Mass']=masstable[1]
@@ -78,7 +76,6 @@ def read_subvol(path,ivol,nslice):
             print(pdata_rest['Temperature'].shape[0])
             print(list(pdata_rest.keys())[1:])
             for field in list(pdata_rest.keys())[1:]:
-                print(field)
                 pdata[ptype][field]=pdata_rest[field]
                 # del pdata_rest[field]
             
