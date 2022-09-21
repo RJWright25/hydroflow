@@ -119,8 +119,8 @@ def read_subvol(path,ivol,nslice,nchunks=None):
         t0=time.time()
         
         if numbar and numtcr:
-            pdata_tracer_parentIDs=np.float32(pdata_ifile[f'PartType3']['ParentID'][:])
-            pdata_tracer_tracerIDs=np.float32(pdata_ifile[f'PartType3']['TracerID'][:])
+            pdata_tracer_parentIDs=pdata_ifile[f'PartType3']['ParentID'][:]
+            pdata_tracer_tracerIDs=pdata_ifile[f'PartType3']['TracerID'][:]
             pdata_ifile_baryons_IDs=pdata[ifile][0]['ParticleIDs'].values
 
             # #all tracers in this file
