@@ -73,11 +73,8 @@ def read_subvol(path,ivol,nslice):
         #everything else
         if len(ptype_fields[ptype]):
             pdata_rest=loadSubset(basepath,snapnum,ptype,fields=ptype_fields[ptype],subset=subvol_mask,float32=True)
-            print(pdata_rest['Temperature'].shape[0])
-            print(list(pdata_rest.keys())[1:])
             for field in list(pdata_rest.keys())[1:]:
-                pdata[ptype][field]=pdata_rest[field]
-                # del pdata_rest[field]
+                pdata[ptype][field]=pdata_rest[field];del pdata_rest[field]
             
 
     #concat all pdata into one df
