@@ -284,7 +284,7 @@ def loadSubset(basePath, snapNum, partType, fields=None, subset=None, mdi=None, 
             # allocate within return dict
             dtype = f[gName][field].dtype
             if dtype == np.float64 and float32: dtype = np.float32
-            result[field] = np.zeros(shape, dtype=dtype)
+            result[field] = np.zeros(shape, dtype=dtype)+np.nan
 
     # loop over chunks
     wOffset = 0
