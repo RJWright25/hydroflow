@@ -290,15 +290,10 @@ def loadSubset(basePath, snapNum, partType, fields=None, subset=None, mdi=None, 
     # only a single field? then return the array instead of a single item dict
     if subset:
         for field in fields:
-            print(f'Compressing {field}: n = {result[field].shape[0]}')
             result[field]=result[field][subset]
-            print(f'Now n = {result[field].shape[0]}')
 
     if sq and len(fields) == 1:
-        if subset:
-            return result[fields[0]][subset]
-        else:
-            return result[fields[0]]
+        return result[fields[0]]
     
     #do temp conv here
     if 'InternalEnergy' in fields:
