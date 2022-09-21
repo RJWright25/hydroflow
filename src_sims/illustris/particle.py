@@ -45,7 +45,8 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             if npart_ifile[ptype]:
                 #mask for subvolume
                 subvol_mask=np.ones(npart_ifile[ptype])
-                coordinates=pdata_ifile[f'PartType{ptype}']['Coordinates'][:]
+                coordinates=np.float16(pdata_ifile[f'PartType{ptype}']['Coordinates'][:])
+                print(coordinates)
                 for idim,dim in enumerate('xyz'):
                     # print(f'Masking subvolume for dim {dim}')
                     lims_idim=lims[2*idim:(2*idim+2)]
@@ -66,25 +67,33 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                     
                     for idim,dim in enumerate('xyz'):
                         pdata[ifile][ptype][f'Coordinates_{dim}']=coordinates[:,idim]
-            
+    
                     subvol_mask=np.where(subvol_mask)
 
                     #ptypes
-                    pdata[ifile][ptype][f'ParticleType']=np.ones(npart)*ptype
+                    pdata[ifile][ptype][f'ParticleType']=np.ones(npart,dtype=np.float16)*ptype
 
                     #pids
-                    pdata[ifile][ptype][f'ParticleIDs']=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask]
+                    pdata[ifile][ptype][f'ParticleIDs']=np.float16(pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask])
                     
                     #masses
                     if not ptype==1:
-                        pdata[ifile][ptype][f'Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*10**10/hval
+                        pdata[ifile][ptype][f'Mass']=np.float16(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*10**10/hval)
                     else:
-                        pdata[ifile][ptype][f'Mass']=np.ones(npart)*masstable[ptype]*1e10/hval        
+                        pdata[ifile][ptype][f'Mass']=np.ones(npart,dtype=np.float16)*masstable[ptype]*1e10/hval        
 
                     #rest
                     for field in ptype_fields[ptype]:
-                        pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
-                
+                        pdata[ifile][ptype][field]=np.float16(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+                    
+                    if ptype==0:
+                        ne     = pdata[ifile][ptype].ElectronAbundance; del pdata[ifile][ptype]['ElectronAbundance']
+                        energy = pdata[ifile][ptype].InternalEnergy; del pdata[ifile][ptype]['InternalEnergy']
+                        yhelium = 0.0789
+                        Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
+                        Temp *= (1.67262178e-24/ 1.38065e-16  )
+                        pdata[ifile][ptype]['Temperature']=Temp
+
                 else:
                     print(f'No ivol ptype {ptype} particles in this file!')
             else:
@@ -134,21 +143,16 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             print('No particles in ifile for desired volume')
             pdata[ifile]=pd.DataFrame([])
 
+    print('Concatenating results...')
     pdata=pd.concat(pdata)
     pdata.reset_index(inplace=True,drop=True)
-    print('Successfully loaded')
-
     tracermask=np.logical_not(pdata.ParticleType==1)
     print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
 
+    print('Converting temp...')
+
     #temperature
-    gas_mask=pdata['ParticleType'].values==0
-    ne     = pdata.loc[gas_mask,'ElectronAbundance'].values; del pdata['ElectronAbundance']
-    energy = pdata.loc[gas_mask,'InternalEnergy'].values; del pdata['InternalEnergy']
-    yhelium = 0.0789
-    Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
-    Temp *= (1.67262178e-24/ 1.38065e-16  )
-    pdata.loc[gas_mask,'Temperature']=Temp
+
 
     pdata['Metallicity']=pdata['GFM_Metallicity'].values; del pdata['GFM_Metallicity']
 
