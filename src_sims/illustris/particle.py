@@ -46,7 +46,6 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                 #mask for subvolume
                 subvol_mask=np.ones(npart_ifile[ptype])
                 coordinates=np.float16(pdata_ifile[f'PartType{ptype}']['Coordinates'][:])
-                print(coordinates)
                 for idim,dim in enumerate('xyz'):
                     # print(f'Masking subvolume for dim {dim}')
                     lims_idim=lims[2*idim:(2*idim+2)]
@@ -133,10 +132,8 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             print('No baryons in ifile for desired volume, will not match tracers')
 
         numdm=pdata[ifile][1].shape[0]
-
         if numbar or numdm:
-            pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1] if not pdata[ifile][ptype].shape[0]==0)
-            pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
+            pdata[ifile]=pd.concat([pdata[ifile][ptype] for ptype in [0,1] if not pdata[ifile][ptype].shape[0]==0])
             pdata[ifile].reset_index(inplace=True,drop=True)
             pdata[ifile].loc[:,'ifile']=ifile
         else:
