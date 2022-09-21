@@ -43,9 +43,11 @@ def get_progidx(subcat,galid,depth):
 	galid_idepth=galid
 	nmerger_min=0;nmerger_maj=0
 
+	snapnum=
+
 	for idepth in range(depth):
 		#find main progenitor
-		match_idepth_progen=subcat[descid_key].values==galid_idepth
+		match_idepth_progen=np.logical_and(subcat[descid_key].values==galid_idepth,subcat['SnapNum'].values==())
 		if np.nansum(match_idepth_progen):
 			progens=subcat.loc[match_idepth_progen,:].copy()
 			progens.sort_values('Mass',ignore_index=True,inplace=True,ascending=False)
