@@ -20,12 +20,12 @@ def read_subvol(path,ivol,nslice):
     masstable=pdata_file['Header'].attrs['MassTable']
     pdata_file.close()
 
-    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])
+    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])[:10]
     numfiles=len(flist)
     print(f'Loading from {numfiles} files')
 
-    lims=get_limits(ivol,nslice,boxsize,buffer=0.2)
-    ptype_fields={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
+    lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
+    ptype_fields={0:['Masses','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
                   1:[],
                   4:['Masses','GFM_Metallicity'],
                   5:['Masses']}
