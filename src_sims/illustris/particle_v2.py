@@ -54,14 +54,17 @@ def read_subvol(path,ivol,nslice):
         
         subvol_mask=np.where(subvol_mask)
         coordinates=coordinates[subvol_mask]*1e-3
-        
+
         #coordinates
         pdata[ptype]=pd.DataFrame(coordinates,columns=[f'Coordinates_{x}' for x in 'xyz'])
         del coordinates
 
         #ID and mass
         if not ptype==1:
-            pdata[ptype].loc[:,['ParticleIDs','Mass']]=loadSubset(basepath,snapnum,ptype,fields=['ParticleIDs','Masses'],subset=subvol_mask,float32=False)
+            pdata_idmass=loadSubset(basepath,snapnum,ptype,fields=['ParticleIDs','Masses'],subset=subvol_mask,float32=False)
+            pdata[ptype]['ParticleIDs']=pdata_idmass['ParticleIDs'];del pdata_idmass['ParticleIDs']
+            pdata[ptype]['Mass']=pdata_idmass['Mass']; del pdata_idmass['Mass']
+            
         else:
             pdata[ptype]['ParticleIDs']=loadSubset(basepath,snapnum,ptype,fields=['ParticleIDs'],subset=subvol_mask,float32=False)
             pdata[ptype].loc[:,'Mass']=masstable[1]
