@@ -78,7 +78,6 @@ def read_subvol(path,ivol,nslice):
             pdata[ptype].loc[:,'Mass']=masstable[1]
 
         pdata[ptype]['Mass']=pdata[ptype]['Mass']*1e10/hval
-        pdata[ptype].loc[:,'ParticleType']=ptype
         
         #everything else
         if len(ptype_fields[ptype]):
@@ -89,7 +88,9 @@ def read_subvol(path,ivol,nslice):
             else:
                 field=ptype_fields[ptype][0]
                 pdata[ptype][field]=pdata_rest;del pdata_rest
-    
+        
+        pdata[ptype].loc[:,'ParticleType']=ptype
+
     pdata[0]=pd.concat([pdata[ptype] for ptype in [0,4,5]]);del pdata[4],pdata[5] #baryons!
     pdata[0].sort_values(by=['ParticleIDs'],inplace=True)
     pdata[0].reset_index(drop=True,inplace=True)
