@@ -112,12 +112,13 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             tracer_match_1=pdata_parid_ifile==baryon_pids[(expected_idx_of_tcr_in_pdata,)]
             pdata_tcrid_ifile=pdata_ifile[f'PartType3']['TracerID'][:][tracer_match_1]
             expected_idx_of_tcr_in_pdata=expected_idx_of_tcr_in_pdata[tracer_match_1]
-            
+            del tracer_match_1
+
             pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tcr_in_pdata,:]
             pdata[ifile][0]['ParticleIDs']=pdata_tcrid_ifile
             pdata[ifile][0].reset_index(inplace=True,drop=True)
 
-            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.4f}% of the tracers were in the desired ivol {ivol+1}/{nslice**3})')
+            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
         
         else:
             print('No baryons in ifile for desired volume, will not match tracers')
