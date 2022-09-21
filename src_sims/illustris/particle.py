@@ -12,15 +12,18 @@ import illustris_python
 
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice):
+def read_subvol(path,ivol,nslice,nchunks=None):
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']
     hval=pdata_file['Header'].attrs['HubbleParam']
     masstable=pdata_file['Header'].attrs['MassTable']
     pdata_file.close()
+    
+    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_'))])
+    if nchunks:
+        flist=flist[:nchunks]
 
-    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])[:100]
     numfiles=len(flist)
     print(f'Loading from {numfiles} files')
 

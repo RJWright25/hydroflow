@@ -8,7 +8,7 @@ import sys
 import time
 import logging
 import argparse
-from unittest import TestSuite
+
 import h5py
 import pandas as pd
 import numpy as np
