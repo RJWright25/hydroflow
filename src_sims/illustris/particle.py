@@ -113,6 +113,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
         numtcr=pdata_ifile[f'PartType3']['ParentID'].shape[0]
         baryon_pids=pdata[ifile][0]['ParticleIDs'].values
         baryon_pids=np.concatenate([baryon_pids,[np.nan]])
+
         if numbar and numtcr:
             t0=time.time()
             pdata_parid_ifile=pdata_ifile[f'PartType3']['ParentID'][:]
@@ -121,7 +122,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             pdata_tcrid_ifile=pdata_ifile[f'PartType3']['TracerID'][:][tracer_match_1]
             expected_idx_of_tcr_in_pdata=expected_idx_of_tcr_in_pdata[tracer_match_1]
             del tracer_match_1
-
+    
             pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tcr_in_pdata,:]
             pdata[ifile][0]['ParticleIDs']=pdata_tcrid_ifile
             pdata[ifile][0].reset_index(inplace=True,drop=True)
@@ -131,13 +132,15 @@ def read_subvol(path,ivol,nslice,nchunks=None):
         else:
             print('No baryons in ifile for desired volume, will not match tracers')
 
+        numtrc=pdata[ifile][0].shape[0]
         numdm=pdata[ifile][1].shape[0]
-        if numbar or numdm:
+
+        if numtrc or numdm:
             pdata[ifile]=pd.concat([pdata[ifile][ptype] for ptype in [0,1] if not pdata[ifile][ptype].shape[0]==0])
             pdata[ifile].reset_index(inplace=True,drop=True)
             pdata[ifile].loc[:,'ifile']=ifile
         else:
-            print('No particles in ifile for desired volume')
+            print('No tracers or DM in ifile for desired volume')
             pdata[ifile]=pd.DataFrame([])
 
     print('Concatenating results...')
