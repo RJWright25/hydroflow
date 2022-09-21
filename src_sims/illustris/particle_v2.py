@@ -73,10 +73,12 @@ def read_subvol(path,ivol,nslice):
         #everything else
         if len(ptype_fields[ptype]):
             pdata_rest=loadSubset(basepath,snapnum,ptype,fields=ptype_fields[ptype],subset=subvol_mask,float32=True)
-            for field in list(pdata_rest.keys())[1:]:
-                pdata[ptype][field]=pdata_rest[field];del pdata_rest[field]
+            if len(ptype_fields[ptype])>1:
+                for field in list(pdata_rest.keys())[1:]:
+                    pdata[ptype][field]=pdata_rest[field];del pdata_rest[field]
+            else:
+                pdata[ptype][ptype_fields[ptype][0]]=pdata_rest[ptype_fields[ptype][0]]
             
-
     #concat all pdata into one df
     pdata=pd.concat(pdata)
     pdata.sort_values(by="ParticleIDs",inplace=True)
@@ -247,7 +249,7 @@ def loadSubset(basePath, snapNum, partType, fields=None, subset=None, mdi=None, 
     while numToRead:
 
         f = h5py.File(snapPath(basePath, snapNum, fileNum), 'r')
-        print('chunk ', fileNum)
+        # print('chunk ', fileNum)
         # no particles of requested type in this file chunk?
         if gName not in f:
             f.close()
