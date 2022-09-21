@@ -88,7 +88,7 @@ elif code=='eaglesnap':
 elif code=='camels.simba':
     from hydroflow.src_sims.camels.simba.particle import read_subvol
 elif code=='illustris':
-    from hydroflow.src_sims.illustris.particle import read_subvol
+    from hydroflow.src_sims.illustris.particle_v2 import read_subvol
 
 
 #metadata
