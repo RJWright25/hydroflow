@@ -143,18 +143,14 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             print('No tracers or DM in ifile for desired volume')
             pdata[ifile]=pd.DataFrame([])
 
+    print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
+
     print('Concatenating results...')
     pdata=pd.concat(pdata)
     pdata.reset_index(inplace=True,drop=True)
     tracermask=np.logical_not(pdata.ParticleType==1)
-    print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
-
-    print('Converting temp...')
-
-    #temperature
-
-
-    pdata['Metallicity']=pdata['GFM_Metallicity'].values; del pdata['GFM_Metallicity']
+    
+    print('KDtree ...')
 
     #generate KDtree
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
