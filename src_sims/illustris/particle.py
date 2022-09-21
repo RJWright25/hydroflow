@@ -121,6 +121,7 @@ def read_subvol(path,ivol,nslice):
             expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1]
 
             parent_data=pdata_ifile_baryons.loc[expected_idx_of_tracer_in_pdata,:]
+            del pdata_ifile_baryons
             parent_data['ParentID']=parent_data['ParticleIDs'].values
             parent_data['ParticleIDs']=pdata_tracer_IDs_invol #set particle IDs as the tracer IDs
             parent_data['TracerType']=parent_data['ParticleType'] #set tracer ptypes
@@ -144,9 +145,10 @@ def read_subvol(path,ivol,nslice):
             print('No particles in ifile for desired volume')
             pdata[ifile]=pd.DataFrame([])
 
+
+    pdata=pd.concat(pdata)
+    pdata.reset_index(inplace=True,drop=True)
     print('Successfully loaded')
-
-
 
     tracermask=np.logical_not(pdata.ParticleType==1)
     print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
