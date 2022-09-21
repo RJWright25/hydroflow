@@ -20,7 +20,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
     masstable=pdata_file['Header'].attrs['MassTable']
     pdata_file.close()
     
-    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_'))])
+    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0])])
     if nchunks:
         flist=flist[:nchunks]
 
