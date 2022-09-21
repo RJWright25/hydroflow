@@ -32,7 +32,7 @@ def read_subvol(path,ivol,nslice):
                   4:['GFM_Metallicity'],
                   5:[]}
     
-    pdata={ptype:[] for ptype in ptype_fields}
+    pdata={ptype:pd.DataFrame([]) for ptype in ptype_fields}
 
     for ptype in pdata:
         print(f'Loading ptype {ptype}')
