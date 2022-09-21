@@ -84,35 +84,35 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df.reset_index(drop=True,inplace=True)
 
 
-        logging.info(f'')
-        logging.info(f'Adding trees... [runtime {time.time()-t0:.2f} sec]')
+        # logging.info(f'')
+        # logging.info(f'Adding trees... [runtime {time.time()-t0:.2f} sec]')
 
-        n=subhalo_df.shape[0]
-        subids=np.zeros(n)-1
-        descids=np.zeros(n)-1
-        progids=np.zeros(n)-1        
-        progmass=np.zeros(n)-1        
+        # n=subhalo_df.shape[0]
+        # subids=np.zeros(n)-1
+        # descids=np.zeros(n)-1
+        # progids=np.zeros(n)-1        
+        # progmass=np.zeros(n)-1        
         
-        for isub,subhalo in subhalo_df.iterrows():
-            if not isub%1000:
-                logging.info(f'{isub/n*100:.1f}% done with trees [runtime {time.time()-t0:.2f} sec]')
+        # for isub,subhalo in subhalo_df.iterrows():
+        #     if not isub%1000:
+        #         logging.info(f'{isub/n*100:.1f}% done with trees [runtime {time.time()-t0:.2f} sec]')
 
-            subhalo_idx=int(subhalo['SubhaloIndex'])
-            subhalo_tree=tng_tools.sublink.loadTree(basepath,snapNum=subhalo['SnapNum'],id=subhalo_idx,onlyMPB=True,fields=['SubhaloID','SubhaloIDRaw','DescendantID','Mass'])
+        #     subhalo_idx=int(subhalo['SubhaloIndex'])
+        #     subhalo_tree=tng_tools.sublink.loadTree(basepath,snapNum=subhalo['SnapNum'],id=subhalo_idx,onlyMPB=True,fields=['SubhaloID','SubhaloIDRaw','DescendantID','Mass'])
             
-            if subhalo_tree:
-                subids[isub]=subhalo_tree['SubhaloID'][0]
-                descids[isub]=subhalo_tree['DescendantID'][0]
-                try:
-                    progids[isub]=subhalo_tree['SubhaloID'][1]
-                    progmass[isub]=subhalo_tree['Mass'][1]
-                except:
-                    progids[isub]=-2
+        #     if subhalo_tree:
+        #         subids[isub]=subhalo_tree['SubhaloID'][0]
+        #         descids[isub]=subhalo_tree['DescendantID'][0]
+        #         try:
+        #             progids[isub]=subhalo_tree['SubhaloID'][1]
+        #             progmass[isub]=subhalo_tree['Mass'][1]
+        #         except:
+        #             progids[isub]=-2
 
-        subhalo_df.loc[:,'GalaxyID']=subids
-        subhalo_df.loc[:,'DescendantID']=descids
-        subhalo_df.loc[:,'MainProgenitorID']=progids
-        subhalo_df.loc[:,'MainProgenitorMass']=progmass
+        # subhalo_df.loc[:,'GalaxyID']=subids
+        # subhalo_df.loc[:,'DescendantID']=descids
+        # subhalo_df.loc[:,'MainProgenitorID']=progids
+        # subhalo_df.loc[:,'MainProgenitorMass']=progmass
 
         subhalo_dfs.append(subhalo_df)
 
