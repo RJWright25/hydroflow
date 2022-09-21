@@ -290,21 +290,16 @@ def loadSubset(basePath, snapNum, partType, fields=None, subset=None, mdi=None, 
         raise Exception("Read ["+str(wOffset)+"] particles, but was expecting ["+str(origNumToRead)+"]")
 
     # only a single field? then return the array instead of a single item dict
-    output_remapping={'Masses':'Mass','GFM_Metallicity':'Metallicity'}
+    if subset:
+        for field in fields:
+            result[field]=result[field][subset]
 
     if sq and len(fields) == 1:
         if subset:
             return result[fields[0]][subset]
         else:
             return result[fields[0]]
-    else:
-        if subset:
-            for field in fields:
-                if not (field in list(output_remapping)):
-                    result[field]=result[field][subset]
-                else:
-                    result[output_remapping[field]]=result[field][subset]
-
+    
     #do temp conv here
     if 'InternalEnergy' in fields:
         ne     = result['ElectronAbundance']
