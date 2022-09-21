@@ -85,7 +85,7 @@ def read_subvol(path,ivol,nslice):
     numbar=np.nansum([nparttable[ptype]for ptype in [0,4,5]])
     numtracers=np.nansum([nparttable[ptype]for ptype in [3]])
     if numbar and numtracers:
-        tracer_pids=loadSubset(basepath,snapnum,3,fields=['ParentIDs'],float32=True)
+        tracer_pids=loadSubset(basepath,snapnum,3,fields=['ParentID'],float32=True)
 
         print(tracer_pids)
         print(np.nanmin(tracer_pids))
