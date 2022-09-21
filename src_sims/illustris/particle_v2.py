@@ -38,10 +38,11 @@ def read_subvol(path,ivol,nslice):
     for ptype in pdata:
         print(f'Loading ptype {ptype}')
         npart=nparttable[ptype]
-        subvol_mask=np.ones(npart)
     
         #masking
         coordinates=loadSubset(basepath,snapnum,ptype,fields=['Coordinates'],float32=True)
+        subvol_mask=np.ones(coordinates.shape[0])
+
         for idim,dim in enumerate('xyz'):
             lims_idim=lims[2*idim:(2*idim+2)]
             if lims_idim[0]<0 and nslice>1:#check for periodic
