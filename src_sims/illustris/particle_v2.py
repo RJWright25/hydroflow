@@ -297,8 +297,8 @@ def loadSubset(basePath, snapNum, partType, fields=None, subset=None, mdi=None, 
 
         #do temp conv here
         if 'InternalEnergy' in fields:
-            ne     = result['ElectronAbundance'].values
-            energy = result['InternalEnergy'].values
+            ne     = result['ElectronAbundance']
+            energy = result['InternalEnergy']
             yhelium = 0.0789
             Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
             Temp *= (1.67262178e-24/ 1.38065e-16  )
