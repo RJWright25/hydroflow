@@ -62,6 +62,7 @@ def read_subvol(path,ivol,nslice):
         #ID and mass
         if not ptype==1:
             pdata_idmass=loadSubset(basepath,snapnum,ptype,fields=['ParticleIDs','Masses'],subset=subvol_mask,float32=False)
+            print(pdata_idmass['ParticleIDs'].shape[0])
             pdata[ptype]['ParticleIDs']=pdata_idmass['ParticleIDs'];del pdata_idmass['ParticleIDs']
             pdata[ptype]['Mass']=pdata_idmass['Mass']; del pdata_idmass['Mass']
             
@@ -74,9 +75,16 @@ def read_subvol(path,ivol,nslice):
         #everything else
         if len(ptype_fields[ptype]):
             pdata_rest=loadSubset(basepath,snapnum,ptype,fields=ptype_fields[ptype],subset=subvol_mask,float32=True)
-            fields_rest=list(pdata_rest)
-            for field in fields_rest:
-                pdata[ptype][field]=pdata_rest[field];del pdata_rest[field]
+            print(pdata_rest['Temperature'].shape[0])
+            print(list(pdata_rest.keys()))
+            for field in list(pdata_rest.keys()):
+                pdata[ptype][field]=pdata_rest[field]
+                del pdata_rest[field]
+
+    #concat all pdata into one df
+    pdata=pd.concat(pdata)
+    pdata.sort_values(by="ParticleIDs",inplace=True)
+    pdata.reset_index(inplace=True,drop=True)
 
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
     return pdata, pdata_kdtree
@@ -296,16 +304,16 @@ def loadSubset(basePath, snapNum, partType, fields=None, subset=None, mdi=None, 
                 else:
                     result[output_remapping[field]]=result[field][subset]
 
-        #do temp conv here
-        if 'InternalEnergy' in fields:
-            ne     = result['ElectronAbundance']
-            energy = result['InternalEnergy']
-            yhelium = 0.0789
-            Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
-            Temp *= (1.67262178e-24/ 1.38065e-16  )
-            result['Temperature']=Temp
-            del result['InternalEnergy']
-            del result['ElectronAbundance']
+    #do temp conv here
+    if 'InternalEnergy' in fields:
+        ne     = result['ElectronAbundance']
+        energy = result['InternalEnergy']
+        yhelium = 0.0789
+        Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
+        Temp *= (1.67262178e-24/ 1.38065e-16  )
+        result['Temperature']=Temp
+        del result['InternalEnergy']
+        del result['ElectronAbundance']
 
     return result
 
