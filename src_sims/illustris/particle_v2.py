@@ -74,7 +74,7 @@ def read_subvol(path,ivol,nslice):
         #everything else
         if len(ptype_fields[ptype]):
             pdata_rest=loadSubset(basepath,snapnum,ptype,fields=ptype_fields[ptype],subset=subvol_mask,float32=True)
-            fields_rest=list(pdata[ptype])
+            fields_rest=list(pdata_rest)
             for field in fields_rest:
                 pdata[ptype][field]=pdata_rest[field];del pdata_rest[field]
 
