@@ -93,8 +93,8 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                         Temp *= (1.67262178e-24/ 1.38065e-16  )
                         pdata[ifile][ptype]['Temperature']=Temp
                     else:
-                        for field in ['Temperature','GFM_Metallicity','StarFormationRate']:
-                            if field not in ptype_fields[ptype]:
+                        for field in pdata[ifile][0]:
+                            if field not in pdata[ifile][ptype]:
                                 pdata[ifile][ptype][field]=np.zeros(npart,dtype=np.float16)+np.nan
                     
                 else:
@@ -125,7 +125,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             tracer_match_1=pdata_parid_ifile==baryon_pids[(expected_idx_of_tcr_in_pdata,)]
             pdata_tcrid_ifile=pdata_ifile[f'PartType3']['TracerID'][:][tracer_match_1]
             expected_idx_of_tcr_in_pdata=expected_idx_of_tcr_in_pdata[tracer_match_1]
-            del tracer_match_1
+            print(np.nanmean(tracer_match_1))
     
             pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tcr_in_pdata,:]
             pdata[ifile][0]['ParticleIDs']=pdata_tcrid_ifile
