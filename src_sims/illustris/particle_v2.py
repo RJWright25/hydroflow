@@ -25,7 +25,7 @@ def read_subvol(path,ivol,nslice):
     numfiles=len(flist)
     print(f'Loading from {numfiles} files')
 
-    lims=get_limits(ivol,nslice,boxsize,buffer=0.2)
+    lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
 
     #in addition to mass and ID
     ptype_fields={0:['InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
@@ -86,6 +86,8 @@ def read_subvol(path,ivol,nslice):
     pdata[0].reset_index(drop=True,inplace=True)
 
     ####### tracers boi
+    print(f'Loading & matching tracers')
+
     numbar=np.nansum([nparttable[ptype]for ptype in [0,4,5]])
     numtracers=np.nansum([nparttable[ptype]for ptype in [3]])
     t0=time.time()
