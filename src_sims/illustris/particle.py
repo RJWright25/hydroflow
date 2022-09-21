@@ -133,7 +133,6 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             print('No particles in ifile for desired volume')
             pdata[ifile]=pd.DataFrame([])
 
-
     pdata=pd.concat(pdata)
     pdata.reset_index(inplace=True,drop=True)
     print('Successfully loaded')
@@ -143,17 +142,14 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
     #temperature
     gas_mask=pdata['ParticleType'].values==0
-    ne     = pdata.loc[gas_mask,'ElectronAbundance'].values
-    energy = pdata.loc[gas_mask,'InternalEnergy'].values
+    ne     = pdata.loc[gas_mask,'ElectronAbundance'].values; del pdata['ElectronAbundance']
+    energy = pdata.loc[gas_mask,'InternalEnergy'].values; del pdata['InternalEnergy']
     yhelium = 0.0789
     Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
     Temp *= (1.67262178e-24/ 1.38065e-16  )
     pdata.loc[gas_mask,'Temperature']=Temp
-    del pdata['InternalEnergy']
-    del pdata['ElectronAbundance']
 
-    pdata['Metallicity']=pdata['GFM_Metallicity'].values
-    del pdata['GFM_Metallicity']
+    pdata['Metallicity']=pdata['GFM_Metallicity'].values; del pdata['GFM_Metallicity']
 
     #generate KDtree
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
