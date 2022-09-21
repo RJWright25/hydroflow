@@ -43,9 +43,6 @@ def read_subvol(path,ivol,nslice):
         coordinates=loadSubset(basepath,snapnum,ptype,fields=['Coordinates'],float32=True)
         subvol_mask=np.ones(coordinates.shape[0])
         
-
-
-
         for idim,dim in enumerate('xyz'):
             lims_idim=lims[2*idim:(2*idim+2)]
             if lims_idim[0]<0 and nslice>1:#check for periodic
@@ -55,7 +52,7 @@ def read_subvol(path,ivol,nslice):
                 otherside=coordinates[:,idim]<=(lims_idim[1]-boxsize)
                 coordinates[:,idim][otherside]=coordinates[:,idim][otherside]+boxsize
             idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
-            
+
             try:
                 print(coordinates.shape[0])
                 print(subvol_mask.shape[0])
@@ -293,7 +290,7 @@ def loadSubset(basePath, snapNum, partType, fields=None, subset=None, mdi=None, 
     wOffset = 0
     origNumToRead = numToRead
 
-    while numToRead:
+    while numToRead and fileNum<=20:
 
         f = h5py.File(snapPath(basePath, snapNum, fileNum), 'r')
         if not fileNum%10:
