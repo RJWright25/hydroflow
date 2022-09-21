@@ -64,7 +64,7 @@ def read_subvol(path,ivol,nslice):
             pdata_idmass=loadSubset(basepath,snapnum,ptype,fields=['ParticleIDs','Masses'],subset=subvol_mask,float32=False)
             print(pdata_idmass['ParticleIDs'].shape[0])
             pdata[ptype]['ParticleIDs']=pdata_idmass['ParticleIDs']
-            pdata[ptype].loc[,:'Mass']=pdata_idmass['Mass']
+            pdata[ptype].loc[:,'Mass']=pdata_idmass['Mass']
             
         else:
             pdata[ptype]['ParticleIDs']=loadSubset(basepath,snapnum,ptype,fields=['ParticleIDs'],subset=subvol_mask,float32=False)
@@ -80,7 +80,8 @@ def read_subvol(path,ivol,nslice):
             for field in list(pdata_rest.keys())[1:]:
                 print(field)
                 pdata[ptype][field]=pdata_rest[field]
-                del pdata_rest[field]
+                # del pdata_rest[field]
+            
 
     #concat all pdata into one df
     pdata=pd.concat(pdata)
