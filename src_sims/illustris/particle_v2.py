@@ -70,6 +70,7 @@ def read_subvol(path,ivol,nslice):
             pdata[ptype].loc[:,'Mass']=masstable[1]
 
         pdata[ptype]['Mass']=pdata[ptype]['Mass']*1e10/hval
+        pdata[ptype].loc[:,'ParticleType']=ptype
         
         #everything else
         if len(ptype_fields[ptype]):

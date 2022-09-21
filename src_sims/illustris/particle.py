@@ -129,7 +129,7 @@ def read_subvol(path,ivol,nslice):
 
             pdata[ifile][0]=parent_data
             pdata[ifile][0]['ParticleType']=parent_data['TracerType'].values
-            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.4f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
+            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.4f}% of the tracers were in the desired ivol {ivol+1}/{nslice**3})')
         else:
             print('No baryons in ifile for desired volume, will not match tracers')
 
@@ -146,10 +146,7 @@ def read_subvol(path,ivol,nslice):
 
     print('Successfully loaded')
 
-    #concat all pdata into one df
-    pdata=pd.concat(pdata)
-    pdata.sort_values(by="ParticleIDs",inplace=True)
-    pdata.reset_index(inplace=True,drop=True)
+
 
     tracermask=np.logical_not(pdata.ParticleType==1)
     print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
