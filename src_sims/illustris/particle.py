@@ -74,7 +74,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                     pdata[ifile][ptype][f'ParticleType']=np.ones(npart,dtype=np.float16)*ptype
 
                     #pids
-                    pdata[ifile][ptype][f'ParticleIDs']=np.float16(pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask])
+                    pdata[ifile][ptype][f'ParticleIDs']=np.uint32(pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask])
                     
                     #masses
                     if not ptype==1:
