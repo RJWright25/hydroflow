@@ -151,6 +151,6 @@ def read_subvol(path,ivol,nslice,nchunks=None):
     print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
 
     #generate KDtree
-    pdata_kdtree=cKDTree(zip(pdata[f'Coordinates_{x}'] for x in 'xyz'))
+    pdata_kdtree=cKDTree(pdata[f'Coordinates_{x}'] for x in 'xyz')
     
     return pdata, pdata_kdtree
