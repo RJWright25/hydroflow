@@ -86,7 +86,6 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                         else:
                             pdata[ifile][ptype]['Metallicity']=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
 
-
                     #if gas, do temp clc
                     if ptype==0:
                         ne     = pdata[ifile][ptype].ElectronAbundance; del pdata[ifile][ptype]['ElectronAbundance']
@@ -119,29 +118,16 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
             t0=time.time()
             pdata_tcr_parent_IDs=np.uint64(pdata_ifile[f'PartType3']['ParentID'][:])
-            # pdata_tcr_tracer_IDs=np.uint64(pdata_ifile[f'PartType3']['TracerID'][:])
-            # pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
-            # pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
-            # pdata_tracers_ifile.reset_index(inplace=True,drop=True)
-
-
-            #baryons in the volume for this ifile
-            # pdata_ifile_baryons=pd.concat(pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0)
-
-            # #all tracers in this file
-            # pdata_tracer_IDs=pdata_tracers_ifile['TracerID'].values
-            # pdata_tracer_parentIDs=pdata_tracers_ifile['ParentID'].values
-
             expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tcr_parent_IDs)
             tracer_match_1=pdata_tcr_parent_IDs==np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])[(expected_idx_of_tracer_in_pdata,)]
-            pdata_tcr_tracer_IDs_invol=np.uint64(pdata_ifile[f'PartType3']['TracerID'][:])[tracer_match_1];           
-            expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1]
+            pdata_tcr_tracer_IDs_invol=np.uint64(pdata_ifile[f'PartType3']['TracerID'][:])[tracer_match_1]
+            expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1];del tracer_match_1    
 
-            pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:].copy()
+            pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:]
             pdata[ifile][0]['ParticleIDs']=pdata_tcr_tracer_IDs_invol #set particle IDs as the tracer IDs
             pdata[ifile][0].reset_index(drop=True,inplace=True)
 
-            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.4f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
+            print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
             pdata_ifile.close()#housekeeping
 
         else:
@@ -149,9 +135,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
         if numbar_thisvol or numdm_thisvol:
             pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1] if not pdata[ifile][ptype].shape[0]==0)
-            # pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
-            # pdata[ifile].reset_index(inplace=True,drop=True)
-            # pdata[ifile].loc[:,'ifile']=ifile
+
         else:
             print('No particles in ifile for desired volume')
             pdata[ifile]=pd.DataFrame([])
