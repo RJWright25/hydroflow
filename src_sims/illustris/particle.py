@@ -114,12 +114,12 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             pdata[ifile][0]=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0])
             pdata[ifile][0].sort_values(by='ParticleIDs',inplace=True)
             pdata[ifile][0].reset_index(inplace=True,drop=True)
-            pdata_ifile_baryons_IDs=pdata[ifile][0]['ParticleIDs'].values
+            pdata_ifile_baryons_IDs=pdata[ifile][0].ParticleIDs
 
             t0=time.time()
             pdata_tcr_parent_IDs=np.uint64(pdata_ifile[f'PartType3']['ParentID'][:])
             expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tcr_parent_IDs)
-            tracer_match_1=pdata_tcr_parent_IDs==np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])[(expected_idx_of_tracer_in_pdata,)]
+            tracer_match_1=np.int8(pdata_tcr_parent_IDs==np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])[(expected_idx_of_tracer_in_pdata,)])
             pdata_tcr_tracer_IDs_invol=np.uint64(pdata_ifile[f'PartType3']['TracerID'][:])[tracer_match_1]
             expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1];del tracer_match_1    
 
@@ -146,9 +146,6 @@ def read_subvol(path,ivol,nslice,nchunks=None):
     pdata=pd.concat(pdata)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
-
-    tracermask=np.logical_not(pdata.ParticleType==1)
-    print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
 
     #generate KDtree
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']])
