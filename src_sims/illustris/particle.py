@@ -84,7 +84,8 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                         pdata[ifile][ptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
 
                     #if gas, do temp clc
-                    if ptype==0:
+                    # if ptype==0:
+
 
         
                 else:
