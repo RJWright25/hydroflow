@@ -81,7 +81,7 @@ def convert_pdata(path,pdata):
     snapshot.close()
 
     molecularweight=1.2285
-    conversions={'Mass':1/msun,
+    conversions={'Mass':1,
                  'StarFormationRate':secperyear/msun}
     for field,conversion in conversions.items():
         pdata[field]=pdata[field].values*conversion

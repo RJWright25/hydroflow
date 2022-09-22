@@ -74,7 +74,7 @@ def convert_pdata(path,pdata):
     snapshot=h5py.File(path,'r')
     msun=snapshot[f'Constants'].attrs['SOLAR_MASS']
     snapshot.close()
-    conversions={'Mass':1/msun}
+    conversions={'Mass':1}
                  
     for field,conversion in conversions.items():
         pdata[field]=pdata[field].values*conversion
