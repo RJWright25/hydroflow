@@ -84,9 +84,13 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                         pdata[ifile][ptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
 
                     #if gas, do temp clc
-                    # if ptype==0:
-
-
+                    if ptype==0:
+                        ne     = pdata[ifile][ptype].ElectronAbundance; del pdata[ifile][ptype]['ElectronAbundance']
+                        energy =  pdata[ifile][ptype].InternalEnergy; del pdata[ifile][ptype]['InternalEnergy']
+                        yhelium = 0.0789
+                        temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
+                        temp *= (1.67262178e-24/ 1.38065e-16  )
+                        pdata[ifile][ptype]['Temperature']=temp
         
                 else:
                     print(f'No ivol ptype {ptype} particles in this file!')
@@ -111,12 +115,11 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
             t0=time.time()
             pdata_tcr_parent_IDs=np.uint64(pdata_ifile[f'PartType3']['ParentID'][:])
-            pdata_tcr_tracer_IDs=np.uint32(pdata_ifile[f'PartType3']['TracerID'][:])
+            # pdata_tcr_tracer_IDs=np.uint64(pdata_ifile[f'PartType3']['TracerID'][:])
             # pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
             # pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
             # pdata_tracers_ifile.reset_index(inplace=True,drop=True)
 
-            pdata_ifile.close()#housekeeping
 
             #baryons in the volume for this ifile
             # pdata_ifile_baryons=pd.concat(pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0)
@@ -127,15 +130,15 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
             expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tcr_parent_IDs)
             tracer_match_1=pdata_tcr_parent_IDs==np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])[(expected_idx_of_tracer_in_pdata,)]
-            pdata_tcr_tracer_IDs_invol=pdata_tcr_tracer_IDs[tracer_match_1]
+            pdata_tcr_tracer_IDs_invol=np.uint64(pdata_ifile[f'PartType3']['TracerID'][:])[tracer_match_1];           
             expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1]
 
             pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:].copy()
             pdata[ifile][0]['ParticleIDs']=pdata_tcr_tracer_IDs_invol #set particle IDs as the tracer IDs
             pdata[ifile][0].reset_index(drop=True,inplace=True)
-            # pdata[ifile][0]=parent_data
 
             print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.4f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
+            pdata_ifile.close()#housekeeping
 
         else:
             print('No baryons in ifile for desired volume, will not match tracers')
@@ -160,19 +163,10 @@ def read_subvol(path,ivol,nslice,nchunks=None):
     print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
 
     #temperature
-    gas_mask=pdata['ParticleType'].values==0
-    ne     = pdata.loc[gas_mask,'ElectronAbundance'].values
-    energy = pdata.loc[gas_mask,'InternalEnergy'].values
-    yhelium = 0.0789
-    Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
-    Temp *= (1.67262178e-24/ 1.38065e-16  )
-    pdata.loc[gas_mask,'Temperature']=Temp
-    del pdata['InternalEnergy']
-    del pdata['ElectronAbundance']
+
 
     pdata['Metallicity']=pdata['GFM_Metallicity'].values
     dm_mask=pdata['ParticleType'].values==1
-    print(pdata.loc[dm_mask,'Metallicity'])
 
     del pdata['GFM_Metallicity']
 
