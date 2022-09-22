@@ -1,4 +1,3 @@
-# src_sims/illustris/particle.py: routines to read and convert particle data from TNG snapshot outputs.
 
 import numpy as np
 import pandas as pd
@@ -8,33 +7,30 @@ import time
 
 from scipy.spatial import cKDTree
 from hydroflow.src_physics.utils import get_limits
-import illustris_python
 
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,nchunks=None):
+def read_subvol(path,ivol,nslice):
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']
     hval=pdata_file['Header'].attrs['HubbleParam']
     masstable=pdata_file['Header'].attrs['MassTable']
-    nparttable=pdata_file['Header'].attrs['NumPart_Total']
     pdata_file.close()
-    
-    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0])])
-    if nchunks:
-        flist=flist[:nchunks]
 
+    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])
     numfiles=len(flist)
     print(f'Loading from {numfiles} files')
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.2)
-    ptype_fields={0:['InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
+    ptype_fields={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
                   1:[],
-                  4:['GFM_Metallicity'],
-                  5:[]}
+                  4:['Masses','GFM_Metallicity'],
+                  5:['Masses']}
     
-    pdata=[{ptype:pd.DataFrame([]) for ptype in ptype_fields} for ifile in range(numfiles)]
+    allkeys=ptype_fields[0]
+
+    pdata=[{ptype:[] for ptype in ptype_fields} for ifile in range(numfiles)]
 
     for ifile,ifname in enumerate(flist):
         pdata_ifile=h5py.File(ifname,'r')
@@ -94,11 +90,6 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
             print(f'Loaded itype {ptype} for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
 
-        # pdata[ifile][0]=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5]])
-        # pdata[ifile][0].sort_values(by=['ParticleIDs'],inplace=True)
-        # pdata[ifile][0].reset_index(inplace=True,drop=True)
-
-        # del pdata[ifile][4]; del pdata[ifile][5]
 
         ################# tracers #################
         numbar=np.nansum([pdata[ifile][ptype].shape[0] for ptype in [0,4,5]])
@@ -148,22 +139,34 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             pdata[ifile].reset_index(inplace=True,drop=True)
             pdata[ifile].loc[:,'ifile']=ifile
         else:
-            print('No tracers or DM in ifile for desired volume')
+            print('No particles in ifile for desired volume')
             pdata[ifile]=pd.DataFrame([])
 
+    print('Successfully loaded')
 
-    print('Concatenating results...')
+    #concat all pdata into one df
     pdata=pd.concat(pdata)
+    pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
 
     tracermask=np.logical_not(pdata.ParticleType==1)
     print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
-    print('KDtree ...')
+
+    #temperature
+    gas_mask=pdata['ParticleType'].values==0
+    ne     = pdata.loc[gas_mask,'ElectronAbundance'].values
+    energy = pdata.loc[gas_mask,'InternalEnergy'].values
+    yhelium = 0.0789
+    Temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
+    Temp *= (1.67262178e-24/ 1.38065e-16  )
+    pdata.loc[gas_mask,'Temperature']=Temp
+    del pdata['InternalEnergy']
+    del pdata['ElectronAbundance']
+
+    pdata['Metallicity']=pdata['GFM_Metallicity'].values
+    del pdata['GFM_Metallicity']
 
     #generate KDtree
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
     
     return pdata, pdata_kdtree
-
-
-
