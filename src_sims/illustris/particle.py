@@ -93,7 +93,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                         yhelium = 0.0789
                         temp = energy*(1.0 + 4.0*yhelium)/(1.0 + yhelium + ne)*1e10*(2.0/3.0)
                         temp *= (1.67262178e-24/ 1.38065e-16  )
-                        pdata[ifile][ptype]['Temperature']=temp
+                        pdata[ifile][ptype]['Temperature']=np.float32(temp)
         
                 else:
                     print(f'No ivol ptype {ptype} particles in this file!')
@@ -123,7 +123,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             pdata_tcr_tracer_IDs_invol=np.uint64(pdata_ifile[f'PartType3']['TracerID'][:])[tracer_match_1]
             expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1];del tracer_match_1    
 
-            pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:]
+            pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:]# reindexing to tracer based
             pdata[ifile][0]['ParticleIDs']=pdata_tcr_tracer_IDs_invol #set particle IDs as the tracer IDs
             pdata[ifile][0].reset_index(drop=True,inplace=True)
 
@@ -151,6 +151,6 @@ def read_subvol(path,ivol,nslice,nchunks=None):
     print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
 
     #generate KDtree
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
+    pdata_kdtree=cKDTree(zip(pdata[f'Coordinates_{x}'] for x in 'xyz'))
     
     return pdata, pdata_kdtree
