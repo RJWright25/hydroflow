@@ -81,7 +81,11 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
                     # print('Loading rest')
                     for field in ptype_fields[ptype]:
-                        pdata[ifile][ptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+                        if not field=='GFM_Metallicity':
+                            pdata[ifile][ptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+                        else:
+                            pdata[ifile][ptype]['Metallicity']=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+
 
                     #if gas, do temp clc
                     if ptype==0:
@@ -161,14 +165,6 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
     tracermask=np.logical_not(pdata.ParticleType==1)
     print(f"Tracer breakdown: {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==0)*100:.2f}% in gas cells, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==4)*100:.2f}% in stars or wind, {np.nanmean(pdata.loc[tracermask,'ParticleType'].values==5)*100:.2f}% in BH")
-
-    #temperature
-
-
-    pdata['Metallicity']=pdata['GFM_Metallicity'].values
-    dm_mask=pdata['ParticleType'].values==1
-
-    del pdata['GFM_Metallicity']
 
     #generate KDtree
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
