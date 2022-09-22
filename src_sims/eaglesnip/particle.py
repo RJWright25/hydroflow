@@ -21,8 +21,10 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     if not ptypes:
-        ptypes={0:['Mass','SubGroupNumber','Temperature','Density','Metallicity'],
-                4:['Mass','SubGroupNumber','Metallicity']}
+        ptypes={0:['Mass','Temperature','Metallicity'],
+                1:['Mass'],
+                4:['Mass','Metallicity']}
+    
     
     snapshot=EagleSnapshot(path)
     snapshot.select_region(*lims)
@@ -65,13 +67,8 @@ def convert_pdata(path,pdata):
     # density in nH/cm^3; mass in Msun; SFR in msun/yr (grams per second)
     snapshot=h5py.File(path,'r')
     msun=snapshot[f'Constants'].attrs['SOLAR_MASS']
-    mproton=snapshot[f'Constants'].attrs['PROTONMASS']
     snapshot.close()
-
-    molecular_weight=1.2285
-    molecular_weight=1
-    conversions={'Mass':1/msun,
-                 'Density':1/(mproton*molecular_weight)}
+    conversions={'Mass':1/msun}
                  
     for field,conversion in conversions.items():
         pdata[field]=pdata[field].values*conversion

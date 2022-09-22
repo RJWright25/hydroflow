@@ -23,6 +23,9 @@ def analyse_galaxy(galaxy,pdata):
 					   'Temperature':'T',
 					   'R_rel':'R'}
 
+	if not ('StarFormationRate' in pdata):
+		pdata.loc[:,'StarFormationRate']=np.nan
+
 	#masks
 	gas=pdata['ParticleType'].values==0.
 	star=pdata['ParticleType'].values==4.
