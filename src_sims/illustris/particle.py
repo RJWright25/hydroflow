@@ -10,19 +10,22 @@ from hydroflow.src_physics.utils import get_limits
 
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice):
+def read_subvol(path,ivol,nslice,nchunks=None):
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']
     hval=pdata_file['Header'].attrs['HubbleParam']
     masstable=pdata_file['Header'].attrs['MassTable']
     pdata_file.close()
-
+    
     flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])
+    if nchunks:
+        flist=flist[:nchunks]
+
     numfiles=len(flist)
     print(f'Loading from {numfiles} files')
 
-    lims=get_limits(ivol,nslice,boxsize,buffer=0.2)
+    lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     ptype_fields={0:['Masses','Density','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
                   1:[],
                   4:['Masses','GFM_Metallicity'],
