@@ -21,25 +21,32 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     if not ptypes:
-        ptypes={0:['Mass','Temperature','Metallicity'],
-                1:['Mass'],
-                4:['Mass','Metallicity']}
+        ptypes={0:['Temperature','Metallicity'],
+                1:[],
+                4:['Metallicity']}
     
-    
+
     snapshot=EagleSnapshot(path)
     snapshot.select_region(*lims)
     pdata={}
+
     for iptype,ptype in enumerate(ptypes):
         pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
         pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')
+        pdata[ptype].loc[:,'ParticleType']=ptype
+        
+        if ptype==1:
+            pdata[ptype].loc[:,'Mass']=file['Header'].attrs['MassTable'][1]*10**10/hfac
+        else:
+            pdata[ptype]['Mass']=snapshot.read_dataset(ptype,'Mass')*10**10/hfac
 
         for field in ptypes[ptype]:
-            hexp=file[f'PartType{ptype}/{field}'].attrs['h-scale-exponent']
-            aexp=file[f'PartType{ptype}/{field}'].attrs['aexp-scale-exponent']
-            cgs=file[f'PartType{ptype}/{field}'].attrs['CGSConversionFactor']
-            pdata[ptype][field]=snapshot.read_dataset(ptype,field)*(hfac**hexp)*(afac**aexp)*cgs
-        pdata[ptype].loc[:,'ParticleType']=ptype
+                hexp=file[f'PartType{ptype}/{field}'].attrs['h-scale-exponent']
+                aexp=file[f'PartType{ptype}/{field}'].attrs['aexp-scale-exponent']
+                cgs=file[f'PartType{ptype}/{field}'].attrs['CGSConversionFactor']
+                pdata[ptype][field]=snapshot.read_dataset(ptype,field)*(hfac**hexp)*(afac**aexp)*cgs
 
+    print(pdata[0]['Mass'])
     snapshot.close()
 
     #for star particles assign a crazy temp, density, entropy
