@@ -46,7 +46,6 @@ def read_subvol(path,ivol,nslice,ptypes=None):
                 cgs=file[f'PartType{ptype}/{field}'].attrs['CGSConversionFactor']
                 pdata[ptype][field]=snapshot.read_dataset(ptype,field)*(hfac**hexp)*(afac**aexp)*cgs
 
-    print(pdata[0]['Mass'])
     snapshot.close()
 
     #for star particles assign a crazy temp, density, entropy
