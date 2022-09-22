@@ -82,6 +82,10 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                     # print('Loading rest')
                     for field in ptype_fields[ptype]:
                         pdata[ifile][ptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+
+                    #if gas, do temp clc
+                    if ptype==0:
+
         
                 else:
                     print(f'No ivol ptype {ptype} particles in this file!')
@@ -94,10 +98,11 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
 
         ################# tracers #################
-        numbar=np.nansum([pdata[ifile][ptype].shape[0] for ptype in [0,4,5]])
+        numbar_thisvol=np.nansum([pdata[ifile][ptype].shape[0] for ptype in [0,4,5]])
+        numdm_thisvol=pdata[ifile][1].shape[0]
         numtcr=pdata_ifile[f'PartType3']['ParentID'].shape[0]
         
-        if numbar and numtcr:
+        if numbar_thisvol and numtcr:
             pdata[ifile][0]=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0])
             pdata[ifile][0].sort_values(by='ParticleIDs',inplace=True)
             pdata[ifile][0].reset_index(inplace=True,drop=True)
@@ -109,6 +114,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             # pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
             # pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
             # pdata_tracers_ifile.reset_index(inplace=True,drop=True)
+
             pdata_ifile.close()#housekeeping
 
             #baryons in the volume for this ifile
@@ -133,9 +139,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
         else:
             print('No baryons in ifile for desired volume, will not match tracers')
 
-        numdm=pdata[ifile][1].shape[0]
-
-        if numbar or numdm:
+        if numbar_thisvol or numdm_thisvol:
             pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1] if not pdata[ifile][ptype].shape[0]==0)
             # pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
             # pdata[ifile].reset_index(inplace=True,drop=True)
@@ -166,6 +170,9 @@ def read_subvol(path,ivol,nslice,nchunks=None):
     del pdata['ElectronAbundance']
 
     pdata['Metallicity']=pdata['GFM_Metallicity'].values
+    dm_mask=pdata['ParticleType'].values==1
+    print(pdata.loc[dm_mask,'Metallicity'])
+
     del pdata['GFM_Metallicity']
 
     #generate KDtree
