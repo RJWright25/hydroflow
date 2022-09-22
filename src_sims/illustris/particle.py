@@ -13,7 +13,7 @@ from hydroflow.src_physics.utils import get_limits
 def read_subvol(path,ivol,nslice,nchunks=None):
 
     pdata_file=h5py.File(path,'r')
-    boxsize=pdata_file['Header'].attrs['BoxSize']
+    boxsize=pdata_file['Header'].attrs['BoxSize']*1e-3
     hval=pdata_file['Header'].attrs['HubbleParam']
     masstable=pdata_file['Header'].attrs['MassTable']
     pdata_file.close()
@@ -45,7 +45,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
                 #mask for subvolume
                 subvol_mask=np.ones(npart_ifile[ptype])
-                coordinates=np.float32(pdata_ifile[f'PartType{ptype}']['Coordinates'][:])
+                coordinates=np.float16(pdata_ifile[f'PartType{ptype}']['Coordinates'][:]*1e-3)
                 
                 for idim,dim in enumerate('xyz'):
                     lims_idim=lims[2*idim:(2*idim+2)]
@@ -63,7 +63,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                 if npart_ifile_invol:
                     print(f'There are {npart_ifile_invol} ivol ptype {ptype} particles in this file')
                     subvol_mask=np.where(subvol_mask)
-                    coordinates=coordinates[subvol_mask]*1e-3
+                    coordinates=coordinates[subvol_mask]
                     
                     # print('Loading IDs,ptypes')
                     pdata[ifile][ptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
