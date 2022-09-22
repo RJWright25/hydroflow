@@ -26,10 +26,10 @@ def read_subvol(path,ivol,nslice,nchunks=None):
     print(f'Loading from {numfiles} files')
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
-    ptype_fields={0:['Masses','InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
+    ptype_fields={0:['InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
                   1:[],
-                  4:['Masses','GFM_Metallicity'],
-                  5:['Masses']}
+                  4:['GFM_Metallicity'],
+                  5:[]}
     
     pdata=[{ptype:[] for ptype in ptype_fields} for ifile in range(numfiles)]
 
