@@ -72,20 +72,20 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                     subvol_mask=np.where(subvol_mask)
 
                     #ptypes
-                    pdata[ifile][ptype][f'ParticleType']=np.ones(npart,dtype=np.float16)*ptype
+                    pdata[ifile][ptype][f'ParticleType']=np.ones(npart)*ptype
 
                     #pids
                     pdata[ifile][ptype][f'ParticleIDs']=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask]
                     
                     #masses
                     if not ptype==1:
-                        pdata[ifile][ptype][f'Mass']=np.float16(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*10**10/hval)
+                        pdata[ifile][ptype][f'Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*10**10/hval
                     else:
-                        pdata[ifile][ptype][f'Mass']=np.ones(npart,dtype=np.float16)*masstable[ptype]*1e10/hval        
+                        pdata[ifile][ptype][f'Mass']=np.ones(npart)*masstable[ptype]*1e10/hval        
 
                     #rest
                     for field in ptype_fields[ptype]:
-                        pdata[ifile][ptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+                        pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
 
                     del subvol_mask
 
@@ -100,7 +100,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                     else:
                         for field in pdata[ifile][0]:
                             if field not in pdata[ifile][ptype]:
-                                pdata[ifile][ptype][field]=np.zeros(npart,dtype=np.float16)+np.nan
+                                pdata[ifile][ptype][field]=np.zeros(npart)+np.nan
                     
                 else:
                     print(f'No ivol ptype {ptype} particles in this file!')
