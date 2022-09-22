@@ -67,7 +67,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                     
                     for idim,dim in enumerate('xyz'):
                         pdata[ifile][ptype][f'Coordinates_{dim}']=coordinates[:,idim]
-    
+                    
                     subvol_mask=np.where(subvol_mask)
 
                     #ptypes
@@ -81,7 +81,6 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                         pdata[ifile][ptype][f'Mass']=np.float16(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*10**10/hval)
                     else:
                         pdata[ifile][ptype][f'Mass']=np.ones(npart,dtype=np.float16)*masstable[ptype]*1e10/hval        
-
 
                     #rest
                     for field in ptype_fields[ptype]:
@@ -110,19 +109,17 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             print(f'Loaded itype {ptype} for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
 
         pdata[ifile][0]=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5]])
-        pdata[ifile][0].reset_index(inplace=True,drop=True)
         pdata[ifile][0].sort_values(by=['ParticleIDs'],inplace=True)
         pdata[ifile][0].reset_index(inplace=True,drop=True)
 
-        del pdata[ifile][4]; del pdata[ifile][5]
+        # del pdata[ifile][4]; del pdata[ifile][5]
 
         ################# tracers #################
 
-        numbar=np.nansum([nparttable[ptype]for ptype in [0,4,5]])
         numtcr=np.nansum([nparttable[ptype]for ptype in [3]])
         t0=time.time()
         
-        if numbar and numtcr:
+        if numtcr:
             pdata_tracer_parentIDs=pdata_ifile[f'PartType3']['ParentID'][:]
             pdata_tracer_tracerIDs=pdata_ifile[f'PartType3']['TracerID'][:]
             pdata_ifile_baryons_IDs=pdata[ifile][0]['ParticleIDs'].values

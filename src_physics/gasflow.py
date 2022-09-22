@@ -132,6 +132,8 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     except:
         print(pdata_snapi.loc[:,['ParticleIDs']])
         print(np.nanmax(pdata_candidates_idx_snapi))
+        print(np.nansum(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
+        print(np.nanmean(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
         print('Couldnt get all initial particle candidates')
         bad=True
         raise
