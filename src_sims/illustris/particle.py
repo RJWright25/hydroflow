@@ -104,15 +104,15 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             pdata_ifile_baryons_IDs=pdata[ifile][0]['ParticleIDs'].values
 
             t0=time.time()
-            pdata_tcr_parent_IDs=np.uint32(pdata_ifile[f'PartType3']['ParentID'][:])
-            pdata_tcr_tracer_IDs=np.uint32(pdata_ifile[f'PartType3']['TracerID'][:])
+            pdata_tcr_parent_IDs=pdata_ifile[f'PartType3']['ParentID'][:]
+            pdata_tcr_tracer_IDs=pdata_ifile[f'PartType3']['TracerID'][:]
             # pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
             # pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
             # pdata_tracers_ifile.reset_index(inplace=True,drop=True)
             pdata_ifile.close()#housekeeping
 
             #baryons in the volume for this ifile
-            pdata_ifile_baryons=pd.concat(pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0)
+            # pdata_ifile_baryons=pd.concat(pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0)
 
             # #all tracers in this file
             # pdata_tracer_IDs=pdata_tracers_ifile['TracerID'].values
@@ -129,7 +129,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             # pdata[ifile][0]=parent_data
 
             print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec ({np.nanmean(tracer_match_1)*100:.4f}% of the tracers in this file were in the desired ivol {ivol+1}/{nslice**3})')
-            
+
         else:
             print('No baryons in ifile for desired volume, will not match tracers')
 
