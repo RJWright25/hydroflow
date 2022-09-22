@@ -104,7 +104,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             pdata_ifile_baryons_IDs=pdata[ifile][0]['ParticleIDs'].values
 
             t0=time.time()
-            pdata_tcr_parent_IDs=np.uint32(pdata_ifile[f'PartType3']['ParentID'][:])
+            pdata_tcr_parent_IDs=np.uint64(pdata_ifile[f'PartType3']['ParentID'][:])
             pdata_tcr_tracer_IDs=np.uint32(pdata_ifile[f'PartType3']['TracerID'][:])
             # pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
             # pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
