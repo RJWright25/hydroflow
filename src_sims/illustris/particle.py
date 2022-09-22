@@ -137,9 +137,9 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
         if numbar or numdm:
             pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1] if not pdata[ifile][ptype].shape[0]==0)
-            pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
-            pdata[ifile].reset_index(inplace=True,drop=True)
-            pdata[ifile].loc[:,'ifile']=ifile
+            # pdata[ifile].sort_values(by="ParticleIDs",inplace=True)
+            # pdata[ifile].reset_index(inplace=True,drop=True)
+            # pdata[ifile].loc[:,'ifile']=ifile
         else:
             print('No particles in ifile for desired volume')
             pdata[ifile]=pd.DataFrame([])
