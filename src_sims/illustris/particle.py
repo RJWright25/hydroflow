@@ -123,7 +123,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             pdata_tcr_tracer_IDs_invol=np.uint64(pdata_ifile[f'PartType3']['TracerID'][:])[tracer_match_1]
             expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1];del tracer_match_1    
 
-            pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:]# reindexing to tracer based
+            pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:].copy()# reindexing to tracer based
             pdata[ifile][0]['ParticleIDs']=pdata_tcr_tracer_IDs_invol #set particle IDs as the tracer IDs
             pdata[ifile][0].reset_index(drop=True,inplace=True)
 
