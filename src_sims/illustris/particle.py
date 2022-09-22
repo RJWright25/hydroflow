@@ -75,13 +75,13 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
                     # print('Loading masses')
                     if not ptype==1:
-                        pdata[ifile][ptype]['Mass']=np.float16(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*10**10/hval)
+                        pdata[ifile][ptype]['Mass']=np.float32(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*10**10/hval)
                     else:
-                        pdata[ifile][ptype]['Mass']=np.float16(np.ones(npart_ifile_invol)*masstable[ptype]*10**10/hval)      
+                        pdata[ifile][ptype]['Mass']=np.float32(np.ones(npart_ifile_invol)*masstable[ptype]*10**10/hval)      
 
                     # print('Loading rest')
                     for field in ptype_fields[ptype]:
-                        pdata[ifile][ptype][field]=np.float16(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+                        pdata[ifile][ptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
         
                 else:
                     print(f'No ivol ptype {ptype} particles in this file!')
