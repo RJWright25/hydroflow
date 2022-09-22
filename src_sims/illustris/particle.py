@@ -104,8 +104,9 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
             print(f'Loaded itype {ptype} for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
 
-
-        ################# tracers #################
+        ########### match the tracers to the baryonic particles ###########
+        ################################################################## 
+        
         numbar_thisvol=np.nansum([pdata[ifile][ptype].shape[0] for ptype in [0,4,5]])
         numdm_thisvol=pdata[ifile][1].shape[0]
         numtcr=pdata_ifile[f'PartType3']['ParentID'].shape[0]
