@@ -46,7 +46,6 @@ def read_subvol(path,ivol,nslice,nchunks=None):
             if npart_ifile[ptype]:
                 #mask for subvolume
                 subvol_mask=np.ones(npart_ifile[ptype])
-                
                 coordinates=pdata_ifile[f'PartType{ptype}']['Coordinates'][:]
                 
                 for idim,dim in enumerate('xyz'):
@@ -73,7 +72,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
                     subvol_mask=np.where(subvol_mask)
 
                     #ptypes
-                    pdata[ifile][ptype][f'ParticleType']=np.ones(npart,dtype=np.uint8)*ptype
+                    pdata[ifile][ptype][f'ParticleType']=np.ones(npart,dtype=np.float16)*ptype
 
                     #pids
                     pdata[ifile][ptype][f'ParticleIDs']=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask]
@@ -86,7 +85,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
                     #rest
                     for field in ptype_fields[ptype]:
-                        pdata[ifile][ptype][field]=np.float16(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+                        pdata[ifile][ptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
 
                     del subvol_mask
 
