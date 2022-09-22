@@ -149,6 +149,6 @@ def read_subvol(path,ivol,nslice,nchunks=100):
     pdata.reset_index(inplace=True,drop=True)
 
     #generate KDtree
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']])
+    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
     
     return pdata, pdata_kdtree
