@@ -118,7 +118,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
             t0=time.time()
             pdata_tcr_parent_IDs=np.uint64(pdata_ifile[f'PartType3']['ParentID'][:])
-            expected_idx_of_tracer_in_pdata=np.searchsorted(pdata_ifile_baryons_IDs,pdata_tcr_parent_IDs)
+            expected_idx_of_tracer_in_pdata=np.int32(np.searchsorted(pdata_ifile_baryons_IDs,pdata_tcr_parent_IDs))
             tracer_match_1=np.int8(pdata_tcr_parent_IDs==np.concatenate([pdata_ifile_baryons_IDs,[np.nan]])[(expected_idx_of_tracer_in_pdata,)])
             pdata_tcr_tracer_IDs_invol=np.uint64(pdata_ifile[f'PartType3']['TracerID'][:])[tracer_match_1]
             expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1];del tracer_match_1    
