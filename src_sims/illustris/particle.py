@@ -10,7 +10,7 @@ from hydroflow.src_physics.utils import get_limits
 
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,nchunks=4):
+def read_subvol(path,ivol,nslice,nchunks=100):
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']*1e-3
@@ -19,7 +19,7 @@ def read_subvol(path,ivol,nslice,nchunks=4):
     pdata_file.close()
     
     flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])
-    if nchunks:
+    if nchunks and len(flist)>nchunks:
         flist=flist[:nchunks]
 
     numfiles=len(flist)
