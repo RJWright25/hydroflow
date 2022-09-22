@@ -12,7 +12,7 @@ import illustris_python
 
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice):
+def read_subvol(path,ivol,nslice,nchunks=None):
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']
