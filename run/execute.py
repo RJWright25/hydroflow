@@ -108,6 +108,7 @@ logging.info(f'Output file: {outcat_fname} [runtime {time.time()-t1:.3f} sec]')
 #subhalo catalogue masking
 subcat_limits=get_limits(ivol,nslice,boxsize,buffer=0)
 logging.info(f'Box limits: x - ({subcat_limits[0]:.1f},{subcat_limits[1]:.1f}); y - ({subcat_limits[2]:.1f},{subcat_limits[3]:.1f}); z - ({subcat_limits[4]:.1f},{subcat_limits[5]:.1f}) [runtime {time.time()-t1:.3f} sec]')
+logging.info(f'Box mass cut: {np.nansum(subcat[mass_key].values>=mcut)}')
 
 subcat_snapmask=np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=mcut])
 subcat_boxmask=np.logical_and.reduce([subcat['CentreOfPotential_x'].values>=subcat_limits[0],subcat['CentreOfPotential_x'].values<subcat_limits[1],
@@ -117,13 +118,6 @@ subcat_selection=subcat.loc[np.logical_and(subcat_boxmask,subcat_snapmask),:].co
 subcat_selection.reset_index(drop=True,inplace=True)
 subcat_selection_final=subcat_selection.loc[subcat_selection[snap_key].values==snapf,:].copy()
 subcat_selection_final.reset_index(drop=True,inplace=True)
-
-print(boxsize)
-print(np.nansum(subcat_snapmask),snapi,snapf)
-print(np.nansum(subcat_boxmask))
-print(np.nansum(subcat_selection))
-
-print(subcat_selection_final)
 
 #check for user requested outputs
 user_radii=[]
