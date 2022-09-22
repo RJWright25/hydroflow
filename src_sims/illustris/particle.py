@@ -100,7 +100,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
         if numbar and numtracers:
             t0=time.time()
             pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
-            pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
+            # pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
             pdata_tracers_ifile.reset_index(inplace=True,drop=True)
             pdata_ifile.close()#housekeeping
 
