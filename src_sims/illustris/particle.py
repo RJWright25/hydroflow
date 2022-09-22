@@ -98,14 +98,14 @@ def read_subvol(path,ivol,nslice,nchunks=None):
         numtcr=pdata_ifile[f'PartType3']['ParentID'].shape[0]
         
         if numbar and numtcr:
-            pdata[ifile][0]=pd.concat(pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0)
+            pdata[ifile][0]=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0])
             pdata[ifile][0].sort_values(by='ParticleIDs',inplace=True)
             pdata[ifile][0].reset_index(inplace=True,drop=True)
             pdata_ifile_baryons_IDs=pdata[ifile][0]['ParticleIDs'].values
 
             t0=time.time()
-            pdata_tcr_parent_IDs=pdata_ifile[f'PartType3']['ParentID'][:]
-            pdata_tcr_tracer_IDs=pdata_ifile[f'PartType3']['TracerID'][:]
+            pdata_tcr_parent_IDs=np.uint32(pdata_ifile[f'PartType3']['ParentID'][:])
+            pdata_tcr_tracer_IDs=np.uint32(pdata_ifile[f'PartType3']['TracerID'][:])
             # pdata_tracers_ifile=pd.DataFrame(np.column_stack([pdata_ifile[f'PartType3']['ParentID'][:],pdata_ifile[f'PartType3']['TracerID'][:]]),columns=['ParentID','TracerID'])
             # pdata_tracers_ifile.sort_values(by='ParentID',inplace=True)
             # pdata_tracers_ifile.reset_index(inplace=True,drop=True)
