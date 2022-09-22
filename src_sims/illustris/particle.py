@@ -10,7 +10,7 @@ from hydroflow.src_physics.utils import get_limits
 
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,nchunks=None):
+def read_subvol(path,ivol,nslice,nchunks=4):
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']*1e-3
@@ -106,7 +106,7 @@ def read_subvol(path,ivol,nslice,nchunks=None):
 
         ########### match the tracers to the baryonic particles ###########
         ################################################################## 
-        
+
         numbar_thisvol=np.nansum([pdata[ifile][ptype].shape[0] for ptype in [0,4,5]])
         numdm_thisvol=pdata[ifile][1].shape[0]
         numtcr=pdata_ifile[f'PartType3']['ParentID'].shape[0]
