@@ -74,8 +74,8 @@ def read_subvol(path,ivol,nslice,nchunks=500):
                         pdata[ifile][ptype][f'Coordinates_{dim}']=coordinates[:,idim]
 
                     # print('Loading masses')
-                    if not ptype==1:
-                        pdata[ifile][ptype]['Mass']=np.float32(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*10**10/hval)
+                    if not ptype==1:#assign all baryonic particles the mass of the tracers
+                        pdata[ifile][ptype]['Mass']=np.float32(np.ones(npart_ifile_invol)*masstable[3]*10**10/hval)      
                     else:
                         pdata[ifile][ptype]['Mass']=np.float32(np.ones(npart_ifile_invol)*masstable[ptype]*10**10/hval)      
 
