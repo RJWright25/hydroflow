@@ -127,6 +127,7 @@ def read_subvol(path,ivol,nslice,nchunks=500):
             pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:].copy()# reindexing to tracer based
             pdata[ifile][0]['ParticleIDs']=pdata_tcr_tracer_IDs_invol #set particle IDs as the tracer IDs
             pdata[ifile][0].reset_index(drop=True,inplace=True)
+            numtcr_thisvol=pdata[ifile][0].shape[0]
 
             print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
             pdata_ifile.close()#housekeeping
@@ -134,8 +135,12 @@ def read_subvol(path,ivol,nslice,nchunks=500):
         else:
             print('No baryons in ifile for desired volume, will not match tracers')
 
-        if numbar_thisvol or numdm_thisvol:
-            pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1] if not pdata[ifile][ptype].shape[0]==0)
+        if numtcr_thisvol or numdm_thisvol:
+            try:
+                pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1] if not pdata[ifile][ptype].shape[0]==0)
+            except:
+                print('No particles in ifile for desired volume')
+                pdata[ifile]=pd.DataFrame([])
 
         else:
             print('No particles in ifile for desired volume')
