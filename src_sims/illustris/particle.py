@@ -133,6 +133,7 @@ def read_subvol(path,ivol,nslice,nchunks=500):
             pdata_ifile.close()#housekeeping
 
         else:
+            numtcr_thisvol=0
             print('No baryons in ifile for desired volume, will not match tracers')
 
         if numtcr_thisvol or numdm_thisvol:
