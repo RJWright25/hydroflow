@@ -86,11 +86,8 @@ elif code=='eaglesnap':
     from hydroflow.src_sims.eaglesnap.particle import read_subvol
 elif code=='camels.simba':
     from hydroflow.src_sims.camels.simba.particle import read_subvol
-elif code=='illustris_v2':
-    from hydroflow.src_sims.illustris.particle_v2 import read_subvol
 elif code=='illustris':
     from hydroflow.src_sims.illustris.particle import read_subvol
-
 
 
 #metadata
@@ -109,13 +106,13 @@ logging.info(f'Output file: {outcat_fname} [runtime {time.time()-t1:.3f} sec]')
 subcat_limits=get_limits(ivol,nslice,boxsize,buffer=0)
 logging.info(f'Box limits: x - ({subcat_limits[0]:.1f},{subcat_limits[1]:.1f}); y - ({subcat_limits[2]:.1f},{subcat_limits[3]:.1f}); z - ({subcat_limits[4]:.1f},{subcat_limits[5]:.1f}) [runtime {time.time()-t1:.3f} sec]')
 
-subcat_snapmask=np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.5)])
+subcat_snapmask=np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.25)])
 subcat_boxmask=np.logical_and.reduce([subcat['CentreOfPotential_x'].values>=subcat_limits[0],subcat['CentreOfPotential_x'].values<subcat_limits[1],
                                       subcat['CentreOfPotential_y'].values>=subcat_limits[2],subcat['CentreOfPotential_y'].values<subcat_limits[3],
                                       subcat['CentreOfPotential_z'].values>=subcat_limits[4],subcat['CentreOfPotential_z'].values<subcat_limits[5]])
 subcat_selection=subcat.loc[np.logical_and(subcat_boxmask,subcat_snapmask),:].copy();del subcat
 subcat_selection.reset_index(drop=True,inplace=True)
-subcat_selection_final=subcat_selection.loc[subcat_selection[snap_key].values==snapf,:].copy()
+subcat_selection_final=subcat_selection.loc[np.logical_and(subcat_selection[snap_key].values==snapf,subcat_selection[mass_key].values>=mcut),:].copy()
 subcat_selection_final.reset_index(drop=True,inplace=True)
 
 #check for user requested outputs
