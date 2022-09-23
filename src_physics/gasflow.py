@@ -114,7 +114,7 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     galaxy_com_snapf=np.array([galaxy_snapf[f'CentreOfPotential_{x}'] for x in 'xyz'],ndmin=2)
     
     #get gasflow candidates
-    rcut=3*r200#choose particles within rcut, which is chosen as 3*r200
+    rcut=5*r200#choose particles within rcut, which is chosen as 3*r200
 
     pidx_candidates_snapi=kdtree_snapi.query_ball_point(galaxy_com_snapi[0],rcut)
     pidx_candidates_snapf=kdtree_snapf.query_ball_point(galaxy_com_snapf[0],rcut)
