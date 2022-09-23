@@ -24,7 +24,6 @@ def read_subvol(path,ivol,nslice,ptypes=None):
         ptypes={0:['Temperature','Metallicity'],
                 1:[],
                 4:['Metallicity']}
-    
 
     snapshot=EagleSnapshot(path)
     snapshot.select_region(*lims)
@@ -48,38 +47,17 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     snapshot.close()
 
-    #for star particles assign a crazy temp, density, entropy
-    npart_gas=pdata[0].shape[0]
-    npart_star=pdata[4].shape[0]
-    for field in ptypes[0]:
-        if not field in ptypes[4]:
-            pdata[4][field]=np.ones(npart_star)*10**10
-
     #concat all pdata into one df
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
-
-    #conversions 
-    pdata=convert_pdata(path,pdata)
 
     #generate KDtree
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
 
     return pdata, pdata_kdtree
 
-##### PARTICLE CONVERSIONS
-def convert_pdata(path,pdata):
-    # density in nH/cm^3; mass in Msun; SFR in msun/yr (grams per second)
-    snapshot=h5py.File(path,'r')
-    msun=snapshot[f'Constants'].attrs['SOLAR_MASS']
-    snapshot.close()
-    conversions={'Mass':1}
-                 
-    for field,conversion in conversions.items():
-        pdata[field]=pdata[field].values*conversion
-        
-    return pdata
+
 
 
 
