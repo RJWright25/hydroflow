@@ -42,7 +42,6 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
         jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
         jobfile.writelines(f"#SBATCH --partition={partition}\n")
         jobfile.writelines(f"#SBATCH --ntasks={1}\n")
-        jobfile.writelines(f"#SBATCH --cpus-per-task={1}\n")
         jobfile.writelines(f"#SBATCH --mem={memory}GB\n")
         jobfile.writelines(f"#SBATCH --time={time}\n")
         jobfile.writelines(f"#SBATCH --output={jobfolder}{jobname}_ivol%a.out\n")
