@@ -109,7 +109,7 @@ logging.info(f'Output file: {outcat_fname} [runtime {time.time()-t1:.3f} sec]')
 subcat_limits=get_limits(ivol,nslice,boxsize,buffer=0)
 logging.info(f'Box limits: x - ({subcat_limits[0]:.1f},{subcat_limits[1]:.1f}); y - ({subcat_limits[2]:.1f},{subcat_limits[3]:.1f}); z - ({subcat_limits[4]:.1f},{subcat_limits[5]:.1f}) [runtime {time.time()-t1:.3f} sec]')
 
-subcat_snapmask=np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=mcut])
+subcat_snapmask=np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.5)])
 subcat_boxmask=np.logical_and.reduce([subcat['CentreOfPotential_x'].values>=subcat_limits[0],subcat['CentreOfPotential_x'].values<subcat_limits[1],
                                       subcat['CentreOfPotential_y'].values>=subcat_limits[2],subcat['CentreOfPotential_y'].values<subcat_limits[3],
                                       subcat['CentreOfPotential_z'].values>=subcat_limits[4],subcat['CentreOfPotential_z'].values<subcat_limits[5]])
