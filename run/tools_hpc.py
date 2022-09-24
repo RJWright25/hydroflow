@@ -12,7 +12,7 @@ def create_dir(path):
         if not os.path.exists(running_dir):
             os.mkdir(running_dir)
 
-def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None):
+def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None,dependency=None):
     
     
     code=arguments['code']
@@ -44,6 +44,9 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
         jobfile.writelines(f"#SBATCH --ntasks={1}\n")
         jobfile.writelines(f"#SBATCH --mem={memory}GB\n")
         jobfile.writelines(f"#SBATCH --time={time}\n")
+        if dependency:
+            jobfile.writelines(f"#SBATCH --dependency=={dependency}\n")
+
         jobfile.writelines(f"#SBATCH --output={jobfolder}{jobname}_ivol%a.out\n")
 
         jobfile.writelines(f" \n")
