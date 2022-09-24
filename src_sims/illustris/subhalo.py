@@ -155,6 +155,9 @@ def gen_btree(path,snapidxmin=0):
     subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False],inplace=True)
     subcat.reset_index(inplace=True,drop=True)
 
+    if not 'GalaxyID' in list(subcat.keys()):
+        subcat['GalaxyID']=subcat['SubhaloIDRaw'].values
+
     subcat.loc[:,'DescendantID']=-1
 
     path_out=path.split('.h')[0]+'_btree.hdf5'
