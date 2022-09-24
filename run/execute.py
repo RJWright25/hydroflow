@@ -106,6 +106,9 @@ logging.info(f'Output file: {outcat_fname} [runtime {time.time()-t1:.3f} sec]')
 subcat_limits=get_limits(ivol,nslice,boxsize,buffer=0)
 logging.info(f'Box limits: x - ({subcat_limits[0]:.1f},{subcat_limits[1]:.1f}); y - ({subcat_limits[2]:.1f},{subcat_limits[3]:.1f}); z - ({subcat_limits[4]:.1f},{subcat_limits[5]:.1f}) [runtime {time.time()-t1:.3f} sec]')
 
+print('frac within snaps',np.nanmean(np.logical_and(subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf)))
+print('frac in mrange',np.nanmean(np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.25)])))
+
 subcat_snapmask=np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.25)])
 subcat_boxmask=np.logical_and.reduce([subcat['CentreOfPotential_x'].values>=subcat_limits[0],subcat['CentreOfPotential_x'].values<subcat_limits[1],
                                       subcat['CentreOfPotential_y'].values>=subcat_limits[2],subcat['CentreOfPotential_y'].values<subcat_limits[3],
@@ -114,6 +117,8 @@ subcat_selection=subcat.loc[np.logical_and(subcat_boxmask,subcat_snapmask),:].co
 subcat_selection.reset_index(drop=True,inplace=True)
 subcat_selection_final=subcat_selection.loc[np.logical_and(subcat_selection[snap_key].values==snapf,subcat_selection[mass_key].values>=mcut),:].copy()
 subcat_selection_final.reset_index(drop=True,inplace=True)
+
+print('frac in boxlims',np.nanmean(subcat_boxmask))
 
 numgal=subcat_selection_final.shape[0]
 galaxy_outputs=[]
@@ -190,15 +195,6 @@ if numgal:
                 gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4)
                 for key in list(gasflow_ism.keys()):
                     galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
-
-
-                # ### kpc cuts
-                # apertures=[25,50,75,100,150,200,250,300,350,400,450,500]#pkpc
-                # apertures_norm=[aperture*hval/afac*10**-3 for aperture in apertures]
-                # for aperture,aperture_norm in zip(apertures,apertures_norm):
-                #     gasflow_icut=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=aperture_norm,dt=dt,Tcut=None)
-                #     for key in list(gasflow_icut.keys()):
-                #         galaxy_output.loc[0,f'{str(int(aperture)).zfill(3)}kpc_gas-'+key]=gasflow_icut[key]
 
 
                 ### r200 facs
