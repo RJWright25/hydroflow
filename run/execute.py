@@ -111,7 +111,7 @@ subcat_snapmask=np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[sna
 subcat_boxmask=np.logical_and.reduce([subcat['CentreOfPotential_x'].values>=subcat_limits[0],subcat['CentreOfPotential_x'].values<subcat_limits[1],
                                       subcat['CentreOfPotential_y'].values>=subcat_limits[2],subcat['CentreOfPotential_y'].values<subcat_limits[3],
                                       subcat['CentreOfPotential_z'].values>=subcat_limits[4],subcat['CentreOfPotential_z'].values<subcat_limits[5]])
-subcat_selection=subcat.loc[np.logical_and(subcat_boxmask,subcat_snapmask),:].copy();del subcat
+subcat_selection=subcat.loc[np.logical_and(subcat_boxmask,subcat_snapmask),:].copy()
 subcat_selection.reset_index(drop=True,inplace=True)
 subcat_selection_final=subcat_selection.loc[np.logical_and(subcat_selection[snap_key].values==snapf,subcat_selection[mass_key].values>=mcut),:].copy()
 subcat_selection_final.reset_index(drop=True,inplace=True)
@@ -120,7 +120,7 @@ print('frac within snaps',np.nanmean(np.logical_and(subcat[snap_key].values>=sna
 print('frac in mrange',np.nanmean(np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.25)])))
 print('frac in boxlims',np.nanmean(subcat_boxmask))
 
-
+del subcat
 numgal=subcat_selection_final.shape[0]
 galaxy_outputs=[]
 
