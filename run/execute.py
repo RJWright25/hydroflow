@@ -106,8 +106,6 @@ logging.info(f'Output file: {outcat_fname} [runtime {time.time()-t1:.3f} sec]')
 subcat_limits=get_limits(ivol,nslice,boxsize,buffer=0)
 logging.info(f'Box limits: x - ({subcat_limits[0]:.1f},{subcat_limits[1]:.1f}); y - ({subcat_limits[2]:.1f},{subcat_limits[3]:.1f}); z - ({subcat_limits[4]:.1f},{subcat_limits[5]:.1f}) [runtime {time.time()-t1:.3f} sec]')
 
-print('frac within snaps',np.nanmean(np.logical_and(subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf)))
-print('frac in mrange',np.nanmean(np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.25)])))
 
 subcat_snapmask=np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.25)])
 subcat_boxmask=np.logical_and.reduce([subcat['CentreOfPotential_x'].values>=subcat_limits[0],subcat['CentreOfPotential_x'].values<subcat_limits[1],
@@ -118,7 +116,10 @@ subcat_selection.reset_index(drop=True,inplace=True)
 subcat_selection_final=subcat_selection.loc[np.logical_and(subcat_selection[snap_key].values==snapf,subcat_selection[mass_key].values>=mcut),:].copy()
 subcat_selection_final.reset_index(drop=True,inplace=True)
 
+print('frac within snaps',np.nanmean(np.logical_and(subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf)))
+print('frac in mrange',np.nanmean(np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.25)])))
 print('frac in boxlims',np.nanmean(subcat_boxmask))
+
 
 numgal=subcat_selection_final.shape[0]
 galaxy_outputs=[]
@@ -129,6 +130,7 @@ if numgal:
     for key in list(subcat_selection_final.keys()):
         if '*' in key:
             user_radii.append(key)
+    logging.info(f'Will generate outputs for {numgal} galaxies at this snapshot')
 
     #load pdata
     logging.info(f'Loading final snap particle data: {snapf_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
