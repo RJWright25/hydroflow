@@ -120,6 +120,9 @@ print('frac within snaps',np.nanmean(np.logical_and(subcat[snap_key].values>=sna
 print('frac in mrange',np.nanmean(np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.25)])))
 print('frac in boxlims',np.nanmean(subcat_boxmask))
 print(subcat_selection.shape[0])
+print(np.nanmean(subcat_selection[snap_key].values==snapf))
+print(np.nanmean(subcat_selection[mass_key].values>=mcut))
+print(subcat_selection_final.shape[0])
 
 del subcat
 numgal=subcat_selection_final.shape[0]
