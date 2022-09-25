@@ -52,33 +52,33 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
             snap=snapdir.split('snap')[-1]
             snap=int(snap[:3])
             snapdir_path=path_gasflow+snapdir
-            if snap>=snapmin and snap<=snapmax and os.path.exists(snapdir_path):
-
+            if snap>=snapmin and snap<=snapmax:
                 isnap_files=sorted(os.listdir(snapdir_path))
                 isnap_files=[snapdir_path+'/'+isnap_file for isnap_file in isnap_files]
             else:
                 continue
-            
-            print(f'Loading gasflow files for snap {snap} delta {depth} ({len(isnap_files)})')
 
-            if verbose: 
-                print(snapdir)
-                print(isnap_files)
+            if len(isnap_files)>0:
+                print(f'Loading gasflow files for snap {snap} delta {depth} ({len(isnap_files)})')
+                if verbose: 
+                    print(snapdir)
+                    print(isnap_files)
 
-            isnap_outputs=[]
-            for iifile,file in enumerate(isnap_files):
-                ifile=pd.read_hdf(file,key='Gasflow')
-                isnap_outputs.append(ifile)
-            try:
-                isnap_outputs=pd.concat(isnap_outputs)
-                isnap_outputs.sort_values(by='HydroflowID',inplace=True)
-                isnap_outputs.reset_index(drop=True,inplace=True)
-                snap_outputs.append(isnap_outputs)
-            except:
-                print(f'No outputs for {snap} depth {depth}')
-                continue
+                isnap_outputs=[]
+                for iifile,file in enumerate(isnap_files):
+                    ifile=pd.read_hdf(file,key='Gasflow')
+                    isnap_outputs.append(ifile)
+                try:
+                    isnap_outputs=pd.concat(isnap_outputs)
+                    isnap_outputs.sort_values(by='HydroflowID',inplace=True)
+                    isnap_outputs.reset_index(drop=True,inplace=True)
+                    snap_outputs.append(isnap_outputs)
+                except:
+                    print(f'No outputs for {snap} depth {depth}')
+                    continue
         
         if snap_outputs:
+
             snap_outputs=pd.concat(snap_outputs)
             snap_outputs.sort_values(by='HydroflowID',inplace=True)
             snap_outputs.reset_index(drop=True,inplace=True)
