@@ -29,12 +29,11 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
     subcat_masked.sort_values(by=idx_key,inplace=True)
     subcat_masked.reset_index(drop=True,inplace=True)
 
-    if depth:
+    if len(str(depth))==1:
         depths=[depth]
         depth_out=str(depth).zfill(2)
     else:
-        depths=list(range(1,13))
-        depth_out='all'
+        depth_out='x'
 
     if snapmax-snapmin==0:
         outpath=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmax)}.hdf5'
@@ -42,7 +41,6 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
         outpath=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmin)}to{int(snapmax)}.hdf5'
 
     for depth in depths:
-        print(depth)
 
         snapdirs=sorted(os.listdir(path_gasflow))
         snapdirs=[snapdir for snapdir in snapdirs if (f'd{str(depth).zfill(2)}' in snapdir) and ('gas' not in snapdir)]
