@@ -77,35 +77,37 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
             except:
                 print(f'No outputs for {snap} depth {depth}')
                 continue
+        
+        if snap_outputs:
+            snap_outputs=pd.concat(snap_outputs)
+            snap_outputs.sort_values(by='HydroflowID',inplace=True)
+            snap_outputs.reset_index(drop=True,inplace=True)
+            print(snap_outputs.shape[0], f' hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs')
 
-        snap_outputs=pd.concat(snap_outputs)
-        snap_outputs.sort_values(by='HydroflowID',inplace=True)
-        snap_outputs.reset_index(drop=True,inplace=True)
-        print(snap_outputs.shape[0], f' hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs')
+            snap_outputs['HydroflowID']=snap_outputs['HydroflowID'].values.astype(np.int64)
+            hydroflow=snap_outputs['HydroflowID'].values
+            nodeidx=subcat_masked[idx_key].values
 
-        snap_outputs['HydroflowID']=snap_outputs['HydroflowID'].values.astype(np.int64)
-        hydroflow=snap_outputs['HydroflowID'].values
-        nodeidx=subcat_masked[idx_key].values
+            valid_idx_hydroflow_in_subcat=np.searchsorted(a=nodeidx,v=hydroflow)
+            valid_idx_hydroflow_in_hydroflow=np.array(list(range(len(hydroflow))))
+            valid=valid_idx_hydroflow_in_subcat<len(nodeidx)
 
-        valid_idx_hydroflow_in_subcat=np.searchsorted(a=nodeidx,v=hydroflow)
-        valid_idx_hydroflow_in_hydroflow=np.array(list(range(len(hydroflow))))
-        valid=valid_idx_hydroflow_in_subcat<len(nodeidx)
+            valid_idx_hydroflow_in_subcat=valid_idx_hydroflow_in_subcat[np.where(valid)]
+            valid_idx_hydroflow_in_hydroflow=valid_idx_hydroflow_in_hydroflow[np.where(valid)]
 
-        valid_idx_hydroflow_in_subcat=valid_idx_hydroflow_in_subcat[np.where(valid)]
-        valid_idx_hydroflow_in_hydroflow=valid_idx_hydroflow_in_hydroflow[np.where(valid)]
+            for index,(ihydro,isubcat) in enumerate(zip(valid_idx_hydroflow_in_hydroflow,valid_idx_hydroflow_in_subcat)):
+                if not nodeidx[isubcat]==hydroflow[ihydro]:
+                    print(nodeidx[isubcat],hydroflow[ihydro])
+                    valid_idx_hydroflow_in_hydroflow[index]=-1
+                    valid_idx_hydroflow_in_subcat[index]=-1
 
-        for index,(ihydro,isubcat) in enumerate(zip(valid_idx_hydroflow_in_hydroflow,valid_idx_hydroflow_in_subcat)):
-            if not nodeidx[isubcat]==hydroflow[ihydro]:
-                print(nodeidx[isubcat],hydroflow[ihydro])
-                valid_idx_hydroflow_in_hydroflow[index]=-1
-                valid_idx_hydroflow_in_subcat[index]=-1
+            hydroflow_idxs=valid_idx_hydroflow_in_hydroflow[np.where(valid_idx_hydroflow_in_hydroflow>=0)]
+            subcat_idxs=valid_idx_hydroflow_in_subcat[np.where(valid_idx_hydroflow_in_subcat>=0)]
 
-        hydroflow_idxs=valid_idx_hydroflow_in_hydroflow[np.where(valid_idx_hydroflow_in_hydroflow>=0)]
-        subcat_idxs=valid_idx_hydroflow_in_subcat[np.where(valid_idx_hydroflow_in_subcat>=0)]
+            print(f'Adding depth {depth} data to subcat')
+            output_columns=[column+f'-d{str(depth).zfill(2)}' for column in list(snap_outputs.columns)]
+            subcat_masked.loc[subcat_idxs,output_columns]=snap_outputs.loc[hydroflow_idxs,:].values
 
-        print(f'Adding depth {depth} data to subcat')
-        output_columns=[column+f'-d{str(depth).zfill(2)}' for column in list(snap_outputs.columns)]
-        subcat_masked.loc[subcat_idxs,output_columns]=snap_outputs.loc[hydroflow_idxs,:].values
 
     create_dir(outpath)
     subcat_masked=subcat_masked.sort_values(by=['SnapNum','Mass'],ascending=[False,False],ignore_index=True)
