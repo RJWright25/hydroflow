@@ -33,6 +33,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
         depths=[depth]
         depth_out=str(depth).zfill(2)
     else:
+        depths=depth
         depth_out='x'
 
     if snapmax-snapmin==0:
