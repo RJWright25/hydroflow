@@ -42,16 +42,18 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
         outpath=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmin)}to{int(snapmax)}.hdf5'
 
     for depth in depths:
+        print(depth)
 
         snapdirs=sorted(os.listdir(path_gasflow))
         snapdirs=[snapdir for snapdir in snapdirs if (f'd{str(depth).zfill(2)}' in snapdir) and ('gas' not in snapdir)]
-        
+
         snap_outputs=[]
         for snapdir in snapdirs:
             snap=snapdir.split('snap')[-1]
             snap=int(snap[:3])
-            if snap>=snapmin and snap<=snapmax:
-                snapdir_path=path_gasflow+snapdir
+            snapdir_path=path_gasflow+snapdir
+            if snap>=snapmin and snap<=snapmax and os.path.exists(snapdir_path):
+
                 isnap_files=sorted(os.listdir(snapdir_path))
                 isnap_files=[snapdir_path+'/'+isnap_file for isnap_file in isnap_files]
             else:
