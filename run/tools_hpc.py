@@ -92,7 +92,7 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
 
 
     with open(jobscriptfilepath,"w") as taskfile:
-        taskfile.writelines(f"#!/bin/sh")
+        taskfile.writelines(f"#!/bin/sh\n")
 
         for ivol in volumes:
             
