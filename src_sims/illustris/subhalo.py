@@ -67,13 +67,17 @@ def read_subcat(basepath,snapnums=None):
 
         idx_of_igroup_in_subcat=subhalo_df['GroupNumber'].searchsorted(group_df['GroupNumber'].values)
         group_df['SubfindID']=subhalo_df['SubfindID'].values[(idx_of_igroup_in_subcat,)]
-        group_df['SubfindIDRaw']=np.uint64(snapnum*1e12+group_df['SubfindID'].values)
+        group_df['GalaxyID']=np.uint64(snapnum*1e12+group_df['SubfindID'].values)
+        group_df.loc[:,'MainProgenitorID']=np.nan
 
-        for id in group_df['SubfindID'].values[:10]:
-            tree=pd.DataFrame(tng_tools.sublink.loadTree(basepath,snapnum,id,fields=['SubfindID','DescendantID','SnapNum'],onlyMPB=True))
-            print(tree.iloc[:5])
+        for igroup,id in group_df['SubfindID'].iterrows():
+            if igroup<10:
+                itree=tng_tools.sublink.loadTree(basepath,snapnum,id,fields=['SubfindID','SnapNum'],onlyMPB=True)
+                mainprogid=np.uint64(itree['SnapNum'][1]*1e12+itree['SubfindID'][1])
+                group_df.loc[igroup,'MainProgenitorID']=mainprogid
 
-
+        print(group_df.loc[:,['GalaxyID','MainProgenitorID']])
+            
     # >>>     tree = il.sublink.loadTree(basePath,135,GroupFirstSub[i],fields=fields,onlyMPB=True)
     logging.info(f'')
     logging.info(f'*********************************************')
