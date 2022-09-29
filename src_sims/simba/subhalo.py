@@ -41,7 +41,7 @@ def read_subcat(basepath,snapnums=None):
         group_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=rockstarfile['/halo_data/minpotpos'][:]*1e-3*hfac
         group_df.loc[:,'GroupNumber']=np.array(list(range(group_df.shape[0]))).astype(np.uint64)
         group_df.loc[:,'SubGroupNumber']=0
-        group_df['GalaxyID']=group_df['GroupNumber'].values+1e12*snapnum
+        group_df['GalaxyID']=np.uint64(group_df['GroupNumber'].values+1e12*snapnum)
 
         group_df.loc[:,'SnapNum']=snapnum
         group_df.loc[:,'Redshift']=zval
