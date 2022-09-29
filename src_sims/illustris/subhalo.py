@@ -63,7 +63,7 @@ def read_subcat(basepath,snapnums=None):
 
         subhalo_df=pd.DataFrame({'GroupNumber':subhalo_uniquegroupnums,'SubhaloIndex':subhalo_mostmassive_indices,'Mass':subhalo_mostmassive_mass})
         subhalo_df.sort_values(by='GroupNumber',inplace=True);subhalo_df.reset_index(inplace=True,drop=True)
-        print(subhalo_df)
+        print(subhalo_df.loc[:,['GroupNumber','SubhaloIndex']])
         print(group_df)
         
 
