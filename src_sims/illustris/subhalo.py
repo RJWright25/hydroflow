@@ -68,7 +68,7 @@ def read_subcat(basepath,snapnums=None):
         idx_of_igroup_in_subcat=subhalo_df['GroupNumber'].searchsorted(group_df['GroupNumber'].values)
         group_df['SubhaloIndex']=subhalo_df['SubhaloIndex'].values[(idx_of_igroup_in_subcat,)]
 
-        print(group_df[:,['GroupNumber','SubhaloIndex']])
+        print(group_df.loc[:,['GroupNumber','SubhaloIndex']])
 
     logging.info(f'')
     logging.info(f'*********************************************')
