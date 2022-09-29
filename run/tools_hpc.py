@@ -89,9 +89,12 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
     
     if os.path.exists(jobscriptfilepath):
         os.remove(jobscriptfilepath)
+        
+    taskfile.writelines(f"#!/bin/sh")
 
     with open(jobscriptfilepath,"w") as taskfile:
         for ivol in volumes:
+            
             taskfile.writelines(f"python {runscriptfilepath} --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut} --ivol {ivol} &> {jobfolder}{jobname}_ivol{ivol}.out\n")
     
     taskfile.close()
