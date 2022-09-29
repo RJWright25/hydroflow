@@ -38,8 +38,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,veject=0,Tcut=None,idm=Fal
 
     #
     arvel=(pdata_snapf['R_rel'].values-pdata_snapi['R_rel'].values)/dt*vel_conversion
-    print(arvel)
-    print(veject)
+    arvel[np.logical_not(np.isfinite(arvel))]=1e5
 
     if Tcut: 
         cool_snap1=T_snap1<=Tcut
