@@ -71,10 +71,12 @@ def read_subcat(basepath,snapnums=None):
         group_df.loc[:,'MainProgenitorID']=np.nan
 
         for igroup,group in group_df.iterrows():
-            if igroup<10:
-                itree=tng_tools.sublink.loadTree(basepath,snapnum,int(group['SubfindID']),fields=['SubfindID','SnapNum'],onlyMPB=True)
-                mainprogid=np.uint64(itree['SnapNum'][1]*1e12+itree['SubfindID'][1])
-                group_df.loc[igroup,'MainProgenitorID']=mainprogid
+            if not igroup%100:
+                print(igroup)
+
+            itree=tng_tools.sublink.loadTree(basepath,snapnum,int(group['SubfindID']),fields=['SubfindID','SnapNum'],onlyMPB=True)
+            mainprogid=np.uint64(itree['SnapNum'][1]*1e12+itree['SubfindID'][1])
+            group_df.loc[igroup,'MainProgenitorID']=mainprogid
 
         print(np.uint64(group_df.loc[:,['GalaxyID','MainProgenitorID']].values))
             
