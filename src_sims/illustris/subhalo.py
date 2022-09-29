@@ -69,7 +69,7 @@ def read_subcat(basepath,snapnums=None):
         group_df['SubfindID']=subhalo_df['SubfindID'].values[(idx_of_igroup_in_subcat,)]
         group_df['SubfindIDRaw']=np.uint64(snapnum*1e12+group_df['SubfindID'].values)
 
-        for id in group_df['SubfindIndex'].values[:10]:
+        for id in group_df['SubfindID'].values[:10]:
             tree=pd.DataFrame(tng_tools.sublink.loadTree(basepath,snapnum,id,fields=['SubfindID','SubfindIDRaw','DescendantID'],onlyMPB=True))
             print(tree.iloc[:10])
 
