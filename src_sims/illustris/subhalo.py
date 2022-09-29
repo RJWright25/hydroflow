@@ -53,20 +53,20 @@ def read_subcat(basepath,snapnums=None):
         group_df.append(group_df)
 
         subhalo_df['GroupNumber']=subcat['SubhaloGrNr'][:]
-        subhalo_df['SubfindIndex']=np.array(range(subhalo_df.shape[0]))
+        subhalo_df['SubfindID']=np.array(range(subhalo_df.shape[0]))
         subhalo_df['Mass']=subcat['SubhaloMass'][:]*10**10/hfac
         subhalo_df.sort_values(by='Mass',inplace=True,ascending=False);subhalo_df.reset_index(inplace=True,drop=True)
         
         subhalo_uniquegroupnums,subhalo_unique_indices=np.unique(subhalo_df['GroupNumber'].values,return_index=True)
-        subhalo_mostmassive_indices=subhalo_df['SubfindIndex'].values[subhalo_unique_indices]
+        subhalo_mostmassive_indices=subhalo_df['SubfindID'].values[subhalo_unique_indices]
         subhalo_mostmassive_mass=subhalo_df['Mass'].values[subhalo_unique_indices]
 
-        subhalo_df=pd.DataFrame({'GroupNumber':subhalo_uniquegroupnums,'SubfindIndex':subhalo_mostmassive_indices,'Mass':subhalo_mostmassive_mass})
+        subhalo_df=pd.DataFrame({'GroupNumber':subhalo_uniquegroupnums,'SubfindID':subhalo_mostmassive_indices,'Mass':subhalo_mostmassive_mass})
         subhalo_df.sort_values(by='GroupNumber',inplace=True);subhalo_df.reset_index(inplace=True,drop=True)
         subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut/5,:];subhalo_df.reset_index(inplace=True,drop=True)
 
         idx_of_igroup_in_subcat=subhalo_df['GroupNumber'].searchsorted(group_df['GroupNumber'].values)
-        group_df['SubfindID']=subhalo_df['SubhaloIndex'].values[(idx_of_igroup_in_subcat,)]
+        group_df['SubfindID']=subhalo_df['SubfindID'].values[(idx_of_igroup_in_subcat,)]
         group_df['SubfindIDRaw']=np.uint64(snapnum*1e12+group_df['SubfindID'].values)
 
         for id in group_df['SubfindIndex'].values[:10]:
