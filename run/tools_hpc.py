@@ -91,7 +91,7 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
         os.remove(jobscriptfilepath)
 
     with open(jobscriptfilepath,"w") as taskfile:
-        # taskfile.writelines("module load disBatch/beta\n")
+        taskfile.writelines("module load disBatch/beta\n")
         for ivol in volumes:
             taskfile.writelines(f"python {runscriptfilepath} --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut} --ivol {ivol} &> {jobfolder}{jobname}_ivol{ivol}.out\n")
     
