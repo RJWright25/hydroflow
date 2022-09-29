@@ -85,7 +85,7 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
     runscriptfilepath=repo+'/run/execute.py'
     num=len(volumes)
 
-    jobscriptfilepath=f'{jobfolder}submit-{jobname}_{num}.tasks'
+    jobscriptfilepath=f'{jobfolder}{jobname}_{num}.tasks'
     
     if os.path.exists(jobscriptfilepath):
         os.remove(jobscriptfilepath)
