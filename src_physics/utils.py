@@ -84,7 +84,7 @@ def calc_r200(galaxy):
 			return r200
 
 
-constant_G=4.30073691e-06 #(km/s)^2*Mpc/Msun
+constant_G=4.30073691e-09 #(km/s)^2*Mpc/Msun
 
 vel_conversion=1*units.Mpc/units.Gyr #from pMpc/Gyr to km/s
 vel_conversion=vel_conversion.to(units.km/units.s)
