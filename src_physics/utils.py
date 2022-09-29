@@ -83,6 +83,9 @@ def calc_r200(galaxy):
 			r200=r200_cubed**(1/3)*h/a #return in comoving units
 			return r200
 
-vel_conversion=1*units.Mpc/units.Gyr
+
+constant_G=4.30073691e-06 #(km/s)^2*Mpc/Msun
+
+vel_conversion=1*units.Mpc/units.Gyr #from pMpc/Gyr to km/s
 vel_conversion=vel_conversion.to(units.km/units.s)
 vel_conversion=vel_conversion.value

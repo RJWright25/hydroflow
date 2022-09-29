@@ -43,7 +43,7 @@ mcut=10**(args.mcut)
 sys.path.append(f"{repo.split('hydroflow')[0]}")
 
 from hydroflow.run.tools_hpc import create_dir
-from hydroflow.src_physics.utils import get_limits,get_progidx
+from hydroflow.src_physics.utils import get_limits,get_progidx,constant_G
 from hydroflow.src_physics.galaxy import analyse_galaxy,calc_r200
 from hydroflow.src_physics.gasflow import candidates_gasflow,analyse_gasflow
 
@@ -174,9 +174,18 @@ if numgal:
         progmatch=progid==subcat_selection[galid_key].values
 
         if progid and np.nansum(progmatch):
-            r200_eff=calc_r200(galaxy_snapf)
+
 
             galaxy_snapi=subcat_selection.loc[progmatch,:].iloc[0]
+
+            r200_eff_f=calc_r200(galaxy_snapf)
+            r200_eff_i=calc_r200(galaxy_snapi)
+            r200_eff=(r200_eff_f+r200_eff_i)/2
+            m200_eff=(galaxy_snapi['Group_M_Crit200']+galaxy_snapf['Group_M_Crit200'])/2
+
+            galaxy_output.loc[0,'r200_eff']=r200_eff
+            galaxy_output.loc[0,'m200_eff']=m200_eff
+
             t1_c=time.time()
             success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf)
             t2_c=time.time()
@@ -189,7 +198,6 @@ if numgal:
                 logging.info(f"Galaxy: {t2_f-t1_f:.3f} sec")
 
                 t1_g=time.time()
-
                 if fitf:
                     #add galaxy outputs
                     for key in list(galaxy_properties_snapf.keys()):
@@ -197,16 +205,18 @@ if numgal:
                 else:
                     logging.info(f'Could not determine properties of galaxy')
 
+                veject=0.5*np.sqrt(constant_G*m200_eff/r200_eff)*hval/afac
+
                 ### ism
-                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4)
+                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4,veject=veject)
                 for key in list(gasflow_ism.keys()):
                     galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
 
 
                 ### r200 facs
-                for fac in [0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.25,1.5,1.75,2,2.25,2.5,2.75,3,3.5,4]:
+                for fac in [0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.25,1.5,1.75,2,2.25,2.5,2.75,3]:
                     idm=(fac>=1)
-                    gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=idm)
+                    gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=idm,veject=veject)
                     for key in list(gasflow_ir200.keys()):
                         
                         if not 'dm' in key:
@@ -218,7 +228,7 @@ if numgal:
                 ### user def
                 for user_radius in user_radii:
                     iuser_radius=galaxy_snapf[user_radius]
-                    gasflow_iuser=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=iuser_radius,dt=dt,Tcut=None)
+                    gasflow_iuser=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=iuser_radius,dt=dt,Tcut=None,veject=veject)
                     for key in list(gasflow_iuser.keys()):
                         galaxy_output.loc[0,f'{user_radius}-'+key]=gasflow_iuser[key]
                     

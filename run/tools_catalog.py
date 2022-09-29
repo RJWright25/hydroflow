@@ -115,5 +115,5 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
     subcat_masked.to_hdf(outpath,key='Gasflow')
 
 
-    
+     
     return subcat_masked
