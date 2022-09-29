@@ -30,6 +30,10 @@ def analyse_galaxy(galaxy,pdata):
 	gas=pdata['ParticleType'].values==0.
 	star=pdata['ParticleType'].values==4.
 	dm=pdata['ParticleType'].values==1.
+
+	if 'StellarFormationTime' in pdata:
+		gas=np.logical_or(gas,pdata.StellarFormationTime<0)
+		star=np.logical_and(star,pdata.StellarFormationTime>0)
 	
 	mass=pdata['Mass'].values
 	cool=pdata['Temperature'].values<5*10**4
