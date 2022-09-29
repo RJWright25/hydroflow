@@ -14,7 +14,6 @@ def create_dir(path):
 
 def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None,dependency=None):
     
-    
     code=arguments['code']
     pathcat=arguments['path']
     nslice=int(arguments['nslice'])
@@ -66,6 +65,39 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
     else:
         os.system(f"sbatch --array=0-{nvol-1} {jobscriptfilepath}")
         print(f"sbatch --array=0-{nvol-1} {jobscriptfilepath}")
+
+def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=None):
+    
+    code=arguments['code']
+    pathcat=arguments['path']
+    nslice=int(arguments['nslice'])
+    nvol=nslice**3
+    snapf=int(arguments['snap'])
+    depth=int(arguments['depth'])
+    mcut=arguments['mcut']
+    namecat=pathcat.split('/')[-1][:-5]
+    cwd=pathcat.split('catalogues')[0]
+
+    jobfolder=f'{cwd}/jobs/gasflow/{namecat}/nvol_{str(nvol).zfill(3)}/snap{str(snapf).zfill(3)}_d{str(depth).zfill(2)}/'
+    jobname=f"s{str(snapf).zfill(3)}_d{str(depth).zfill(2)}_n{str(int(nslice**3)).zfill(3)}"
+    create_dir(jobfolder)
+
+    runscriptfilepath=repo+'/run/execute.py'
+    num=len(volumes)
+
+    jobscriptfilepath=f'{jobfolder}submit-{jobname}_{num}.tasks'
+    
+    if os.path.exists(jobscriptfilepath):
+        os.remove(jobscriptfilepath)
+
+    with open(jobscriptfilepath,"w") as taskfile:
+        
+        for ivol in volumes:
+            taskfile.writelines(f"python {runscriptfilepath} --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut} --ivol {ivol} &> {jobfolder}{jobname}_ivol{ivol}.out\n")
+    
+    taskfile.close()
+
+    os.system(f"sbatch -p {partition} -t {time} --mem {memory} -n {num} disBatch {jobscriptfilepath}")
 
 def submit_gasflow_function(repo,function,arguments,memory,time):
     cwd=os.getcwd()
