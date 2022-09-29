@@ -63,17 +63,12 @@ def read_subcat(basepath,snapnums=None):
 
         subhalo_df=pd.DataFrame({'GroupNumber':subhalo_uniquegroupnums,'SubhaloIndex':subhalo_mostmassive_indices,'Mass':subhalo_mostmassive_mass})
         subhalo_df.sort_values(by='GroupNumber',inplace=True);subhalo_df.reset_index(inplace=True,drop=True)
-        print(subhalo_df.loc[:,['GroupNumber','Mass','SubhaloIndex']])
-        print(group_df.loc[:,['GroupNumber','Mass']])
-        # print(group_df)
-        
+        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut/5,:];subhalo_df.reset_index(inplace=True,drop=True)
 
+        idx_of_igroup_in_subcat=subhalo_df['GroupNumber'].searchsorted(group_df['GroupNumber'].values)
+        group_df['SubhaloIndex']=subhalo_df['SubhaloIndex'].values[(idx_of_igroup_in_subcat,)]
 
-        
-
-        
-        
-
+        print(group_df[:,['GroupNumber','SubhaloIndex']])
 
     logging.info(f'')
     logging.info(f'*********************************************')
