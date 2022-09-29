@@ -24,8 +24,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,veject=0,Tcut=None,idm=Fal
     gas_snap1=pdata_snapi['ParticleType'].values==0
 
     if 'StellarFormationTime' in pdata_snapi:
-        gas_snap2=np.logical_or(gas_snap2,pdata_snapf['StellarFormationTime'].values<0)
-        gas_snap1=np.logical_or(gas_snap1,pdata_snapi['StellarFormationTime'].values<0)
+        gas_snap2=np.logical_or(gas_snap2,pdata_snapf['StellarFormationTime'].values==0)
+        gas_snap1=np.logical_or(gas_snap1,pdata_snapi['StellarFormationTime'].values==0)
 
     star_snap2=pdata_snapf['ParticleType'].values==4
     star_snap1=pdata_snapi['ParticleType'].values==4
