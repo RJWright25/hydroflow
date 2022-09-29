@@ -147,9 +147,9 @@ def gen_btree(path,snapidxmin=0):
                 positions_next_z=positions_next[:,2]
 
                 for isub,subhalo in subcat_now.iterrows():
-                    loc_x_match=np.abs(positions_next_x-subhalo[f'CentreOfPotential_x'])<=0.2
+                    loc_x_match=np.abs(positions_next_x-subhalo[f'CentreOfPotential_x'])<=0.5
                     mass_offset=np.abs(np.log10(mass_next/subhalo['Group_M_Crit200']))
-                    mass_match=mass_offset<=0.15
+                    mass_match=mass_offset<=0.2
                     match=np.logical_and(loc_x_match,mass_match)
                     
                     if not np.nansum(match):
@@ -157,7 +157,7 @@ def gen_btree(path,snapidxmin=0):
                     elif np.nansum(match)==1:
                         desc_ids[isub]=subcat_next.loc[match,'GalaxyID'].values[0]
                     else:
-                        match=np.logical_and.reduce([match,np.abs(positions_next_y-subhalo[f'CentreOfPotential_y'])<=0.2,np.abs(positions_next_z-subhalo[f'CentreOfPotential_z'])<=0.2])
+                        match=np.logical_and.reduce([match,np.abs(positions_next_y-subhalo[f'CentreOfPotential_y'])<=0.5,np.abs(positions_next_z-subhalo[f'CentreOfPotential_z'])<=0.5])
                         if np.nansum(match)==1:
                             desc_ids[isub]=subcat_next.loc[match,'GalaxyID'].values[0]
                         elif np.nansum(match)>1:
