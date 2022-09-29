@@ -91,13 +91,13 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
         os.remove(jobscriptfilepath)
 
     with open(jobscriptfilepath,"w") as taskfile:
-        taskfile.writelines("module load disBatch/beta\n")
+        taskfile.writelines("module load disBatch/2.0\n")
         for ivol in volumes:
             taskfile.writelines(f"python {runscriptfilepath} --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut} --ivol {ivol} &> {jobfolder}{jobname}_ivol{ivol}.out\n")
     
     taskfile.close()
 
-    os.system(f"sbatch -p {partition} -t {time} -n {num} disBatch {jobscriptfilepath}")
+    os.system(f"sbatch disBatch {jobscriptfilepath} -p {partition} -t {time} -n {num} -m {memory}GB")
 
 def submit_gasflow_function(repo,function,arguments,memory,time):
     cwd=os.getcwd()
