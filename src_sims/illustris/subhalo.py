@@ -76,7 +76,7 @@ def read_subcat(basepath,snapnums=None):
                 mainprogid=np.uint64(itree['SnapNum'][1]*1e12+itree['SubfindID'][1])
                 group_df.loc[igroup,'MainProgenitorID']=mainprogid
 
-        print(group_df.loc[:,['GalaxyID','MainProgenitorID']])
+        print(np.uint64(group_df.loc[:,['GalaxyID','MainProgenitorID']].values))
             
     # >>>     tree = il.sublink.loadTree(basePath,135,GroupFirstSub[i],fields=fields,onlyMPB=True)
     logging.info(f'')
