@@ -68,41 +68,32 @@ def read_subcat(basepath,snapnums=None):
         idx_of_igroup_in_subcat=subhalo_df['GroupNumber'].searchsorted(group_df['GroupNumber'].values)
         group_df['SubfindID']=subhalo_df['SubfindID'].values[(idx_of_igroup_in_subcat,)]
         group_df['GalaxyID']=np.uint64(snapnum*1e12+group_df['SubfindID'].values)
-        group_df.loc[:,'MainProgenitorID']=np.nan
 
-        for igroup,group in group_df.iterrows():
-            if not igroup%100:
-                print(igroup)
+        subhalo_dfs.append(group_df)
 
-            itree=tng_tools.sublink.loadTree(basepath,snapnum,int(group['SubfindID']),fields=['SubfindID','SnapNum'],onlyMPB=True)
-            mainprogid=np.uint64(itree['SnapNum'][1]*1e12+itree['SubfindID'][1])
-            group_df.loc[igroup,'MainProgenitorID']=mainprogid
 
-        print(np.uint64(group_df.loc[:,['GalaxyID','MainProgenitorID']].values))
-            
-    # >>>     tree = il.sublink.loadTree(basePath,135,GroupFirstSub[i],fields=fields,onlyMPB=True)
     logging.info(f'')
     logging.info(f'*********************************************')
     logging.info(f'Concatenating final subhalo data structure...')
     logging.info(f'*********************************************')
 
-    # if len (subhalo_dfs)>1:
-    #     subcat=pd.concat(subhalo_dfs)
-    # else:
-    #     subcat=subhalo_dfs[0]
-    # subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False],inplace=True)
-    # subcat.reset_index(inplace=True,drop=True)
+    if len (subhalo_dfs)>1:
+        subcat=pd.concat(subhalo_dfs)
+    else:
+        subcat=subhalo_dfs[0]
+    subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False],inplace=True)
+    subcat.reset_index(inplace=True,drop=True)
 
-    # outname=f'catalogues/catalogue_subhalo_{str(int(snapnums[0])).zfill(3)}_to_{str(int(snapnums[-1])).zfill(3)}.hdf5'
-    # logging.info(f'')
-    # logging.info(f'*********************************************')
-    # logging.info(f'Saving final subhalo data structure to {outname}...')
-    # logging.info(f'*********************************************')
-    # if os.path.exists(f'{outname}'):
-    #     os.remove(f'{outname}')
-    # subcat.to_hdf(f'{outname}',key='Subhalo')
+    outname=f'catalogues/catalogue_subhalo_{str(int(snapnums[0])).zfill(3)}_to_{str(int(snapnums[-1])).zfill(3)}.hdf5'
+    logging.info(f'')
+    logging.info(f'*********************************************')
+    logging.info(f'Saving final subhalo data structure to {outname}...')
+    logging.info(f'*********************************************')
+    if os.path.exists(f'{outname}'):
+        os.remove(f'{outname}')
+    subcat.to_hdf(f'{outname}',key='Subhalo')
 
-    # return subcat
+    return subcat
 
 
 
