@@ -66,10 +66,15 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut/5,:];subhalo_df.reset_index(inplace=True,drop=True)
 
         idx_of_igroup_in_subcat=subhalo_df['GroupNumber'].searchsorted(group_df['GroupNumber'].values)
-        group_df['SubhaloIndex']=subhalo_df['SubhaloIndex'].values[(idx_of_igroup_in_subcat,)]
+        group_df['SubfindID']=subhalo_df['SubhaloIndex'].values[(idx_of_igroup_in_subcat,)]
+        group_df['SubfindIDRaw']=np.uint64(snapnum*1e12+group_df['SubfindIndex'].values)
 
-        print(group_df.loc[:,['GroupNumber','SubhaloIndex','Mass']])
+        for id in group_df['SubfindIndex'].values[:10]:
+            tree=pd.DataFrame(tng_tools.sublink.loadTree(basepath,snapnum,id,fields=['SubfindID','SubfindIDRaw','DescendantID'],onlyMPB=True))
+            print(tree.iloc[:10])
 
+
+    # >>>     tree = il.sublink.loadTree(basePath,135,GroupFirstSub[i],fields=fields,onlyMPB=True)
     logging.info(f'')
     logging.info(f'*********************************************')
     logging.info(f'Concatenating final subhalo data structure...')
