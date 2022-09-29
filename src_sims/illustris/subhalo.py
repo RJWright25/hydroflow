@@ -96,7 +96,6 @@ def read_subcat(basepath,snapnums=None):
     return subcat
 
 
-
 def gen_btree(path,snapidxmin=0):
 
     t0=time.time()
