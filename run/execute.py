@@ -116,14 +116,6 @@ subcat_selection.reset_index(drop=True,inplace=True)
 subcat_selection_final=subcat_selection.loc[np.logical_and(subcat_selection[snap_key].values==snapf,subcat_selection[mass_key].values>=mcut),:].copy()
 subcat_selection_final.reset_index(drop=True,inplace=True)
 
-print('frac within snaps',np.nanmean(np.logical_and(subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf)))
-print('frac in mrange',np.nanmean(np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.25)])))
-print('frac in boxlims',np.nanmean(subcat_boxmask))
-print(subcat_selection.shape[0])
-print(np.nanmean(subcat_selection[snap_key].values==snapf))
-print(np.nanmean(subcat_selection[mass_key].values>=mcut))
-print(subcat_selection_final.shape[0])
-
 del subcat
 numgal=subcat_selection_final.shape[0]
 galaxy_outputs=[]
@@ -175,7 +167,6 @@ if numgal:
 
         if progid and np.nansum(progmatch):
 
-
             galaxy_snapi=subcat_selection.loc[progmatch,:].iloc[0]
 
             r200_eff_f=calc_r200(galaxy_snapf)
@@ -206,6 +197,8 @@ if numgal:
                     logging.info(f'Could not determine properties of galaxy')
 
                 veject=0.5*np.sqrt(constant_G*m200_eff/r200_eff)*hval/afac
+                print(m200_eff,r200_eff)
+                print(galaxy_snapf['Vmax'])
 
                 ### ism
                 gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4,veject=veject)
