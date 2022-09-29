@@ -54,7 +54,7 @@ def read_subcat(basepath,snapnums=None):
 
         subhalo_df['GroupNumber']=subcat['SubhaloGrNr'][:]
         subhalo_df['SubhaloIndex']=np.array(range(subhalo_df.shape[0]))
-        subhalo_df['Mass']=subcat['SubhaloMass'][:]
+        subhalo_df['Mass']=subcat['SubhaloMass'][:]*10**10/hfac
         subhalo_df.sort_values(by='Mass',inplace=True);subhalo_df.reset_index(inplace=True,drop=True)
         
         subhalo_uniquegroupnums,subhalo_unique_indices=np.unique(subhalo_df['GroupNumber'].values,return_index=True)
