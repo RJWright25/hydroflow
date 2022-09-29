@@ -197,8 +197,7 @@ if numgal:
                     logging.info(f'Could not determine properties of galaxy')
 
                 veject=0.5*np.sqrt(constant_G*m200_eff/r200_eff)*hval/afac
-                print(m200_eff,r200_eff)
-                print(galaxy_snapf['Vmax'])
+
 
                 ### ism
                 gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4,veject=veject)
