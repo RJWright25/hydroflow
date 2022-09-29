@@ -28,7 +28,7 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     ptype_fields={0:['InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
                   1:[],
-                  4:['GFM_Metallicity'],
+                  4:['GFM_Metallicity','GFM_StellarFormationTime'],
                   5:[]}
     
     pdata=[{ptype:[] for ptype in ptype_fields} for ifile in range(numfiles)]
@@ -81,10 +81,11 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
 
                     # print('Loading rest')
                     for field in ptype_fields[ptype]:
-                        if not field=='GFM_Metallicity':
+                        if not 'GFM' in field:
                             pdata[ifile][ptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
                         else:
-                            pdata[ifile][ptype]['Metallicity']=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+                            field_out=field[4:]
+                            pdata[ifile][ptype][field_out]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
 
                     #if gas, do temp clc
                     if ptype==0:
