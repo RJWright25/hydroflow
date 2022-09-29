@@ -34,6 +34,8 @@ def analyse_galaxy(galaxy,pdata):
 	if 'StellarFormationTime' in pdata:
 		gas=np.logical_or(gas,pdata.StellarFormationTime<0)
 		star=np.logical_and(star,pdata.StellarFormationTime>0)
+		print(np.nansum(pdata.StellarFormationTime<0))
+		print(np.nanmean(pdata.StellarFormationTime<0))
 	
 	mass=pdata['Mass'].values
 	cool=pdata['Temperature'].values<5*10**4

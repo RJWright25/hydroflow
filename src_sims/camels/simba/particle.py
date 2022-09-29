@@ -20,7 +20,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     if not ptypes:
         ptypes={0:['Masses','Density','InternalEnergy','ElectronAbundance','Metallicity','StarFormationRate'],
                 1:['Masses'],
-                4:['Masses','Metallicity']}
+                4:['Masses','Metallicity','StellarFormationTime']}
     
     pdata={}
     for iptype,ptype in enumerate(ptypes):
