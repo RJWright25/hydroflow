@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from hydroflow.src_physics.utils import calc_r200, calc_v200, vel_conversion
+from hydroflow.src_physics.utils import calc_r200, vel_conversion
 
 def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,veject=0,Tcut=None,idm=False):
     gasflow_output={}
@@ -66,7 +66,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,veject=0,Tcut=None,idm=Fal
     #do gas calcs here
     inflow_mask=np.logical_and.reduce([selection_snap2,np.logical_not(selection_snap1),np.logical_or(gas_snap2,gas_snap1)])
     outflow_mask=np.logical_and.reduce([selection_snap1,np.logical_not(selection_snap2),np.logical_or(gas_snap2,gas_snap1)])
-    ejected_mask=np.logical_and.reduce([outflow_mask,arvel>=veject)
+    ejected_mask=np.logical_and.reduce([outflow_mask,arvel>=veject])
     sfr_mask=np.logical_and.reduce([star_snap2,selection_snap2,np.logical_or(np.logical_not(selection_snap1),gas_snap1)])
 
     #### inflow
