@@ -83,6 +83,8 @@ def read_subvol(path,ivol,nslice):
             print(f'No ptype {ptype} particles in this file!')
             pdata[iptype]=pd.DataFrame([])
 
+    pdata_ifile.close()
+
     print('Successfully loaded')
 
     #concat all pdata into one df
