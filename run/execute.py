@@ -88,7 +88,8 @@ elif code=='camels.simba':
     from hydroflow.src_sims.camels.simba.particle import read_subvol
 elif code=='illustris':
     from hydroflow.src_sims.illustris.particle import read_subvol
-
+elif code=='simba':
+    from hydroflow.src_sims.simba.particle import read_subvol
 
 #metadata
 metadata=pd.read_pickle(path+'/redshifts.dat')
