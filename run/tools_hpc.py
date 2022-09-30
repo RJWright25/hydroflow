@@ -98,7 +98,7 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
     
     taskfile.close()
 
-    os.system(f"sbatch --time {time} -n {num+1} --partition {partition} disBatch {jobscriptfilepath}")
+    os.system(f"sbatch --time {time} -n {num+1} --partition {partition} /mnt/home/carriero/projects/disBatch/beta/disBatch/disBatch {jobscriptfilepath}")
 
 def submit_gasflow_function(repo,function,arguments,memory,time):
     cwd=os.getcwd()
