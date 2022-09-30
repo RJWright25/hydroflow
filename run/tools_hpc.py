@@ -85,8 +85,13 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
     runscriptfilepath=repo+'/run/execute.py'
     num=len(volumes)
 
-    jobscriptfilepath=f'{jobfolder}{jobname}_{num}.tasks'
-    submitscriptfilepath=f'{jobfolder}{jobname}_{num}.sh'
+    disbatch_dir=f'{jobfolder}{jobname}_{num}'
+    if not os.path.exists(disbatch_dir):
+        os.mkdir(disbatch_dir)
+
+    jobscriptfilepath=f'{disbatch_dir}{jobname}_{num}.tasks'
+    submitscriptfilepath=f'{disbatch_dir}{jobname}_{num}.sh'
+
     
     if os.path.exists(jobscriptfilepath):
         os.remove(jobscriptfilepath)
@@ -97,7 +102,7 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
     taskfile.close()
 
     with open(submitscriptfilepath,"w") as submitfile:
-        submitfile.writelines(f"cd {jobfolder}\n")
+        submitfile.writelines(f"cd {disbatch_dir}\n")        
         submitfile.writelines(f"sbatch --time {time} -n {num} --partition {partition} --mem {memory}GB --output {jobfolder}{jobname}.out --job-name {jobname} disBatch {jobscriptfilepath}\n")
         submitfile.writelines(f"cd {cwd}\n")
 
