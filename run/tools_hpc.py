@@ -97,7 +97,10 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
     taskfile.close()
 
     with open(submitscriptfilepath,"w") as submitfile:
+        submitfile.writelines(f"cd {jobfolder}\n")
         submitfile.writelines(f"sbatch --time {time} -n {num} --partition {partition} --mem {memory}GB --output {jobfolder}{jobname}.out --job-name {jobname} disBatch {jobscriptfilepath}\n")
+        submitfile.writelines(f"cd {cwd}\n")
+
     submitfile.close()
 
     print(f'sh {submitscriptfilepath}')
