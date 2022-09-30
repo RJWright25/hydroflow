@@ -85,12 +85,12 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
     runscriptfilepath=repo+'/run/execute.py'
     num=len(volumes)
 
-    disbatch_dir=f'{jobfolder}{jobname}_{num}'
+    disbatch_dir=f'{jobfolder}{jobname}_{str(num).zfill(3)}'
     if not os.path.exists(disbatch_dir):
         os.mkdir(disbatch_dir)
 
-    jobscriptfilepath=f'{disbatch_dir}{jobname}_{num}.tasks'
-    submitscriptfilepath=f'{disbatch_dir}{jobname}_{num}.sh'
+    jobscriptfilepath=f'{disbatch_dir}{jobname}_{str(num).zfill(3)}.tasks'
+    submitscriptfilepath=f'{disbatch_dir}{jobname}_{str(num).zfill(3)}.sh'
 
     
     if os.path.exists(jobscriptfilepath):
