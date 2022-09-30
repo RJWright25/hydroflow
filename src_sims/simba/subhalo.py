@@ -55,7 +55,6 @@ def read_subcat(basepath,snapnums=None):
             subhalo_df.loc[:,'DescendantID']=-1
 
         subhalo_df['GroupNumber']=rockstarfile['/galaxy_data/parent_halo_index'][:]
-        subhalo_df['Mass']=rockstarfile['/galaxy_data/dicts/masses.total'][:]
         subhalo_df['SubGroupNumber']=np.logical_not(rockstarfile['/galaxy_data/central'][:]).astype(np.uint16)
         subhalo_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=rockstarfile['/galaxy_data/minpotpos'][:]*1e-3*hfac
         subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut,:].copy()
@@ -67,7 +66,7 @@ def read_subcat(basepath,snapnums=None):
         totransfer=['GroupMass','Group_M_Crit200','Group_R_Crit200','GroupCentreOfPotential_x','GroupCentreOfPotential_y','GroupCentreOfPotential_z']
         idx_subhalo_in_group=group_df['GroupNumber'].searchsorted(subhalo_df['GroupNumber'].values)
         subhalo_df.loc[:,totransfer]=group_df.loc[idx_subhalo_in_group,totransfer].values
-
+        subhalo_df['Mass']=subhalo_df['GroupMass']
         subhalo_dfs.append(subhalo_df)
 
     logging.info(f'')
