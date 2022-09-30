@@ -62,8 +62,10 @@ def read_subvol(path,ivol,nslice):
 
                 # print('Loading rest')
                 for field in ptype_fields[ptype]:
-                    pdata[iptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
-
+                    if not field=='Metallicity':
+                        pdata[iptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
+                    else:
+                        pdata[iptype][field]=pdata_ifile[f'PartType{ptype}'][field][:,0][subvol_mask]
 
                 #if gas, do temp clc
                 if ptype==0:
