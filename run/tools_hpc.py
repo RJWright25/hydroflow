@@ -100,7 +100,7 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
         submitfile.writelines(f"sbatch --time {time} -n {num} --partition {partition} --mem {memory}GB --output {jobfolder}{jobname}.out --job-name {jobname} disBatch {jobscriptfilepath}\n")
     submitfile.close()
 
-    print(f'Execute {submitscriptfilepath}')
+    print(f'sh {submitscriptfilepath}')
 
 def submit_gasflow_function(repo,function,arguments,memory,time):
     cwd=os.getcwd()
