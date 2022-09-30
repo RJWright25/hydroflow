@@ -18,7 +18,7 @@ def read_subvol(path,ivol,nslice):
                   4:['Metallicity'],
                   5:[]}
     
-    pdata=[{} for iptype in len(ptype_fields)]
+    pdata=[{} for iptype in range(len(ptype_fields))]
 
     pdata_ifile=h5py.File(path,'r')
     npart_ifile=pdata_ifile['Header'].attrs['NumPart_ThisFile']
