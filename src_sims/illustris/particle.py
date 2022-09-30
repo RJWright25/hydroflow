@@ -45,7 +45,7 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
 
                 #mask for subvolume
                 subvol_mask=np.ones(npart_ifile[ptype])
-                coordinates=np.float16(pdata_ifile[f'PartType{ptype}']['Coordinates'][:]*1e-3)
+                coordinates=np.float32(pdata_ifile[f'PartType{ptype}']['Coordinates'][:]*1e-3)
                 
                 for idim,dim in enumerate('xyz'):
                     lims_idim=lims[2*idim:(2*idim+2)]
