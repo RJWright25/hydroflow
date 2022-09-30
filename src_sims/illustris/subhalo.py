@@ -1,6 +1,5 @@
 
 import os
-import h5py
 import numpy as np
 import pandas as pd
 import logging
@@ -48,6 +47,10 @@ def read_subcat(basepath,snapnums=None):
         group_df.loc[:,'SnapNum']=snapnum
         group_df.loc[:,'Redshift']=zval
 
+        logging.info(f'Loaded group data {snapnum} [runtime {time.time()-t0:.2f} sec]')
+
+
+
         group_df=group_df.loc[group_df['Mass'].values>=mcut,:].copy()
         group_df.reset_index(drop=True,inplace=True)
         group_df.append(group_df)
@@ -71,6 +74,7 @@ def read_subcat(basepath,snapnums=None):
 
         subhalo_dfs.append(group_df)
 
+        logging.info(f'Matched group data {snapnum} [runtime {time.time()-t0:.2f} sec]')
 
     logging.info(f'')
     logging.info(f'*********************************************')
