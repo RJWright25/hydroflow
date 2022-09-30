@@ -95,7 +95,7 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
             taskfile.writelines(f"python {runscriptfilepath} --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut} --ivol {ivol}&>{jobfolder}{jobname}_ivol{ivol}.out\n")
     taskfile.close()
 
-    print(f"Execute: cd {jobfolder}; sbatch --time {time} -n {num} --partition {partition} --mem {memory}GB --output {jobfolder}{jobname}.out disBatch {jobscriptfilepath}")
+    print(f"Execute: cd {jobfolder}; sbatch --time {time} -n {num} --partition {partition} --mem {memory}GB --output {jobfolder}{jobname}.out --job-name {jobname} disBatch {jobscriptfilepath}")
 
 def submit_gasflow_function(repo,function,arguments,memory,time):
     cwd=os.getcwd()
