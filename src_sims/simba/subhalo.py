@@ -68,7 +68,9 @@ def read_subcat(basepath,snapnums=None):
         idx_subhalo_in_group=group_df['GroupNumber'].searchsorted(subhalo_df['GroupNumber'].values)
         subhalo_df.loc[:,totransfer]=group_df.loc[idx_subhalo_in_group,totransfer].values
         subhalo_df['Mass']=subhalo_df['GroupMass'].values
-        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut,:].copy()
+        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut,:]
+        subhalo_df=subhalo_df.loc[subhalo_df['SubGroupNumber'].values==0,:]
+        subhalo_df.reset_index(inplace=True,drop=True)
 
         subhalo_dfs.append(subhalo_df)
 
