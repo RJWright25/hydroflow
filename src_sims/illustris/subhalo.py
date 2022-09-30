@@ -24,52 +24,98 @@ def read_subcat(basepath,snapnums=None):
         logging.info(f'Processing snapnum {snapnum} [runtime {time.time()-t0:.2f} sec]')
         logging.info(f'***********************************************************************')
 
-        rockstarfile=h5py.File(basepath+f'_{str(snapnum).zfill(3)}.hdf5')
+        subfind_raw= tng_tools.groupcat.load(basepath,snapNum=snapnum)
+        subcat=subfind_raw['subhalos']
+        groupcat=subfind_raw['halos']
 
-        hfac=rockstarfile['simulation_attributes'].attrs['hubble_constant']
-        zval=rockstarfile['simulation_attributes'].attrs['redshift']
+        hfac=subfind_raw['header']['HubbleParam']
+        zval=subfind_raw['header']['Redshift']
 
         group_df=pd.DataFrame()
         subhalo_df=pd.DataFrame()
 
-        mcut=1e10
+        mcut=3e10
 
         ### group data
-        group_df.loc[:,'Mass']=rockstarfile['/halo_data/dicts/masses.total'][:]
-        group_df.loc[:,'GroupMass']=rockstarfile['/halo_data/dicts/masses.total'][:]
-        group_df.loc[:,'Group_M_Crit200']=rockstarfile['/halo_data/dicts/virial_quantities.m200c'][:]
-        group_df.loc[:,'Group_R_Crit200']=rockstarfile['/halo_data/dicts/virial_quantities.r200c'][:]*1e-3*hfac
-        group_df.loc[:,[f'GroupCentreOfPotential_{x}' for x in 'xyz']]=rockstarfile['/halo_data/minpotpos'][:]*1e-3*hfac
-        group_df.loc[:,'GroupNumber']=rockstarfile['/halo_data/GroupID'][:]
-
-        # group_df=group_df.loc[group_df['Mass'].values>=mcut,:].copy()
-        group_df.sort_values('GroupNumber',inplace=True)
+        group_df.loc[:,'GroupMass']=groupcat['GroupMass'][:]*10**10/hfac
+        group_df.loc[:,'Group_M_Crit200']=groupcat['Group_M_Crit200'][:]*10**10/hfac
+        group_df.loc[:,'Group_R_Crit200']=groupcat['Group_R_Crit200'][:]*1e-3
+        group_df.loc[:,[f'GroupCentreOfPotential_{x}' for x in 'xyz']]=groupcat['GroupPos'][:]*1e-3
+        group_df.loc[:,'GroupNumber']=np.array(list(range(group_df.shape[0]))).astype(np.uint64)
+        group_df=group_df.loc[group_df.GroupMass>=mcut,:].copy()
         group_df.reset_index(drop=True,inplace=True)
 
-        subhalo_df['GalaxyIndex']=np.array(rockstarfile['/galaxy_data/GroupID'][:])
-        subhalo_df['GalaxyID']=np.uint64(subhalo_df['GalaxyIndex'].values+snapnum*1e12)
-        if 'descend_galaxy_star' in list(rockstarfile['tree_data'].keys()):
-            subhalo_df['DescendantIndex']=np.array(rockstarfile['/tree_data/descend_galaxy_star'][:])
-            subhalo_df['DescendantID']=np.uint64(subhalo_df['DescendantIndex'].values+(snapnum+1)*1e12)
-        else:
-            subhalo_df.loc[:,'DescendantIndex']=-1
-            subhalo_df.loc[:,'DescendantID']=-1
 
-        subhalo_df['GroupNumber']=rockstarfile['/galaxy_data/parent_halo_index'][:]
-        subhalo_df['Mass']=rockstarfile['/galaxy_data/dicts/masses.total'][:]
-        subhalo_df['SubGroupNumber']=np.logical_not(rockstarfile['/galaxy_data/central'][:]).astype(np.uint16)
-        subhalo_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=rockstarfile['/galaxy_data/minpotpos'][:]*1e-3*hfac
-        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut,:].copy()
-        subhalo_df.reset_index(inplace=True,drop=True)
+        ### subhalo data
+        subhalo_df['GroupNumber']=subcat['SubhaloGrNr'][:]
+        subhalo_df['Flag']=subcat['SubhaloFlag'][:]
+        subhalo_df['Vmax']=subcat['SubhaloVmax'][:]
+        subhalo_df['VmaxRadius']=subcat['SubhaloVmaxRad'][:]*1e-3
+        subhalo_df['HalfMassRad']=subcat['SubhaloHalfmassRad'][:]*1e-3
+
+        subhalo_df['Mass']=np.nansum(subcat['SubhaloMassType'][:],axis=1)*10**10/hfac
+        subhalo_df.loc[:,[f'MassType_{itype}' for itype in [0,1,2,3,4,5]]]=subcat['SubhaloMassType'][:]*10**10/hfac
+        subhalo_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=subcat['SubhaloPos'][:]*1e-3
+        subhalo_df.loc[:,[f'CentreOfMass_{x}' for x in 'xyz']]=subcat['SubhaloCM'][:]*1e-3
+        subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=subcat['SubhaloVel'][:]
+        subhalo_df.loc[:,[f'Spin_{x}' for x in 'xyz']]=subcat['SubhaloSpin'][:]
+
         subhalo_df.loc[:,'SnapNum']=snapnum
         subhalo_df.loc[:,'Redshift']=zval
+        subhalo_df.loc[:,'SubhaloIndex']=np.int64(list(range(subhalo_df.shape[0])))
+        subhalo_df.loc[:,'SubhaloIDRaw']=np.int64(10**12*snapnum+subhalo_df.loc[:,'SubhaloIndex'].values)
 
-        ##add groups
-        totransfer=['GroupMass','Group_M_Crit200','Group_R_Crit200','GroupCentreOfPotential_x','GroupCentreOfPotential_y','GroupCentreOfPotential_z']
-        idx_subhalo_in_group=group_df['GroupNumber'].searchsorted(subhalo_df['GroupNumber'].values)
-        subhalo_df.loc[:,totransfer]=group_df.loc[idx_subhalo_in_group,totransfer].values
+        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut/10,:].copy()
+        subhalo_df.reset_index(drop=True,inplace=True)
+
+        logging.info(f'Matching groups... [runtime {time.time()-t0:.2f} sec]')
+        numgroups=group_df.shape[0]
+        groupkeys=list(group_df.keys())
+        for igroup,group in group_df.iterrows():
+            if not igroup%1000:
+                logging.info(f'{igroup/numgroups*100:.1f}% done with groups [runtime {time.time()-t0:.2f} sec]')
+
+            groupmatch=subhalo_df['GroupNumber'].values==group['GroupNumber']
+            for key in groupkeys:
+                subhalo_df.loc[groupmatch,key]=group[key]
+            subhalo_df.loc[groupmatch,'SubGroupNumber']=np.argsort(np.argsort(-subhalo_df.loc[groupmatch,'Mass'].values))
+
+        subhalo_df=subhalo_df.loc[subhalo_df['GroupMass'].values>=mcut,:].copy()
+        subhalo_df.reset_index(drop=True,inplace=True)
+
+
+        # logging.info(f'')
+        # logging.info(f'Adding trees... [runtime {time.time()-t0:.2f} sec]')
+
+        # n=subhalo_df.shape[0]
+        # subids=np.zeros(n)-1
+        # descids=np.zeros(n)-1
+        # progids=np.zeros(n)-1        
+        # progmass=np.zeros(n)-1        
+        
+        # for isub,subhalo in subhalo_df.iterrows():
+        #     if not isub%1000:
+        #         logging.info(f'{isub/n*100:.1f}% done with trees [runtime {time.time()-t0:.2f} sec]')
+
+        #     subhalo_idx=int(subhalo['SubhaloIndex'])
+        #     subhalo_tree=tng_tools.sublink.loadTree(basepath,snapNum=subhalo['SnapNum'],id=subhalo_idx,onlyMPB=True,fields=['SubhaloID','SubhaloIDRaw','DescendantID','Mass'])
+            
+        #     if subhalo_tree:
+        #         subids[isub]=subhalo_tree['SubhaloID'][0]
+        #         descids[isub]=subhalo_tree['DescendantID'][0]
+        #         try:
+        #             progids[isub]=subhalo_tree['SubhaloID'][1]
+        #             progmass[isub]=subhalo_tree['Mass'][1]
+        #         except:
+        #             progids[isub]=-2
+
+        # subhalo_df.loc[:,'GalaxyID']=subids
+        # subhalo_df.loc[:,'DescendantID']=descids
+        # subhalo_df.loc[:,'MainProgenitorID']=progids
+        # subhalo_df.loc[:,'MainProgenitorMass']=progmass
 
         subhalo_dfs.append(subhalo_df)
+
 
     logging.info(f'')
     logging.info(f'*********************************************')
@@ -80,8 +126,7 @@ def read_subcat(basepath,snapnums=None):
         subcat=pd.concat(subhalo_dfs)
     else:
         subcat=subhalo_dfs[0]
-
-    subcat.sort_values(by=['SnapNum','Mass'],ascending=[True,False],inplace=True)
+    subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False],inplace=True)
     subcat.reset_index(inplace=True,drop=True)
 
     outname=f'catalogues/catalogue_subhalo_{str(int(snapnums[0])).zfill(3)}_to_{str(int(snapnums[-1])).zfill(3)}.hdf5'
@@ -94,6 +139,7 @@ def read_subcat(basepath,snapnums=None):
     subcat.to_hdf(f'{outname}',key='Subhalo')
 
     return subcat
+
 
 
 def gen_btree(path,snapidxmin=0):
