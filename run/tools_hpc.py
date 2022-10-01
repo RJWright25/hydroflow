@@ -4,6 +4,7 @@
 # run/tools_hpc.py: handy functions to submit gas flow execute script via batch system.
 
 import os
+from tkinter import NONE
 
 def create_dir(path):
     running_dir=''
@@ -66,7 +67,7 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
         os.system(f"sbatch --array=0-{nvol-1} {jobscriptfilepath}")
         print(f"sbatch --array=0-{nvol-1} {jobscriptfilepath}")
 
-def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=None):
+def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,nodetype=None,volumes=None):
     
     code=arguments['code']
     pathcat=arguments['path']
@@ -102,7 +103,7 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,volumes=No
 
     with open(submitscriptfilepath,"w") as submitfile:
         submitfile.writelines(f"cd {disbatch_dir}\n")        
-        submitfile.writelines(f"sbatch --time {time} -n {num} --partition {partition} --mem {memory}GB --output {jobfolder}{jobname}.out --job-name {jobname} disBatch {jobscriptfilepath}\n")
+        submitfile.writelines(f"sbatch --time {time} -n {num} --partition {partition} --C {nodetype} --mem {memory}GB --output {jobfolder}{jobname}.out --job-name {jobname} disBatch {jobscriptfilepath}\n")
         submitfile.writelines(f"cd {cwd}\n")
 
     submitfile.close()
