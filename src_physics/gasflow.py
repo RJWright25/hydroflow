@@ -161,6 +161,7 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     
     pid_allcandidates=np.unique(np.concatenate([pids_candidates_snapi,pids_candidates_snapf]))
     bad=False
+    
     try:
         pdata_candidates_idx_snapi=np.searchsorted(pdata_snapi['ParticleIDs'].values,pid_allcandidates)
         pdata_candidates_snapi=pdata_snapi.iloc[pdata_candidates_idx_snapi,:]
