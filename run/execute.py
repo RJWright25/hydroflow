@@ -197,11 +197,11 @@ if numgal:
                 else:
                     logging.info(f'Could not determine properties of galaxy')
 
-                veject=0.5*np.sqrt(constant_G*m200_eff/r200_eff)*hval/afac
-
+                #v200
+                v200=np.sqrt(constant_G*m200_eff/(r200_eff*afac/hval))*hval
 
                 ### ism
-                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4,veject=veject)
+                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4,vc=v200)
                 for key in list(gasflow_ism.keys()):
                     galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
 
@@ -209,7 +209,7 @@ if numgal:
                 ### r200 facs
                 for fac in [0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.25,1.5,1.75,2,2.25,2.5,2.75,3]:
                     idm=(fac>=1)
-                    gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=idm,veject=veject)
+                    gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=idm,vc=v200)
                     for key in list(gasflow_ir200.keys()):
                         
                         if not 'dm' in key:
@@ -221,7 +221,7 @@ if numgal:
                 ### user def
                 for user_radius in user_radii:
                     iuser_radius=galaxy_snapf[user_radius]
-                    gasflow_iuser=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=iuser_radius,dt=dt,Tcut=None,veject=veject)
+                    gasflow_iuser=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=iuser_radius,dt=dt,Tcut=None,vc=v200)
                     for key in list(gasflow_iuser.keys()):
                         galaxy_output.loc[0,f'{user_radius}-'+key]=gasflow_iuser[key]
                     
