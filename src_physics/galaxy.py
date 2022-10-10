@@ -84,7 +84,7 @@ def analyse_galaxy(galaxy,pdata):
 		galaxy_output[f'{reservoir}-m']=np.nansum(partmass)
 
 		if 'prof' in reservoir:
-			galaxy_output[f'{reservoir}-vol']=reservoir_volume[reservoir.split('_r200')[0]]
+			galaxy_output[f'{reservoir}-vol']=reservoir_volume[reservoir.split('_')[0]]
 
 		if 'star' in reservoir:
 			reservoir_props=properties_ptype[4]
