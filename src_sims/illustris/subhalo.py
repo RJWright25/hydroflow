@@ -73,6 +73,7 @@ def read_subcat(basepath,snapnums=None):
         idx_of_igroup_in_subcat=idx_of_igroup_in_subcat[np.where(groupmatch)]
         group_df.loc[groupmatch,'SubfindID']=subhalo_df['SubfindID'].values[(idx_of_igroup_in_subcat,)]
         group_df.loc[groupmatch,'StarFormationRate']=subhalo_df['StarFormationRate'].values[(idx_of_igroup_in_subcat,)]
+        group_df.loc[groupmatch,'StellarMass']=subhalo_df['StellarMass'].values[(idx_of_igroup_in_subcat,)]
         group_df.loc[groupmatch,'GalaxyID']=np.uint64(snapnum*1e12+group_df.loc[groupmatch,'SubfindID'].values)
 
         subhalo_dfs.append(group_df)
