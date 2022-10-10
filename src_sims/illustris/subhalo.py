@@ -64,8 +64,9 @@ def read_subcat(basepath,snapnums=None):
         subhalo_mostmassive_indices=subhalo_df['SubfindID'].values[subhalo_unique_indices]
         subhalo_mostmassive_mass=subhalo_df['Mass'].values[subhalo_unique_indices]
         subhalo_mostmassive_SFR=subhalo_df['StarFormationRate'].values[subhalo_unique_indices]
+        subhalo_mostmassive_StellarMass=subhalo_df['StellarMass'].values[subhalo_unique_indices]
 
-        subhalo_df=pd.DataFrame({'GroupNumber':subhalo_uniquegroupnums,'SubfindID':subhalo_mostmassive_indices,'Mass':subhalo_mostmassive_mass,'StarFormationRate':subhalo_mostmassive_SFR})
+        subhalo_df=pd.DataFrame({'GroupNumber':subhalo_uniquegroupnums,'SubfindID':subhalo_mostmassive_indices,'Mass':subhalo_mostmassive_mass,'StarFormationRate':subhalo_mostmassive_SFR,'StellarMass':subhalo_mostmassive_StellarMass})
         subhalo_df.sort_values(by='GroupNumber',inplace=True);subhalo_df.reset_index(inplace=True,drop=True)
 
         idx_of_igroup_in_subcat=subhalo_df['GroupNumber'].searchsorted(group_df['GroupNumber'].values)
