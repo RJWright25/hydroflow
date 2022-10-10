@@ -4,12 +4,14 @@
 # src_physics/gasflow.py: routines to analyse reservoir between snapshots, find inflow/outflow particles, and characterise them.
 
 import numpy as np
+import time
 
 from hydroflow.src_physics.utils import calc_r200, vel_conversion
 
 def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
     gasflow_output={}
 
+    t1=time.time()
     mass_snap1=pdata_snapi['Mass'].values
     mass_snap2=pdata_snapf['Mass'].values
 
@@ -52,6 +54,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
     selection_snap1=np.logical_and.reduce([rcut_snap1,np.logical_or(cool_snap1,star_snap1)])
     selection_snap2=np.logical_and.reduce([rcut_snap2,np.logical_or(cool_snap2,star_snap2)])
 
+    print(f'{time.time()-t1:.3f} seconds for initial masking')
 
     #do DM calcs here
     if idm:
@@ -65,6 +68,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
         gasflow_output['dm-outflow-n']=np.nansum(outflow_mask_dm)
         gasflow_output['dm-outflow-m']=np.nansum(outflow_mass_dm)/dt
 
+    print(f'{time.time()-t1:.3f} seconds for dm calcs')
+
     #do gas calcs here
     inflow_mask=np.logical_and.reduce([selection_snap2,np.logical_not(selection_snap1),np.logical_or(gas_snap2,gas_snap1)])
     outflow_mask=np.logical_and.reduce([selection_snap1,np.logical_not(selection_snap2),np.logical_or(gas_snap2,gas_snap1)])
@@ -76,6 +81,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
     vcuts=['000kmps','050kmps','100kmps','150kmps','250kmps','0p25vc','0p50vc','1p00vc','2p00vc']
     vcuts_val=[0,50,100,150,250,0.25*vc,0.5*vc,vc,2*vc]
     outflow_masks={vcut:np.logical_and.reduce([outflow_mask,arvel>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
+
+    print(f'{time.time()-t1:.3f} seconds for inflow/outflow masking')
 
     #### inflow
     for name,mask in zip(['inflow','inflow_pristine'],[inflow_mask,inflow_pristine_mask]):
@@ -98,6 +105,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
             remove=[f'{name}-Z_mean',f'{name}-Z_median',f'{name}-T_mean',f'{name}-T_median',f'{name}-arvel_mean',f'{name}-arvel_median']
             for field in remove:
                 gasflow_output[field]=np.nan
+
+    print(f'{time.time()-t1:.3f} seconds for inflow calcs')
 
 
     #### outflows
@@ -125,6 +134,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
             remove=[f'{vcut}_outflow-Z_mean',f'{vcut}_outflow-Z_median',f'{vcut}_outflow-T_mean',f'{vcut}_outflow-T_median',f'{vcut}_outflow-arvel_mean',f'{vcut}_outflow-arvel_median',f'{vcut}_outflow-arvel_05P',f'{vcut}_outflow-arvel_95P']
             for field in remove:
                 gasflow_output[field]=np.nan
+
+    print(f'{time.time()-t1:.3f} seconds for outflow calcs')
 
     return gasflow_output
 
