@@ -178,8 +178,8 @@ if numgal:
 
             galaxy_output.loc[0,'r200_eff']=r200_eff
             galaxy_output.loc[0,'m200_eff']=m200_eff
-            galaxy_output.loc[0,'inst_SFR']=m200_eff
-            galaxy_output.loc[0,'ave_SFR']=m200_eff
+            galaxy_output.loc[0,'inst_SFR']=inst_sfr
+            galaxy_output.loc[0,'ave_SFR']=ave_sfr
 
             t1_c=time.time()
             success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf)
@@ -209,7 +209,7 @@ if numgal:
                     galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
 
                 ### r200 facs
-                for fac in [0.1,0.15,0.2,0.25,0.5,0.75,1,1.5,2,2.5,3]:
+                for fac in [0.1,0.15,0.2,0.25,0.5,0.75,1,1.5,2,2.5]:
                     idm=(fac>=1)
                     gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=idm,vc=v200)
                     for key in list(gasflow_ir200.keys()):
