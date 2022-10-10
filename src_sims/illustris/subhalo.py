@@ -56,7 +56,7 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df['GroupNumber']=subcat['SubhaloGrNr'][:]
         subhalo_df['SubfindID']=np.array(range(subhalo_df.shape[0]))
         subhalo_df['StarFormationRate']=subcat['SubhaloSFR'][:]
-        subhalo_df['StellarMass']=subcat['SubhaloMassType'][:,4]
+        subhalo_df['StellarMass']=subcat['SubhaloMassType'][:,4]*10**10/hfac
         subhalo_df['Mass']=subcat['SubhaloMass'][:]*10**10/hfac
         subhalo_df.sort_values(by='Mass',inplace=True,ascending=False);subhalo_df.reset_index(inplace=True,drop=True)
         
