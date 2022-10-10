@@ -78,7 +78,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
     inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Z_snap2<1e-4,Z_snap1<1e-4))
 
     #vcuts
-    vcuts=['000kmps','050kmps','100kmps','150kmps','250kmps','0p25vc','0p50vc','1p00vc','2p00vc']
+    vcuts=['000kmps','50kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
     vcuts_val=[0,50,100,150,250,0.25*vc,0.5*vc,vc,2*vc]
     outflow_masks={vcut:np.logical_and.reduce([outflow_mask,arvel>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
