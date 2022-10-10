@@ -8,11 +8,11 @@ import time
 
 def read_subcat(basepath,snapnums=None):
     snapm1=snapnums[-1]
-    if os.path.exists(f'logs/extract_subhalo_{snapm1}.log'):
-        os.remove(f'logs/extract_subhalo_{snapm1}.log')
+    if os.path.exists(f'jobs/logs/extract_subhalo_{snapm1}.log'):
+        os.remove(f'jobs/logs/extract_subhalo_{snapm1}.log')
         
     t0=time.time()
-    logging.basicConfig(filename=f'logs/extract_subhalo_{snapm1}.log', level=logging.INFO)
+    logging.basicConfig(filename=f'jobs/logs/extract_subhalo_{snapm1}.log', level=logging.INFO)
     logging.info(f'Running subhalo extraction for {len(snapnums)} snaps ending at {snapnums[-1]} ...')
 
     subhalo_dfs=[]
@@ -58,7 +58,10 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df['Mass']=rockstarfile['/galaxy_data/dicts/masses.total'][:]
         subhalo_df['GroupNumber']=rockstarfile['/galaxy_data/parent_halo_index'][:]
         subhalo_df['SubGroupNumber']=np.logical_not(rockstarfile['/galaxy_data/central'][:]).astype(np.uint16)
+        subhalo_df['StarFormationRate']=rockstarfile['/galaxy_data/sfr'][:]
+        subhalo_df['StellarMass']=rockstarfile['/galaxy_data/dicts/masses.stellar'][:]
         subhalo_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=rockstarfile['/galaxy_data/minpotpos'][:]*1e-3*hfac
+
         subhalo_df.reset_index(inplace=True,drop=True)
         subhalo_df.loc[:,'SnapNum']=snapnum
         subhalo_df.loc[:,'Redshift']=zval

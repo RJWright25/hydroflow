@@ -8,11 +8,11 @@ import illustris_python as tng_tools
 
 def read_subcat(basepath,snapnums=None):
     snapm1=snapnums[-1]
-    if os.path.exists(f'logs/extract_subhalo_{snapm1}.log'):
-        os.remove(f'logs/extract_subhalo_{snapm1}.log')
+    if os.path.exists(f'jobs/logs/extract_subhalo_{snapm1}.log'):
+        os.remove(f'jobs/logs/extract_subhalo_{snapm1}.log')
         
     t0=time.time()
-    logging.basicConfig(filename=f'logs/extract_subhalo_{snapm1}.log', level=logging.INFO)
+    logging.basicConfig(filename=f'jobs/logs/extract_subhalo_{snapm1}.log', level=logging.INFO)
     logging.info(f'Running subhalo extraction for {len(snapnums)} snaps ending at {snapnums[-1]} ...')
 
     subhalo_dfs=[]
@@ -49,28 +49,30 @@ def read_subcat(basepath,snapnums=None):
 
         logging.info(f'Loaded group data {snapnum} [runtime {time.time()-t0:.2f} sec]')
 
-
-
         group_df=group_df.loc[group_df['Mass'].values>=mcut,:].copy()
         group_df.reset_index(drop=True,inplace=True)
         group_df.append(group_df)
 
         subhalo_df['GroupNumber']=subcat['SubhaloGrNr'][:]
         subhalo_df['SubfindID']=np.array(range(subhalo_df.shape[0]))
+        subhalo_df['StarFormationRate']=subcat['SubhaloSFR'][:]
         subhalo_df['Mass']=subcat['SubhaloMass'][:]*10**10/hfac
         subhalo_df.sort_values(by='Mass',inplace=True,ascending=False);subhalo_df.reset_index(inplace=True,drop=True)
         
         subhalo_uniquegroupnums,subhalo_unique_indices=np.unique(subhalo_df['GroupNumber'].values,return_index=True)
         subhalo_mostmassive_indices=subhalo_df['SubfindID'].values[subhalo_unique_indices]
         subhalo_mostmassive_mass=subhalo_df['Mass'].values[subhalo_unique_indices]
+        subhalo_mostmassive_SFR=subhalo_df['StarFormationRate'].values[subhalo_unique_indices]
 
-        subhalo_df=pd.DataFrame({'GroupNumber':subhalo_uniquegroupnums,'SubfindID':subhalo_mostmassive_indices,'Mass':subhalo_mostmassive_mass})
+        subhalo_df=pd.DataFrame({'GroupNumber':subhalo_uniquegroupnums,'SubfindID':subhalo_mostmassive_indices,'Mass':subhalo_mostmassive_mass,'StarFormationRate':subhalo_mostmassive_SFR})
         subhalo_df.sort_values(by='GroupNumber',inplace=True);subhalo_df.reset_index(inplace=True,drop=True)
-        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut/5,:];subhalo_df.reset_index(inplace=True,drop=True)
 
         idx_of_igroup_in_subcat=subhalo_df['GroupNumber'].searchsorted(group_df['GroupNumber'].values)
-        group_df['SubfindID']=subhalo_df['SubfindID'].values[(idx_of_igroup_in_subcat,)]
-        group_df['GalaxyID']=np.uint64(snapnum*1e12+group_df['SubfindID'].values)
+        groupmatch=group_df['GroupNumber'].values==subhalo_df['GroupNumber'].values[(idx_of_igroup_in_subcat,)]
+        idx_of_igroup_in_subcat=idx_of_igroup_in_subcat[np.where(groupmatch)]
+        group_df.loc[groupmatch,'SubfindID']=subhalo_df['SubfindID'].values[(idx_of_igroup_in_subcat,)]
+        group_df.loc[groupmatch,'StarFormationRate']=subhalo_df['StarFormationRate'].values[(idx_of_igroup_in_subcat,)]
+        group_df.loc[groupmatch,'GalaxyID']=np.uint64(snapnum*1e12+group_df.loc[groupmatch,'SubfindID'].values)
 
         subhalo_dfs.append(group_df)
 
@@ -105,10 +107,10 @@ def read_subcat(basepath,snapnums=None):
 def gen_btree(path,snapidxmin=0):
 
     t0=time.time()
-    if os.path.exists('logs/gen_btree.log'):
-        os.remove('logs/gen_btree.log')
+    if os.path.exists('jobs/logs/gen_btree.log'):
+        os.remove('jobs/logs/gen_btree.log')
 
-    logging.basicConfig(filename='logs/gen_btree.log', level=logging.INFO)
+    logging.basicConfig(filename='jobs/logs/gen_btree.log', level=logging.INFO)
     logging.info(f'Loading subhalo catalogue from {path} [runtime {time.time()-t0:.2f} sec]')
 
     subcat=pd.read_hdf(path,key='Subhalo')

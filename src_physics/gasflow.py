@@ -58,52 +58,54 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
         inflow_mask_dm=np.logical_and.reduce([rcut_snap2,np.logical_not(rcut_snap1),pdata_snapf['ParticleType'].values==1])
         inflow_mass_dm=mass_snap2[inflow_mask_dm]
         gasflow_output['dm-inflow-n']=np.nansum(inflow_mask_dm)
-        gasflow_output['dm-inflow-m']=np.nansum(inflow_mass_dm)
+        gasflow_output['dm-inflow-m']=np.nansum(inflow_mass_dm)/dt
 
         outflow_mask_dm=np.logical_and.reduce([rcut_snap1,np.logical_not(rcut_snap2),pdata_snapf['ParticleType'].values==1])
         outflow_mass_dm=mass_snap2[outflow_mask_dm]
         gasflow_output['dm-outflow-n']=np.nansum(outflow_mask_dm)
-        gasflow_output['dm-outflow-m']=np.nansum(outflow_mass_dm)
+        gasflow_output['dm-outflow-m']=np.nansum(outflow_mass_dm)/dt
 
     #do gas calcs here
     inflow_mask=np.logical_and.reduce([selection_snap2,np.logical_not(selection_snap1),np.logical_or(gas_snap2,gas_snap1)])
     outflow_mask=np.logical_and.reduce([selection_snap1,np.logical_not(selection_snap2),np.logical_or(gas_snap2,gas_snap1)])
 
-    ################# vcuts
+    ## pristine
+    inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Z_snap2<1e-4,Z_snap1<1e-4))
+
+    #vcuts
     vcuts=['000kmps','050kmps','100kmps','150kmps','250kmps','0p25vc','0p50vc','1p00vc','2p00vc']
     vcuts_val=[0,50,100,150,250,0.25*vc,0.5*vc,vc,2*vc]
-
     outflow_masks={vcut:np.logical_and.reduce([outflow_mask,arvel>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
-    sfr_mask=np.logical_and.reduce([star_snap2,selection_snap2,np.logical_or(np.logical_not(selection_snap1),gas_snap1)])
 
     #### inflow
-    inflow_mass=mass_snap2[inflow_mask]
-    gasflow_output['inflow-n']=np.nansum(inflow_mask)
-    gasflow_output['inflow-m']=np.nansum(inflow_mass)
-    if gasflow_output['inflow-n']>0.:
-        gasflow_output['inflow-Z_mean']=np.average(Z_snap2[inflow_mask],weights=inflow_mass)
-        gasflow_output['inflow-Z_median']=np.nanmedian(Z_snap2[inflow_mask])
-        gasflow_output['inflow-T_mean']=np.average(T_snap2[inflow_mask],weights=inflow_mass)
-        gasflow_output['inflow-T_median']=np.nanmedian(T_snap2[inflow_mask])
+    for name,mask in zip(['inflow','inflow_pristine'],[inflow_mask,inflow_pristine_mask]):
+        inflow_mass=mass_snap2[mask]
+        gasflow_output[f'{name}-n']=np.nansum(mask)
+        gasflow_output[f'{name}-m']=np.nansum(inflow_mass)/dt
+        if gasflow_output[f'{name}-n']>0.:
+            gasflow_output[f'{name}-Z_mean']=np.average(Z_snap2[mask],weights=inflow_mass)
+            gasflow_output[f'{name}-Z_median']=np.nanmedian(Z_snap2[mask])
+            gasflow_output[f'{name}-T_mean']=np.average(T_snap2[mask],weights=inflow_mass)
+            gasflow_output[f'{name}-T_median']=np.nanmedian(T_snap2[mask])
 
-        #infall vel
-        arvel_inflow=arvel[inflow_mask]
-        arvel_mask=np.where(np.logical_and(np.isfinite(arvel_inflow),inflow_mass>=0))
-        if np.nansum(arvel_mask):
-            gasflow_output['inflow-arvel_mean']=np.average(arvel_inflow[arvel_mask],weights=inflow_mass[arvel_mask])
-            gasflow_output['inflow-arvel_median']=np.nanmedian(arvel_inflow[arvel_mask])
-    else:
-        remove=['inflow-Z_mean','inflow-Z_median','inflow-T_mean','inflow-T_median','inflow-arvel_mean','inflow-arvel_median']
-        for field in remove:
-            gasflow_output[field]=np.nan
+            #infall vel
+            arvel_inflow=arvel[mask]
+            arvel_mask=np.where(np.logical_and(np.isfinite(arvel_inflow),inflow_mass>=0))
+            if np.nansum(arvel_mask):
+                gasflow_output[f'{name}-arvel_mean']=np.average(arvel_inflow[arvel_mask],weights=inflow_mass[arvel_mask])
+                gasflow_output[f'{name}-arvel_median']=np.nanmedian(arvel_inflow[arvel_mask])
+        else:
+            remove=[f'{name}-Z_mean',f'{name}-Z_median',f'{name}-T_mean',f'{name}-T_median',f'{name}-arvel_mean',f'{name}-arvel_median']
+            for field in remove:
+                gasflow_output[field]=np.nan
 
 
-    #### outflows v2
+    #### outflows
     for vcut,vcut_val in zip(vcuts,vcuts_val):
         ejected_mask=outflow_masks[vcut]
         outflow_mass=mass_snap1[ejected_mask]
         gasflow_output[f'{vcut}_outflow-n']=np.nansum(ejected_mask)
-        gasflow_output[f'{vcut}_outflow-m']=np.nansum(outflow_mass)
+        gasflow_output[f'{vcut}_outflow-m']=np.nansum(outflow_mass)/dt
         if gasflow_output[f'{vcut}_outflow-n']>0.:
             gasflow_output[f'{vcut}_outflow-Z_mean']=np.average(Z_snap1[ejected_mask],weights=outflow_mass)
             gasflow_output[f'{vcut}_outflow-Z_median']=np.nanmedian(Z_snap1[ejected_mask])
@@ -124,11 +126,6 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
             for field in remove:
                 gasflow_output[field]=np.nan
 
-    #star formation (mass of new stars)
-    sfr_mass=mass_snap2[sfr_mask]
-    gasflow_output['ave_SFR-n']=np.nansum(sfr_mask)
-    gasflow_output['ave_SFR-m']=np.nansum(sfr_mass)
-
     return gasflow_output
 
 def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf):
@@ -139,7 +136,7 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     galaxy_com_snapf=np.array([galaxy_snapf[f'CentreOfPotential_{x}'] for x in 'xyz'],ndmin=2)
     
     #get gasflow candidates
-    rcut=5*r200#choose particles within rcut, which is chosen as 3*r200
+    rcut=3*r200#choose particles within rcut, which is chosen as 3*r200
 
     pidx_candidates_snapi=kdtree_snapi.query_ball_point(galaxy_com_snapi[0],rcut)
     pidx_candidates_snapf=kdtree_snapf.query_ball_point(galaxy_com_snapf[0],rcut)

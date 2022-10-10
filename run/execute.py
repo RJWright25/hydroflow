@@ -133,7 +133,6 @@ if numgal:
     logging.info(f'Loading final snap particle data: {snapf_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
     pdata_snapf,kdtree_snapf=read_subvol(snapf_pdata_fname,ivol,nslice)
 
-
     # pdata_snapf.sort_values("ParticleIDs",inplace=True)
     # pdata_snapf.reset_index(inplace=True,drop=True)
     logging.info(f'Loading initial snap particle data: {snapi_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
@@ -155,7 +154,6 @@ if numgal:
         logging.info(f"Galaxy {igal+1}/{subcat_selection_final.shape[0]:.0f}: subhalo mass - {galaxy_snapf[mass_key]:.1e}, sgn - {galaxy_snapf['SubGroupNumber']} [runtime {time.time()-t1:.3f} sec]")
 
         nmin,nmaj,progid=get_progidx(subcat_selection,galaxy_snapf[galid_key],depth)
-
         
         galaxy_output=pd.DataFrame([])
         galaxy_output.loc[0,'HydroflowID']=galaxy_snapf[galid_key]
@@ -165,8 +163,9 @@ if numgal:
         galaxy_output.loc[0,'ivol']=ivol
 
         progmatch=progid==subcat_selection[galid_key].values
+        central=galaxy_snapf['SubGroupNumber']==0
 
-        if progid and np.nansum(progmatch):
+        if progid and np.nansum(progmatch) and central:
 
             galaxy_snapi=subcat_selection.loc[progmatch,:].iloc[0]
 
@@ -174,9 +173,13 @@ if numgal:
             r200_eff_i=calc_r200(galaxy_snapi)
             r200_eff=(r200_eff_f+r200_eff_i)/2
             m200_eff=(galaxy_snapi['Group_M_Crit200']+galaxy_snapf['Group_M_Crit200'])/2
+            inst_sfr=(galaxy_snapi['StarFormationRate']+galaxy_snapf['StarFormationRate'])/2
+            ave_sfr=(galaxy_snapf['StellarMass']-galaxy_snapi['StellarMass'])/dt
 
             galaxy_output.loc[0,'r200_eff']=r200_eff
             galaxy_output.loc[0,'m200_eff']=m200_eff
+            galaxy_output.loc[0,'inst_SFR']=m200_eff
+            galaxy_output.loc[0,'ave_SFR']=m200_eff
 
             t1_c=time.time()
             success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf)
@@ -217,6 +220,11 @@ if numgal:
                         else:
                             galaxy_output.loc[0,f'{fac:.2f}r200_dm-'.replace('.','p')+key[3:]]=gasflow_ir200[key]
 
+                ### physical radii
+                for rad in [10,30,50,100]:
+                    gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)/afac*hval,dt=dt,Tcut=None,idm=False,vc=v200)
+                    for key in list(gasflow_irad.keys()):
+                        galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}pkpc_gas-'+key]=gasflow_ir200[key]
 
                 ### user def
                 for user_radius in user_radii:
@@ -232,7 +240,7 @@ if numgal:
                 logging.info(f'Could not process galaxy, could not retrieve candidates')
 
         else:
-            logging.info(f'Could not process galaxy, progenitor lost')
+            logging.info(f'Did not process galaxy, progenitor lost or is satellite')
 
         galaxy_outputs.append(galaxy_output)
 
