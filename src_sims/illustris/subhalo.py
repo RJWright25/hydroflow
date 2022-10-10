@@ -8,11 +8,11 @@ import illustris_python as tng_tools
 
 def read_subcat(basepath,snapnums=None):
     snapm1=snapnums[-1]
-    if os.path.exists(f'jobs/logs/extract_subhalo_{snapm1}.log'):
-        os.remove(f'jobs/logs/extract_subhalo_{snapm1}.log')
+    if os.path.exists(f'jobs/logs/read_subcat_{snapm1}.log'):
+        os.remove(f'jobs/logs/read_subcat_{snapm1}.log')
         
     t0=time.time()
-    logging.basicConfig(filename=f'jobs/logs/extract_subhalo_{snapm1}.log', level=logging.INFO)
+    logging.basicConfig(filename=f'jobs/logs/read_subcat_{snapm1}.log', level=logging.INFO)
     logging.info(f'Running subhalo extraction for {len(snapnums)} snaps ending at {snapnums[-1]} ...')
 
     subhalo_dfs=[]
