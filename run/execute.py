@@ -208,9 +208,8 @@ if numgal:
                 for key in list(gasflow_ism.keys()):
                     galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
 
-
                 ### r200 facs
-                for fac in [0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.25,1.5,1.75,2,2.25,2.5,2.75,3]:
+                for fac in [0.1,0.15,0.2,0.25,0.5,0.75,1,1.5,2,2.5,3]:
                     idm=(fac>=1)
                     gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=idm,vc=v200)
                     for key in list(gasflow_ir200.keys()):
