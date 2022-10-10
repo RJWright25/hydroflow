@@ -13,7 +13,7 @@ def create_dir(path):
         if not os.path.exists(running_dir):
             os.mkdir(running_dir)
 
-def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None,dependency=None):
+def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None,dependency=None,ntaskspernode=None):
     
     code=arguments['code']
     pathcat=arguments['path']
@@ -23,7 +23,11 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
     depth=int(arguments['depth'])
     mcut=arguments['mcut']
     namecat=pathcat.split('/')[-1][:-5]
-    cwd=pathcat.split('catalogues')[0]
+    cwd=pathcat.split('catalogues')[0]    
+    
+    if not ntaskspernode:
+        ntaskspernode=64
+
 
     jobfolder=f'{cwd}/jobs/gasflow/{namecat}/nvol_{str(nvol).zfill(3)}/snap{str(snapf).zfill(3)}_d{str(depth).zfill(2)}/'
     jobname=f"s{str(snapf).zfill(3)}_d{str(depth).zfill(2)}_n{str(int(nslice**3)).zfill(3)}"
@@ -44,6 +48,7 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
         jobfile.writelines(f"#SBATCH --ntasks={1}\n")
         jobfile.writelines(f"#SBATCH --mem={memory}GB\n")
         jobfile.writelines(f"#SBATCH --time={time}\n")
+        jobfile.writelines(f"#SBATCH --ntasks-per-node {ntaskspernode}\n")
         if dependency:
             jobfile.writelines(f"#SBATCH --dependency={dependency}\n")
 
