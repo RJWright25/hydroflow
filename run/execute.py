@@ -40,7 +40,7 @@ snapf=int(args.snap)
 depth=int(args.depth)
 snapi=int(snapf-depth)
 mcut=10**(args.mcut)
-idm=bool(args.idm)
+idm=bool(int(args.idm))
 
 sys.path.append(f"{repo.split('hydroflow')[0]}")
 
@@ -189,7 +189,7 @@ if numgal:
                 maxrad=np.nanmax([1*r200_eff,(100*1e-3)/afac*hval])
 
             t1_c=time.time()
-            success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,maxrad=maxrad)
+            success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad)
             t2_c=time.time()
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
 

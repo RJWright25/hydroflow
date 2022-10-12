@@ -139,7 +139,95 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
 
     return gasflow_output
 
-def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,maxrad=None):
+def analyse_gasflow_eulerian(pdata,radius,usetracers=False,dr=0.01,vc=0):
+    gasflow_output={}
+
+    if radius<0.1:
+        dr=0.005
+    else:
+        dr=0.02
+
+    #grab out tracers
+    if 'Flag_Tracer' in list(tracers.keys()):
+        tracers=pdata['Flag_Tracer'].values>0
+        if usetracers:
+            pdata=pdata.loc[tracers,:].copy();pdata.reset_index(drop=True,inplace=True)
+        else:
+            pdata=pdata.loc[np.logical_not(tracers),:].copy();pdata.reset_index(drop=True,inplace=True)
+
+    gas=pdata['ParticleType'].values==0
+    if 'StellarFormationTime' in pdata:
+        gas=np.logical_or(gas,pdata['StellarFormationTime'].values<=0)
+    boundary=np.abs(pdata.R_Rel-radius)<=(dr/2)
+
+    pdata=pdata.loc[np.logical_and(boundary,gas),:].copy();pdata.reset_index(inplace=True,drop=True)
+    mass=pdata['Mass'].values
+    temp=pdata['Temperature'].values
+    Zmet=pdata['Metallicity'].values
+    vrad=pdata['Relative_Vrad'].values
+    vtan=np.sqrt(pdata['Relative_Vabs'].values**2-pdata['Relative_Vrad'].values**2)
+
+    #do gas calcs here
+    inflow_mask=vrad<=0
+    outflow_mask=vrad>=0
+
+    ## pristine
+    inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Zmet<1e-4))
+
+    #vcuts
+    vcuts=['000kmps','50kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
+    vcuts_val=[0,50,100,150,250,0.25*vc,0.5*vc,vc,2*vc]
+    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
+
+    #### inflow
+    for name,mask in zip(['inflowflux','inflowflux_pristine'],[inflow_mask,inflow_pristine_mask]):
+        inflow_mass=mass[mask]
+        gasflow_output[f'{name}-n']=np.nansum(mask)
+        gasflow_output[f'{name}-m']=np.nansum(inflow_mass*vrad[mask])/dr
+        gasflow_output[f'{name}-fcov']=np.nanmean(mask)
+        if gasflow_output[f'{name}-n']>0.:
+            gasflow_output[f'{name}-Z_mean']=np.average(Zmet[mask],weights=inflow_mass)
+            gasflow_output[f'{name}-Z_median']=np.nanmedian(Zmet[mask])
+            gasflow_output[f'{name}-T_mean']=np.average(temp[mask],weights=inflow_mass)
+            gasflow_output[f'{name}-T_median']=np.nanmedian(temp[mask])
+
+        else:
+            remove=[f'{name}-Z_mean',f'{name}-Z_median',f'{name}-T_mean',f'{name}-T_median',f'{name}-arvel_mean',f'{name}-arvel_median']
+            for field in remove:
+                gasflow_output[field]=np.nan
+
+
+    #### outflows
+    for vcut,vcut_val in zip(vcuts,vcuts_val):
+        ejected_mask=outflow_masks[vcut]
+        outflow_mass=mass[ejected_mask]
+        gasflow_output[f'{vcut}_outflowflux-n']=np.nansum(ejected_mask)
+        gasflow_output[f'{vcut}_outflowflux-m']=np.nansum(outflow_mass*vrad[ejected_mask])/dr
+        gasflow_output[f'{name}-fcov']=np.nanmean(ejected_mask)
+        if gasflow_output[f'{vcut}_outflowflux-n']>0.:
+            gasflow_output[f'{vcut}_outflowflux-Z_mean']=np.average(Zmet[ejected_mask],weights=outflow_mass)
+            gasflow_output[f'{vcut}_outflowflux-Z_median']=np.nanmedian(Zmet[ejected_mask])
+            gasflow_output[f'{vcut}_outflowflux-T_mean']=np.average(temp[ejected_mask],weights=outflow_mass)
+            gasflow_output[f'{vcut}_outflowflux-T_median']=np.nanmedian(temp[ejected_mask])
+            
+            #ejection vel
+            arvel_ejected=vrad[ejected_mask]
+            arvel_mask=np.where(np.logical_and(np.isfinite(arvel_ejected),outflow_mass>=0))
+            if np.nansum(arvel_mask):
+                gasflow_output[f'{vcut}_outflowflux-vrad_mean']=np.average(arvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vrad_median']=np.nanmedian(arvel_ejected[arvel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vrad_05P']=np.nanpercentile(arvel_ejected[arvel_mask],5)
+                gasflow_output[f'{vcut}_outflowflux-vrad_95P']=np.nanpercentile(arvel_ejected[arvel_mask],95)
+
+        else:
+            remove=[f'{vcut}_outflowflux-Z_mean',f'{vcut}_outflowflux-Z_median',f'{vcut}_outflowflux-T_mean',f'{vcut}_outflowflux-T_median',f'{vcut}_outflowflux-vrad_mean',f'{vcut}_outflowflux-vrad_median',f'{vcut}_outflowflux-vrad_05P',f'{vcut}_outflowflux-vrad_95P']
+            for field in remove:
+                gasflow_output[field]=np.nan
+
+    return gasflow_output
+    
+def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=None,maxrad=None):
+    afac_snap1=1/(1+galaxy_snapi['Redshift']);afac_snap2=1/(1+galaxy_snapf['Redshift']);ave_a=(afac_snap1+afac_snap2)/2;hval=0.67
 
     r200=calc_r200(galaxy_snapf)
 
@@ -200,13 +288,27 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapi['ParticleIDs']=pid_allcandidates
         pdata_candidates_snapf['ParticleIDs']=pid_allcandidates
 
-        pdata_candidates_snapi['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi),axis=1))
-        pdata_candidates_snapf['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapf),axis=1))
+        pdata_candidates_snapi[:,[f'Relative_{x}' for x in 'xyz']]=pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi
+        pdata_candidates_snapf[:,[f'Relative_{x}' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapf
 
-        afac_snap1=1/(1+galaxy_snapi['Redshift']);afac_snap2=1/(1+galaxy_snapf['Redshift']);ave_a=(afac_snap1+afac_snap2)/2;hval=0.67
-        pdata_candidates_snapi['R_rel_phys']=pdata_candidates_snapi['R_rel']*ave_a/hval
-        pdata_candidates_snapf['R_rel_phys']=pdata_candidates_snapf['R_rel']*ave_a/hval
+        pdata_candidates_snapi['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']]),axis=1))
+        pdata_candidates_snapf['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']]),axis=1))
 
+        pdata_candidates_snapi['R_rel_phys']=pdata_candidates_snapi['R_rel'].values*ave_a/hval
+        pdata_candidates_snapf['R_rel_phys']=pdata_candidates_snapf['R_rel'].values*ave_a/hval
+
+        vhalo_ave=(galaxy_com_snapf-galaxy_com_snapi)/dt*ave_a/hval
+        
+        pdata_candidates_snapi[:,[f'Relative_V{x}' for x in 'xyz']]=pdata_candidates_snapi.loc[:,[f'Velocity_{x}' for x in 'xyz']]-vhalo_ave
+        pdata_candidates_snapf[:,[f'Relative_V{x}' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Velocity_{x}' for x in 'xyz']]-vhalo_ave
+
+        pdata_candidates_snapf['Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']]),axis=1))
+        pdata_candidates_snapi['Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']]),axis=1))
+        pdata_candidates_snapf['Relative_Vrad']=(pdata_candidates_snapf['Relative_Vx'].values*pdata_candidates_snapf['Relative_x'].values+pdata_candidates_snapf['Relative_Vy'].values*pdata_candidates_snapf['Relative_y'].values+pdata_candidates_snapf['Relative_Vz'].values*pdata_candidates_snapf['Relative_z'].values)/(pdata_candidates_snapf['R_rel_phys'].values)
+        pdata_candidates_snapi['Relative_Vrad']=(pdata_candidates_snapi['Relative_Vx'].values*pdata_candidates_snapi['Relative_x'].values+pdata_candidates_snapi['Relative_Vy'].values*pdata_candidates_snapi['Relative_y'].values+pdata_candidates_snapi['Relative_Vz'].values*pdata_candidates_snapi['Relative_z'].values)/(pdata_candidates_snapi['R_rel_phys'].values)
+
+        print(f"{np.nanmean(pdata_candidates_snapi['Relative_Vrad'].values>0)*100:.1f}% of candidate particles moving outwards")
+        print(f"{np.nanmean(pdata_candidates_snapi['Relative_Vrad'].values>0)*100:.1f}% of candidate particles moving outwards")
 
         return True,pdata_candidates_snapi,pdata_candidates_snapf
 
