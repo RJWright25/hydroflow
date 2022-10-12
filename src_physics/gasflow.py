@@ -134,6 +134,8 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     if radius<0.02:
         dr=0.01
 
+    dr_physical=dr*afac/0.67
+
     #grab out tracers
     if 'Flag_Tracer' in list(pdata.keys()):
         tracers=pdata['Flag_Tracer'].values>0
