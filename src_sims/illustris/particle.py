@@ -110,7 +110,6 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
         ################################################################## 
 
         numbar_thisvol=np.nansum([pdata[ifile][ptype].shape[0] for ptype in [0,4,5]])
-        numdm_thisvol=pdata[ifile][1].shape[0]
         numtcr=pdata_ifile[f'PartType3']['ParentID'].shape[0]
         
         if numbar_thisvol and numtcr:
@@ -140,7 +139,7 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
         else:
             numtcr_thisvol=0
             print('No baryons in ifile for desired volume, will not match tracers')
-        if numtcr_thisvol or numdm_thisvol:
+        if numtcr_thisvol:
             try:
                 pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,3] if not pdata[ifile][ptype].shape[0]==0)
             except:
