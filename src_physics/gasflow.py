@@ -288,23 +288,27 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapi['ParticleIDs']=pid_allcandidates
         pdata_candidates_snapf['ParticleIDs']=pid_allcandidates
 
-        pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']]=pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi
-        pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapf
+        pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']]=pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-galaxy_com_snapi
+        pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-galaxy_com_snapf
 
-        pdata_candidates_snapi['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']]),axis=1))
-        pdata_candidates_snapf['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']]),axis=1))
+        pdata_candidates_snapi['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']].values),axis=1))
+        pdata_candidates_snapf['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']].values),axis=1))
 
         pdata_candidates_snapi['R_rel_phys']=pdata_candidates_snapi['R_rel'].values*ave_a/hval
         pdata_candidates_snapf['R_rel_phys']=pdata_candidates_snapf['R_rel'].values*ave_a/hval
 
         vhalo_ave=(galaxy_com_snapf-galaxy_com_snapi)/dt*ave_a/hval
         
-        pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']]=(pdata_candidates_snapi.loc[:,[f'Velocity_{x}' for x in 'xyz']]-vhalo_ave)/vel_conversion
-        pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']]=(pdata_candidates_snapf.loc[:,[f'Velocity_{x}' for x in 'xyz']]-vhalo_ave)/vel_conversion
+        pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']]=(pdata_candidates_snapi.loc[:,[f'Velocity_{x}' for x in 'xyz']]/vel_conversion-vhalo_ave)
+        pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']]=(pdata_candidates_snapf.loc[:,[f'Velocity_{x}' for x in 'xyz']]/vel_conversion-vhalo_ave)
 
-        pdata_candidates_snapf.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']]),axis=1))/vel_conversion
-        pdata_candidates_snapi.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']]),axis=1))/vel_conversion
+        print('relative vxyz (Mpc/Gyr)')
+        print(pdata_candidates_idx_snapf['Relative_Vx'])
 
+        pdata_candidates_snapf.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']].values),axis=1))*vel_conversion
+        pdata_candidates_snapi.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']].values),axis=1))*vel_conversion
+
+        print('relative vabs (Mpc/Gyr)')
         print(pdata_candidates_snapi.loc[:,'Relative_Vabs'])
 
         pdata_candidates_snapf.loc[:,'Relative_Vrad']=(pdata_candidates_snapf['Relative_Vx'].values*pdata_candidates_snapf['Relative_x'].values*ave_a/hval+pdata_candidates_snapf['Relative_Vy'].values*pdata_candidates_snapf['Relative_y'].values*ave_a/hval+pdata_candidates_snapf['Relative_Vz'].values*pdata_candidates_snapf['Relative_z'].values*ave_a/hval)/(pdata_candidates_snapf['R_rel_phys'].values)
