@@ -10,7 +10,7 @@ from hydroflow.src_physics.utils import get_limits
 
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,nchunks=1e3,idm=False):
+def read_subvol(path,ivol,nslice,nchunks=1e3):
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']*1e-3
@@ -30,8 +30,6 @@ def read_subvol(path,ivol,nslice,nchunks=1e3,idm=False):
     ptype_fields={0:['InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
                   4:['GFM_Metallicity','GFM_StellarFormationTime'],
                   5:[]}
-    if idm:
-        ptype_fields[1]=[]
 
     pdata=[{ptype:[] for ptype in ptype_fields} for ifile in range(numfiles)]
 
@@ -144,10 +142,7 @@ def read_subvol(path,ivol,nslice,nchunks=1e3,idm=False):
             print('No baryons in ifile for desired volume, will not match tracers')
         if numtcr_thisvol or numdm_thisvol:
             try:
-                if idm:
-                    pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1,3] if not pdata[ifile][ptype].shape[0]==0)
-                else:
-                    pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,3] if not pdata[ifile][ptype].shape[0]==0)
+                pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,3] if not pdata[ifile][ptype].shape[0]==0)
             except:
                 print('No particles in ifile for desired volume')
                 pdata[ifile]=pd.DataFrame([])

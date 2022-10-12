@@ -8,7 +8,7 @@ import numpy as np
 
 from hydroflow.src_physics.utils import calc_r200
 
-def analyse_galaxy(galaxy,pdata,idm=False):
+def analyse_galaxy(galaxy,pdata):
 	galaxy_output={}
 	galaxy_reservoirs={}
 
@@ -55,8 +55,7 @@ def analyse_galaxy(galaxy,pdata,idm=False):
 	r200_mask=rrel<=r200
 	galaxy_reservoirs['1p00r200_star']=np.logical_and(star,r200_mask)
 	galaxy_reservoirs['1p00r200_gas']=np.logical_and(gas,r200_mask)
-	if idm:
-		galaxy_reservoirs['1p00r200_dm']=np.logical_and(dm,r200_mask)
+
 
 	#kpc calc
 	p30kpc_mask=rrel<=(30*1e-3)/afac*hfac
@@ -85,16 +84,10 @@ def analyse_galaxy(galaxy,pdata,idm=False):
 	reservoir_edges=[0.00,0.05,0.1,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
 	reservoir_names_gas=[f'{fachi:.2f}'.replace('.','p')+'r200_gasprof' for fachi in reservoir_edges[1:]]
 	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>faclo*r200,rrel<=fachi*r200]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
-	if idm:
-		reservoir_names_dm=[f'{fachi:.2f}'.replace('.','p')+'r200_dmprof' for fachi in reservoir_edges[1:]]
-		reservoir_masks_dm=[np.logical_and.reduce([dm,rrel>faclo*r200,rrel<=fachi*r200]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
 	reservoir_volume={name[:-8]:4/3*np.pi*((fachi*r200*afac/0.67)**3-(faclo*r200*afac/0.67)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
 
 	for name, mask in zip(reservoir_names_gas,reservoir_masks_gas):
 		galaxy_reservoirs[name]=mask
-	if idm:
-		for name, mask in zip(reservoir_names_dm,reservoir_masks_dm):
-			galaxy_reservoirs[name]=mask
 
     #metallicity, sfr, temperature
 	for reservoir in galaxy_reservoirs:

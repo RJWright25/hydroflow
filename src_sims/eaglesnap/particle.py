@@ -13,7 +13,7 @@ from read_eagle import EagleSnapshot
 from hydroflow.src_physics.utils import get_limits
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,ptypes=None,idm=False):
+def read_subvol(path,ivol,nslice,ptypes=None):
     file=h5py.File(path,'r')
     boxsize=file['Header'].attrs['BoxSize']
     hfac=file['Header'].attrs['HubbleParam']
@@ -23,9 +23,6 @@ def read_subvol(path,ivol,nslice,ptypes=None,idm=False):
     if not ptypes:
         ptypes={0:['Temperature','Metallicity','StarFormationRate'],
                 4:['Metallicity']}
-
-    if idm:
-        ptypes[1]=[]
     
     snapshot=EagleSnapshot(path)
     snapshot.select_region(*lims)

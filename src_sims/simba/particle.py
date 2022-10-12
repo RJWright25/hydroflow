@@ -5,7 +5,7 @@ from scipy.spatial import cKDTree
 from hydroflow.src_physics.utils import get_limits
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,idm=False):
+def read_subvol(path,ivol,nslice):
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']*1e-3
@@ -17,9 +17,6 @@ def read_subvol(path,ivol,nslice,idm=False):
     ptype_fields={0:['InternalEnergy','ElectronAbundance','Metallicity','StarFormationRate'],
                   4:['Metallicity'],
                   5:[]}
-
-    if idm:
-        ptype_fields[1]=[]
 
     pdata=[{} for iptype in range(len(ptype_fields))]
 

@@ -22,7 +22,6 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
     snapf=int(arguments['snap'])
     depth=int(arguments['depth'])
     mcut=arguments['mcut']
-    idm=arguments['idm']
     namecat=pathcat.split('/')[-1][:-5]
     cwd=pathcat.split('catalogues')[0]    
     
@@ -61,7 +60,7 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
         jobfile.writelines(f"date\n")
         jobfile.writelines(f"echo CPU DETAILS\n")
         jobfile.writelines(f"lscpu\n")
-        jobfile.writelines(f"python {runscriptfilepath} --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut} --idm {idm} --ivol $SLURM_ARRAY_TASK_ID \n")
+        jobfile.writelines(f"python {runscriptfilepath} --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut}  --ivol $SLURM_ARRAY_TASK_ID \n")
         jobfile.writelines(f"echo JOB END TIME\n")
         jobfile.writelines(f"date\n")
 
@@ -82,7 +81,6 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,ntaskspern
     snapf=int(arguments['snap'])
     depth=int(arguments['depth'])
     mcut=arguments['mcut']
-    idm=int(arguments['idm'])
     namecat=pathcat.split('/')[-1][:-5]
     cwd=pathcat.split('catalogues')[0]
 
@@ -108,7 +106,7 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,ntaskspern
 
     with open(jobscriptfilepath,"w") as taskfile:
         for ivol in volumes:
-            taskfile.writelines(f"python {runscriptfilepath} --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut}--idm {idm} --ivol {ivol}&>{jobfolder}{jobname}_ivol{ivol}.out\n")
+            taskfile.writelines(f"python {runscriptfilepath} --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snapf} --depth {depth} --mcut {mcut} --ivol {ivol}&>{jobfolder}{jobname}_ivol{ivol}.out\n")
     taskfile.close()
 
     with open(submitscriptfilepath,"w") as submitfile:

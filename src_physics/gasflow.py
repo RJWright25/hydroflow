@@ -8,7 +8,7 @@ import time
 
 from hydroflow.src_physics.utils import calc_r200, vel_conversion
 
-def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
+def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     gasflow_output={}
 
     #grab out tracers
@@ -61,18 +61,6 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
 
     selection_snap1=np.logical_and.reduce([rcut_snap1,np.logical_or(cool_snap1,star_snap1)])
     selection_snap2=np.logical_and.reduce([rcut_snap2,np.logical_or(cool_snap2,star_snap2)])
-
-    #do DM calcs here
-    if idm:
-        inflow_mask_dm=np.logical_and.reduce([rcut_snap2,np.logical_or(np.logical_not(rcut_snap1),nopdata_snap1),pdata_snapf['ParticleType'].values==1])
-        inflow_mass_dm=mass_snap2[inflow_mask_dm]
-        gasflow_output['dm-inflow-n']=np.nansum(inflow_mask_dm)
-        gasflow_output['dm-inflow-m']=np.nansum(inflow_mass_dm)/dt
-
-        outflow_mask_dm=np.logical_and.reduce([rcut_snap1,np.logical_or(np.logical_not(rcut_snap2),nopdata_snap2),pdata_snapf['ParticleType'].values==1])
-        outflow_mass_dm=mass_snap2[outflow_mask_dm]
-        gasflow_output['dm-outflow-n']=np.nansum(outflow_mask_dm)
-        gasflow_output['dm-outflow-m']=np.nansum(outflow_mass_dm)/dt
 
     #do gas calcs here
     inflow_mask=np.logical_and.reduce([selection_snap2,np.logical_or(np.logical_not(selection_snap1),nopdata_snap1),np.logical_or(gas_snap2,gas_snap1)])
