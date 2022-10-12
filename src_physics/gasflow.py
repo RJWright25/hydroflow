@@ -130,10 +130,9 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
 def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     gasflow_output={}
 
+    dr=0.02
     if radius<0.02:
         dr=0.01
-    else:
-        dr=0.02
 
     #grab out tracers
     if 'Flag_Tracer' in list(pdata.keys()):
