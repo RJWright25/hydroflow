@@ -172,7 +172,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0):
     outflow_mask=vrad>=0
 
     ## pristine
-    inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Zmet<1e-4))
+    inflow_pristine_mask=np.logical_and(inflow_mask,Zmet<1e-4)
 
     #vcuts
     vcuts=['000kmps','50kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
@@ -301,6 +301,10 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         
         pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']]=pdata_candidates_snapi.loc[:,[f'Velocity_{x}' for x in 'xyz']]-vhalo_ave
         pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Velocity_{x}' for x in 'xyz']]-vhalo_ave
+
+        print(vhalo_ave)
+        print(pdata_candidates_snapi.loc[:,[f'Velocity_{x}' for x in 'xyz']].values[:10,0])
+        print(pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']].values[:10,0])
 
         pdata_candidates_snapf.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']]),axis=1))
         pdata_candidates_snapi.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']]),axis=1))
