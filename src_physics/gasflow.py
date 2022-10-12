@@ -298,9 +298,13 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapf['R_rel_phys']=pdata_candidates_snapf['R_rel'].values*ave_a/hval
 
         vhalo_ave=(galaxy_com_snapf-galaxy_com_snapi)/dt*ave_a/hval
-        
-        pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']]=(pdata_candidates_snapi.loc[:,[f'Velocity_{x}' for x in 'xyz']]/vel_conversion-vhalo_ave)
-        pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']]=(pdata_candidates_snapf.loc[:,[f'Velocity_{x}' for x in 'xyz']]/vel_conversion-vhalo_ave)
+
+        print(pdata_candidates_snapi['R_rel'])
+        print(pdata_candidates_snapi['R_rel_phys'])
+
+        for idim,dim in enumerate('xyz'):
+            pdata_candidates_snapi[f'Relative_V{dim}']=pdata_candidates_snapi[f'Velocity_{dim}'].values/vel_conversion-vhalo_ave[idim]
+            pdata_candidates_snapf[f'Relative_V{dim}']=pdata_candidates_snapf[f'Velocity_{dim}'].values/vel_conversion-vhalo_ave[idim]
 
         print('relative vxyz (Mpc/Gyr)')
         print(pdata_candidates_idx_snapf['Relative_Vx'])
