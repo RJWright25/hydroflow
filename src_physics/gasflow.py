@@ -17,6 +17,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
         tracers_snap2=pdata_snapf['Flag_Tracer'].values>0
         pdata_snapi=pdata_snapi.loc[tracers_snap1,:].copy();pdata_snapi.reset_index(drop=True,inplace=True)
         pdata_snapf=pdata_snapf.loc[tracers_snap2,:].copy();pdata_snapf.reset_index(drop=True,inplace=True)
+        print('Using tracers')
 
     mass_snap1=pdata_snapi['Mass'].values
     mass_snap2=pdata_snapf['Mass'].values
@@ -147,12 +148,17 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
         tracers=pdata['Flag_Tracer'].values>0
         if usetracers:
             pdata=pdata.loc[tracers,:].copy();pdata.reset_index(drop=True,inplace=True)
+            print('Grabbing tracers')
         else:
             pdata=pdata.loc[np.logical_not(tracers),:].copy();pdata.reset_index(drop=True,inplace=True)
+            print('Removing tracers')
+
+    print(pdata.shape[0])
 
     gas=pdata['ParticleType'].values==0
     if 'StellarFormationTime' in pdata:
         gas=np.logical_or(gas,pdata['StellarFormationTime'].values<=0)
+    
     boundary=np.abs(pdata['R_rel'].values-radius)<=(dr/2)
 
     pdata=pdata.loc[np.logical_and(boundary,gas),:].copy();pdata.reset_index(inplace=True,drop=True)
