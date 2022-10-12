@@ -297,7 +297,7 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapi['R_rel_phys']=pdata_candidates_snapi['R_rel'].values*ave_a/hval
         pdata_candidates_snapf['R_rel_phys']=pdata_candidates_snapf['R_rel'].values*ave_a/hval
 
-        vhalo_ave=(galaxy_com_snapf-galaxy_com_snapi)/dt*ave_a/hval
+        vhalo_ave=(galaxy_com_snapf-galaxy_com_snapi)/dt*ave_a/hval*vel_conversion
         
         pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']]=pdata_candidates_snapi.loc[:,[f'Velocity_{x}' for x in 'xyz']]-vhalo_ave
         pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Velocity_{x}' for x in 'xyz']]-vhalo_ave
@@ -310,6 +310,7 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapi.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']]),axis=1))
         pdata_candidates_snapf.loc[:,'Relative_Vrad']=(pdata_candidates_snapf['Relative_Vx'].values*pdata_candidates_snapf['Relative_x'].values*ave_a/hval+pdata_candidates_snapf['Relative_Vy'].values*pdata_candidates_snapf['Relative_y'].values*ave_a/hval+pdata_candidates_snapf['Relative_Vz'].values*pdata_candidates_snapf['Relative_z'].values*ave_a/hval)/(pdata_candidates_snapf['R_rel_phys'].values)
         pdata_candidates_snapi.loc[:,'Relative_Vrad']=(pdata_candidates_snapi['Relative_Vx'].values*pdata_candidates_snapi['Relative_x'].values*ave_a/hval+pdata_candidates_snapi['Relative_Vy'].values*pdata_candidates_snapi['Relative_y'].values*ave_a/hval+pdata_candidates_snapi['Relative_Vz'].values*pdata_candidates_snapi['Relative_z'].values*ave_a/hval)/(pdata_candidates_snapi['R_rel_phys'].values)
+        print(pdata_candidates_snapi.loc[:,'Relative_Vrad'].values[:10])
 
         print(f"{np.nanmean(pdata_candidates_snapi['Relative_Vrad'].values>0)*100:.1f}% of candidate particles moving outwards")
         print(f"{np.nanmean(pdata_candidates_snapf['Relative_Vrad'].values>0)*100:.1f}% of candidate particles moving outwards")
