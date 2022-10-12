@@ -116,7 +116,6 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
             pdata[ifile][0]=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0])
             pdata[ifile][0].sort_values(by='ParticleIDs',inplace=True)
             pdata[ifile][0].reset_index(inplace=True,drop=True)
-            pdata[ifile][0]['Flag_Tracer']=np.zeros(pdata[ifile][0].shape[0],dtype=np.int8)            
             pdata_ifile_baryons_IDs=pdata[ifile][0].ParticleIDs
 
             t0=time.time()
@@ -132,6 +131,8 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
             pdata[ifile][3]['Flag_Tracer']=np.ones(pdata[ifile][3].shape[0],dtype=np.int8) #
             pdata[ifile][3]['Mass']=np.float32(np.ones(pdata[ifile][3].shape[0])*masstable[3]*10**10/hval)  
             numtcr_thisvol=pdata[ifile][3].shape[0]
+
+            pdata[ifile][0]['Flag_Tracer']=np.zeros(pdata[ifile][0].shape[0],dtype=np.int8)            
 
             print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
             pdata_ifile.close()#housekeeping
@@ -154,10 +155,18 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
 
     #concat all pdata into one df
     pdata=pd.concat(pdata)
-    pdata.sort_values(by="ParticleIDs",inplace=True)
-    pdata.reset_index(inplace=True,drop=True)
+
+    pdata_tracers=pdata_tracers.loc[pdata.Flag_Tracer==1,:].copy()
+    pdata_baryons=pdata.loc[pdata.Flag_Tracer==0,:].copy()
+
+    pdata_tracers.sort_values(by="ParticleIDs",inplace=True)
+    pdata_tracers.reset_index(inplace=True,drop=True)
+
+    pdata_baryons.sort_values(by="ParticleIDs",inplace=True)
+    pdata_baryons.reset_index(inplace=True,drop=True)
 
     #generate KDtree
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
+    pdata_kdtree=cKDTree(pdata_tracers.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
+    pdata_kdtree_cells=cKDTree(pdata_baryons.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
     
-    return pdata, pdata_kdtree
+    return (pdata_tracers, pdata_kdtree), (pdata_baryons,pdata_kdtree_cells)

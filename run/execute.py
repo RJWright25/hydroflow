@@ -131,12 +131,18 @@ if numgal:
 
     #load pdata
     logging.info(f'Loading final snap particle data: {snapf_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
-    pdata_snapf,kdtree_snapf=read_subvol(snapf_pdata_fname,ivol,nslice)
+    if 'illustris' in code:
+        pdata_snapf,kdtree_snapf,pdata_cells_snapf,kdtree_cells_snapf=read_subvol(snapf_pdata_fname,ivol,nslice)
+    else:
+        pdata_snapf,kdtree_snapf=read_subvol(snapf_pdata_fname,ivol,nslice)
 
     # pdata_snapf.sort_values("ParticleIDs",inplace=True)
     # pdata_snapf.reset_index(inplace=True,drop=True)
     logging.info(f'Loading initial snap particle data: {snapi_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
-    pdata_snapi,kdtree_snapi=read_subvol(snapi_pdata_fname,ivol,nslice)
+    if 'illustris' in code:
+        pdata_snapi,kdtree_snapi,pdata_cells_snapi,kdtree_cells_snapi=read_subvol(snapi_pdata_fname,ivol,nslice)
+    else:
+        pdata_snapi,kdtree_snapi=read_subvol(snapi_pdata_fname,ivol,nslice)
 
     # pdata_snapf.sort_values("ParticleIDs",inplace=True)
     # pdata_snapf.reset_index(inplace=True,drop=True)
@@ -184,13 +190,19 @@ if numgal:
             maxrad=np.nanmax([2*r200_eff,(100*1e-3)/afac*hval])
 
             t1_c=time.time()
-            success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad)
+            if 'illustris' in code:
+                success,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad,)
+            success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad,)
             t2_c=time.time()
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
 
             if success:
                 t1_f=time.time()
-                fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf)
+                if 'illustris' in code:
+                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_cells_snapf)
+                else:
+                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf)
+
                 t2_f=time.time()
                 logging.info(f"Galaxy: {t2_f-t1_f:.3f} sec")
 
@@ -201,6 +213,10 @@ if numgal:
                         galaxy_output.loc[0,key]=galaxy_properties_snapf[key]
                 else:
                     logging.info(f'Could not determine properties of galaxy')
+
+                euler_pdata=pdata_candidates_snapf
+                if 'illustris' in code:
+                    euler_pdata=pdata_candidates_cells_snapf
 
                 #v200
                 v200=np.sqrt(constant_G*m200_eff/(r200_eff*afac/hval))
@@ -218,7 +234,7 @@ if numgal:
                     for key in list(gasflow_ir200.keys()):
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200[key]
                     
-                    gasflow_ir200_euler=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=r200_eff*fac,vc=v200,usetracers=False,afac=afac)
+                    gasflow_ir200_euler=analyse_gasflow_eulerian(euler_pdata,radius=r200_eff*fac,vc=v200,usetracers=False,afac=afac)
                     for key in list(gasflow_ir200_euler.keys()):
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200_euler[key]
 
@@ -227,7 +243,7 @@ if numgal:
                     gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)/afac*hval,dt=dt,Tcut=None,vc=v200)
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}pkpc_gas-'+key]=gasflow_irad[key]
-                    gasflow_irad_euler=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=(rad*1e-3)/afac*hval,vc=v200,usetracers=False,afac=afac)
+                    gasflow_irad_euler=analyse_gasflow_eulerian(euler_pdata,radius=(rad*1e-3)/afac*hval,vc=v200,usetracers=False,afac=afac)
                     for key in list(gasflow_irad_euler.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}pkpc_gas-'+key]=gasflow_irad_euler[key]
 
@@ -236,7 +252,7 @@ if numgal:
                     gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,vc=v200)
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad[key]
-                    gasflow_irad_euler=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=(rad*1e-3)*hval,vc=v200,afac=afac)
+                    gasflow_irad_euler=analyse_gasflow_eulerian(euler_pdata,radius=(rad*1e-3)*hval,vc=v200,afac=afac)
                     for key in list(gasflow_irad_euler.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad_euler[key]
 
