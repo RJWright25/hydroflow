@@ -47,7 +47,7 @@ sys.path.append(f"{repo.split('hydroflow')[0]}")
 from hydroflow.run.tools_hpc import create_dir
 from hydroflow.src_physics.utils import get_limits,get_progidx,constant_G
 from hydroflow.src_physics.galaxy import analyse_galaxy,calc_r200
-from hydroflow.src_physics.gasflow import candidates_gasflow,analyse_gasflow
+from hydroflow.src_physics.gasflow import analyse_gasflow_eulerian, candidates_gasflow,analyse_gasflow
 
 #subhalo catalogue
 namecat=pathcat.split('/')[-1][:-5]
@@ -208,7 +208,7 @@ if numgal:
                     logging.info(f'Could not determine properties of galaxy')
 
                 #v200
-                v200=np.sqrt(constant_G*m200_eff/(r200_eff*afac/hval))*hval
+                v200=np.sqrt(constant_G*m200_eff/(r200_eff*afac/hval))
 
                 ### ism
                 gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4,vc=v200)
@@ -225,24 +225,33 @@ if numgal:
                     idm=(fac>=1)
                     gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=idm,vc=v200)
                     for key in list(gasflow_ir200.keys()):
-                        
                         if not 'dm' in key:
                             galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200[key]
                         else:
                             galaxy_output.loc[0,f'{fac:.2f}r200_dm-'.replace('.','p')+key[3:]]=gasflow_ir200[key]
+                    
+                    gasflow_ir200_euler=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=r200_eff*fac,vc=v200,usetracers=False)
+                    for key in list(gasflow_ir200_euler.keys()):
+                        galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200_euler[key]
 
                 ### physical radii
                 for rad in [10,30,50,100]:
                     gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)/afac*hval,dt=dt,Tcut=None,idm=False,vc=v200)
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}pkpc_gas-'+key]=gasflow_irad[key]
+                    gasflow_irad_euler=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=(rad*1e-3)/afac*hval,vc=v200,usetracers=False)
+                    for key in list(gasflow_irad_euler.keys()):
+                        galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}pkpc_gas-'+key]=gasflow_irad_euler[key]
 
                 ### comoving units
                 for rad in [10,30,50,100]:
                     gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,idm=False,vc=v200)
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad[key]
-
+                    gasflow_irad_euler=analyse_gasflow(pdata_candidates_snapf,radius=(rad*1e-3)*hval,vc=v200)
+                    for key in list(gasflow_irad_euler.keys()):
+                        galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad_euler[key]
+                        
                 ### user def
                 for user_radius in user_radii:
                     iuser_radius=galaxy_snapf[user_radius]

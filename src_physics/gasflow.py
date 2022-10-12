@@ -139,7 +139,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
 
     return gasflow_output
 
-def analyse_gasflow_eulerian(pdata,radius,usetracers=False,dr=0.01,vc=0):
+def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0):
     gasflow_output={}
 
     if radius<0.1:
