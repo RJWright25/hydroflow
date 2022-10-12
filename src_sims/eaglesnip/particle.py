@@ -75,8 +75,7 @@ def convert_pdata(path,pdata):
     snapshot.close()
 
     molecular_weight=1.2285
-    conversions={'Mass':1/msun,
-                 'Density':1/(mproton*molecular_weight)}
+    conversions={'Density':1/(mproton*molecular_weight)}
                  
     for field,conversion in conversions.items():
         pdata[field]=pdata[field].values*conversion
