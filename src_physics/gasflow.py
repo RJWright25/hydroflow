@@ -11,7 +11,6 @@ from hydroflow.src_physics.utils import calc_r200, vel_conversion
 def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
     gasflow_output={}
 
-    t1=time.time()
     mass_snap1=pdata_snapi['Mass'].values
     mass_snap2=pdata_snapf['Mass'].values
 
@@ -20,6 +19,9 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
 
     rcut_snap1=pdata_snapi['R_rel'].values<=radius
     rcut_snap2=pdata_snapf['R_rel'].values<=radius
+
+    nopdata_snap1=np.logical_not(pdata_snapi['inpdata'].values)
+    nopdata_snap2=np.logical_not(pdata_snapf['inpdata'].values)
 
     ################
     gas_snap2=pdata_snapf['ParticleType'].values==0
@@ -41,7 +43,6 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
 
     #
     arvel=(pdata_snapf['R_rel'].values-pdata_snapi['R_rel'].values)/dt*vel_conversion
-    arvel[np.logical_not(np.isfinite(arvel))]=1e5
 
     if Tcut: 
         cool_snap1=T_snap1<=Tcut
@@ -56,21 +57,19 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
 
     #do DM calcs here
     if idm:
-        inflow_mask_dm=np.logical_and.reduce([rcut_snap2,np.logical_not(rcut_snap1),pdata_snapf['ParticleType'].values==1])
+        inflow_mask_dm=np.logical_and.reduce([rcut_snap2,np.logical_or(np.logical_not(rcut_snap1),nopdata_snap1),pdata_snapf['ParticleType'].values==1])
         inflow_mass_dm=mass_snap2[inflow_mask_dm]
         gasflow_output['dm-inflow-n']=np.nansum(inflow_mask_dm)
         gasflow_output['dm-inflow-m']=np.nansum(inflow_mass_dm)/dt
 
-        outflow_mask_dm=np.logical_and.reduce([rcut_snap1,np.logical_not(rcut_snap2),pdata_snapf['ParticleType'].values==1])
+        outflow_mask_dm=np.logical_and.reduce([rcut_snap1,np.logical_or(np.logical_not(rcut_snap2),nopdata_snap2),pdata_snapf['ParticleType'].values==1])
         outflow_mass_dm=mass_snap2[outflow_mask_dm]
         gasflow_output['dm-outflow-n']=np.nansum(outflow_mask_dm)
         gasflow_output['dm-outflow-m']=np.nansum(outflow_mass_dm)/dt
 
-    print(f'{time.time()-t1:.3f} seconds for dm calcs')
-
     #do gas calcs here
-    inflow_mask=np.logical_and.reduce([selection_snap2,np.logical_not(selection_snap1),np.logical_or(gas_snap2,gas_snap1)])
-    outflow_mask=np.logical_and.reduce([selection_snap1,np.logical_not(selection_snap2),np.logical_or(gas_snap2,gas_snap1)])
+    inflow_mask=np.logical_and.reduce([selection_snap2,np.logical_or(np.logical_not(selection_snap1),nopdata_snap1),np.logical_or(gas_snap2,gas_snap1)])
+    outflow_mask=np.logical_and.reduce([selection_snap1,np.logical_or(np.logical_not(selection_snap2),nopdata_snap2),np.logical_or(gas_snap2,gas_snap1)])
 
     ## pristine
     inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Z_snap2<1e-4,Z_snap1<1e-4))
@@ -78,13 +77,14 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
     #vcuts
     vcuts=['000kmps','50kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
     vcuts_val=[0,50,100,150,250,0.25*vc,0.5*vc,vc,2*vc]
-    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,arvel>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
+    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,np.logical_or(arvel>=vcut_val,nopdata_snap2)]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
     for name,mask in zip(['inflow','inflow_pristine'],[inflow_mask,inflow_pristine_mask]):
         inflow_mass=mass_snap2[mask]
         gasflow_output[f'{name}-n']=np.nansum(mask)
         gasflow_output[f'{name}-m']=np.nansum(inflow_mass)/dt
+        gasflow_output[f'{name}-fapp']=np.nanmean(nopdata_snap1[mask])
         if gasflow_output[f'{name}-n']>0.:
             gasflow_output[f'{name}-Z_mean']=np.average(Z_snap2[mask],weights=inflow_mass)
             gasflow_output[f'{name}-Z_median']=np.nanmedian(Z_snap2[mask])
@@ -109,6 +109,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
         outflow_mass=mass_snap1[ejected_mask]
         gasflow_output[f'{vcut}_outflow-n']=np.nansum(ejected_mask)
         gasflow_output[f'{vcut}_outflow-m']=np.nansum(outflow_mass)/dt
+        gasflow_output[f'{vcut}_outflow-flost']=np.nanmean(nopdata_snap2[ejected_mask])
         if gasflow_output[f'{vcut}_outflow-n']>0.:
             gasflow_output[f'{vcut}_outflow-Z_mean']=np.average(Z_snap1[ejected_mask],weights=outflow_mass)
             gasflow_output[f'{vcut}_outflow-Z_median']=np.nanmedian(Z_snap1[ejected_mask])
@@ -159,28 +160,21 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     pdata_candidates_idx_snapi_incorrectlyextracted=pids_candidates_snapi_forcheck[(pdata_candidates_idx_snapi,)]!=pid_allcandidates
     pdata_candidates_idx_snapf_incorrectlyextracted=pids_candidates_snapf_forcheck[(pdata_candidates_idx_snapf,)]!=pid_allcandidates
     
-    
-    if np.nansum(pdata_candidates_idx_snapi_incorrectlyextracted):
-        print(f"{np.nanmean(pdata_candidates_idx_snapi_incorrectlyextracted)*100:.3f}% of candidates not in fof at initial snap")
-    if np.nansum(pdata_candidates_idx_snapf_incorrectlyextracted):
-        print(f"{np.nanmean(pdata_candidates_idx_snapf_incorrectlyextracted)*100:.3f}% of candidates not in fof at final snap")
+    # if np.nansum(pdata_candidates_idx_snapi_incorrectlyextracted):
+    #     print(f"{np.nanmean(pdata_candidates_idx_snapi_incorrectlyextracted)*100:.3f}% of candidates not in fof at initial snap")
+    # if np.nansum(pdata_candidates_idx_snapf_incorrectlyextracted):
+    #     print(f"{np.nanmean(pdata_candidates_idx_snapf_incorrectlyextracted)*100:.3f}% of candidates not in fof at final snap")
         
     bad=False
     
     try:
         pdata_candidates_snapi=pdata_snapi.iloc[pdata_candidates_idx_snapi,:]
-
     except:
-        print(np.nansum(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
-        print(np.nanmean(pdata_candidates_idx_snapi==np.nanmax(pdata_candidates_idx_snapi)))
-        print('Couldnt get all initial particle candidates')
         bad=True
 
     try:
         pdata_candidates_snapf=pdata_snapf.iloc[pdata_candidates_idx_snapf,:]
     except:
-        print(np.nansum(pdata_candidates_idx_snapf==np.nanmax(pdata_candidates_idx_snapf)))
-        print(np.nanmean(pdata_candidates_idx_snapf==np.nanmax(pdata_candidates_idx_snapf)))
         print('Couldnt get all final particle candidates')
         bad=True
 
