@@ -158,7 +158,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0):
     gas=pdata['ParticleType'].values==0
     if 'StellarFormationTime' in pdata:
         gas=np.logical_or(gas,pdata['StellarFormationTime'].values<=0)
-    boundary=np.abs(pdata.R_Rel-radius)<=(dr/2)
+    boundary=np.abs(pdata['R_rel'].values-radius)<=(dr/2)
 
     pdata=pdata.loc[np.logical_and(boundary,gas),:].copy();pdata.reset_index(inplace=True,drop=True)
     mass=pdata['Mass'].values
@@ -304,11 +304,15 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
 
         pdata_candidates_snapf.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']]),axis=1))
         pdata_candidates_snapi.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']]),axis=1))
-        pdata_candidates_snapf.loc[:,'Relative_Vrad']=(pdata_candidates_snapf['Relative_Vx'].values*pdata_candidates_snapf['Relative_x'].values+pdata_candidates_snapf['Relative_Vy'].values*pdata_candidates_snapf['Relative_y'].values+pdata_candidates_snapf['Relative_Vz'].values*pdata_candidates_snapf['Relative_z'].values)/(pdata_candidates_snapf['R_rel_phys'].values)
-        pdata_candidates_snapi.loc[:,'Relative_Vrad']=(pdata_candidates_snapi['Relative_Vx'].values*pdata_candidates_snapi['Relative_x'].values+pdata_candidates_snapi['Relative_Vy'].values*pdata_candidates_snapi['Relative_y'].values+pdata_candidates_snapi['Relative_Vz'].values*pdata_candidates_snapi['Relative_z'].values)/(pdata_candidates_snapi['R_rel_phys'].values)
+        pdata_candidates_snapf.loc[:,'Relative_Vrad']=(pdata_candidates_snapf['Relative_Vx'].values*pdata_candidates_snapf['Relative_x'].values*ave_a/hval+pdata_candidates_snapf['Relative_Vy'].values*pdata_candidates_snapf['Relative_y'].values*ave_a/hval+pdata_candidates_snapf['Relative_Vz'].values*pdata_candidates_snapf['Relative_z'].values*ave_a/hval)/(pdata_candidates_snapf['R_rel_phys'].values)
+        pdata_candidates_snapi.loc[:,'Relative_Vrad']=(pdata_candidates_snapi['Relative_Vx'].values*pdata_candidates_snapi['Relative_x'].values*ave_a/hval+pdata_candidates_snapi['Relative_Vy'].values*pdata_candidates_snapi['Relative_y'].values*ave_a/hval+pdata_candidates_snapi['Relative_Vz'].values*pdata_candidates_snapi['Relative_z'].values*ave_a/hval)/(pdata_candidates_snapi['R_rel_phys'].values)
 
         print(f"{np.nanmean(pdata_candidates_snapi['Relative_Vrad'].values>0)*100:.1f}% of candidate particles moving outwards")
-        print(f"{np.nanmean(pdata_candidates_snapi['Relative_Vrad'].values>0)*100:.1f}% of candidate particles moving outwards")
+        print(f"{np.nanmean(pdata_candidates_snapf['Relative_Vrad'].values>0)*100:.1f}% of candidate particles moving outwards")
+
+        print(np.nanmean(pdata_candidates_snapi.loc[:,'Relative_Vrad'].values))
+        print(np.nanpercentile(pdata_candidates_snapi.loc[:,'Relative_Vrad'].values,20))
+        print(np.nanpercentile(pdata_candidates_snapi.loc[:,'Relative_Vrad'].values,80))
 
         return True,pdata_candidates_snapi,pdata_candidates_snapf
 
