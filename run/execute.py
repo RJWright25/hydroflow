@@ -27,6 +27,7 @@ parser.add_argument('--ivol',metavar='-I',type=int,help='which sub-volume to con
 parser.add_argument('--snap',metavar='-S',type=int,help='which snapshot to consider')
 parser.add_argument('--depth',metavar='-D',type=int,help='time interval')
 parser.add_argument('--mcut',metavar='-M',type=float,help='mass limit (log mass)')
+parser.add_argument('--idm',metavar='-B',type=int,help='baryons only')
 
 args=parser.parse_args()
 repo=args.repo
@@ -39,6 +40,7 @@ snapf=int(args.snap)
 depth=int(args.depth)
 snapi=int(snapf-depth)
 mcut=10**(args.mcut)
+idm=bool(args.idm)
 
 sys.path.append(f"{repo.split('hydroflow')[0]}")
 
@@ -131,12 +133,12 @@ if numgal:
 
     #load pdata
     logging.info(f'Loading final snap particle data: {snapf_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
-    pdata_snapf,kdtree_snapf=read_subvol(snapf_pdata_fname,ivol,nslice)
+    pdata_snapf,kdtree_snapf=read_subvol(snapf_pdata_fname,ivol,nslice,idm=idm)
 
     # pdata_snapf.sort_values("ParticleIDs",inplace=True)
     # pdata_snapf.reset_index(inplace=True,drop=True)
     logging.info(f'Loading initial snap particle data: {snapi_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
-    pdata_snapi,kdtree_snapi=read_subvol(snapi_pdata_fname,ivol,nslice)
+    pdata_snapi,kdtree_snapi=read_subvol(snapi_pdata_fname,ivol,nslice,idm=idm)
 
     # pdata_snapf.sort_values("ParticleIDs",inplace=True)
     # pdata_snapf.reset_index(inplace=True,drop=True)
@@ -181,14 +183,19 @@ if numgal:
             galaxy_output.loc[0,'inst_SFR']=inst_sfr
             galaxy_output.loc[0,'ave_SFR']=ave_sfr
 
+            if idm:
+                maxrad=np.nanmax([3*r200_eff,(100*1e-3)/afac*hval])
+            else:
+                maxrad=np.nanmax([1*r200_eff,(100*1e-3)/afac*hval])
+
             t1_c=time.time()
-            success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf)
+            success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,maxrad=maxrad)
             t2_c=time.time()
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
 
             if success:
                 t1_f=time.time()
-                fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf)
+                fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf,idm=idm)
                 t2_f=time.time()
                 logging.info(f"Galaxy: {t2_f-t1_f:.3f} sec")
 
@@ -209,7 +216,12 @@ if numgal:
                     galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
 
                 ### r200 facs
-                for fac in [0.1,0.15,0.2,0.25,0.5,0.75,1,1.5,2,2.5]:
+                if idm:
+                    r200_facs=[0.1,0.15,0.2,0.25,0.5,0.75,1,1.5,2,2.5]
+                else:
+                    r200_facs=[0.1,0.15,0.2,0.25,0.5,0.75,1]
+
+                for fac in r200_facs:
                     idm=(fac>=1)
                     gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,idm=idm,vc=v200)
                     for key in list(gasflow_ir200.keys()):

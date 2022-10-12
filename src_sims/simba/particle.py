@@ -5,19 +5,22 @@ from scipy.spatial import cKDTree
 from hydroflow.src_physics.utils import get_limits
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice):
+def read_subvol(path,ivol,nslice,idm=False):
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']*1e-3
     hval=pdata_file['Header'].attrs['HubbleParam']
+    afac=1/(1+pdata_file['Header'].attrs['Redshift'])
     pdata_file.close()
     
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     ptype_fields={0:['InternalEnergy','ElectronAbundance','Metallicity','StarFormationRate'],
-                  1:[],
                   4:['Metallicity'],
                   5:[]}
-    
+
+    if idm:
+        ptype_fields[1]=[]
+
     pdata=[{} for iptype in range(len(ptype_fields))]
 
     pdata_ifile=h5py.File(path,'r')
@@ -53,8 +56,9 @@ def read_subvol(path,ivol,nslice):
                 pdata[iptype]['ParticleType']=np.uint16(np.ones(npart_ifile_invol)*ptype)
 
                 # print('Loading')
-                for idim,dim in enumerate('xyz'):
-                    pdata[iptype][f'Coordinates_{dim}']=coordinates[:,idim]
+                pdata[iptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates
+                if not ptype==1:
+                    pdata[iptype].loc[:,[f'Velocity_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask]*afac**(1/2)
 
                 # print('Loading masses')
                 pdata[iptype]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*1e10/hval      

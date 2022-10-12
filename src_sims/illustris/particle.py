@@ -10,12 +10,13 @@ from hydroflow.src_physics.utils import get_limits
 
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,nchunks=1e3):
+def read_subvol(path,ivol,nslice,nchunks=1e3,idm=False):
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']*1e-3
     hval=pdata_file['Header'].attrs['HubbleParam']
     masstable=pdata_file['Header'].attrs['MassTable']
+    afac=1/(1+pdata_file['Header'].attrs['Redshift'])
     pdata_file.close()
     
     flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])
@@ -27,10 +28,11 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     ptype_fields={0:['InternalEnergy','ElectronAbundance','GFM_Metallicity','StarFormationRate'],
-                  1:[],
                   4:['GFM_Metallicity','GFM_StellarFormationTime'],
                   5:[]}
-    
+    if idm:
+        ptype_fields[1]=[]
+
     pdata=[{ptype:[] for ptype in ptype_fields} for ifile in range(numfiles)]
 
     for ifile,ifname in enumerate(flist):
@@ -70,12 +72,13 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
                     pdata[ifile][ptype]['ParticleType']=np.uint16(np.ones(npart_ifile_invol)*ptype)
 
                     # print('Loading')
-                    for idim,dim in enumerate('xyz'):
-                        pdata[ifile][ptype][f'Coordinates_{dim}']=coordinates[:,idim]
+                    pdata[ifile][ptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates;del coordinates
+                    if not ptype==1:
+                        pdata[ifile][ptype].loc[:,[f'Velocity_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask]*afac**(1/2)
 
                     # print('Loading masses')
-                    if not ptype==1:#assign all baryonic particles the mass of the tracers
-                        pdata[ifile][ptype]['Mass']=np.float32(np.ones(npart_ifile_invol)*masstable[3]*10**10/hval)      
+                    if not ptype==1:
+                        pdata[ifile][ptype]['Mass']=np.float32(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*1e10/hval)
                     else:
                         pdata[ifile][ptype]['Mass']=np.float32(np.ones(npart_ifile_invol)*masstable[ptype]*10**10/hval)      
 
@@ -116,6 +119,7 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
             pdata[ifile][0]=pd.concat([pdata[ifile][ptype] for ptype in [0,4,5] if not pdata[ifile][ptype].shape[0]==0])
             pdata[ifile][0].sort_values(by='ParticleIDs',inplace=True)
             pdata[ifile][0].reset_index(inplace=True,drop=True)
+            pdata[ifile][0]['Flag_Tracer']=np.zeros(pdata[ifile][0].shape[0],dtype=np.int8)            
             pdata_ifile_baryons_IDs=pdata[ifile][0].ParticleIDs
 
             t0=time.time()
@@ -125,10 +129,12 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
             pdata_tcr_tracer_IDs_invol=np.uint64(pdata_ifile[f'PartType3']['TracerID'][:])[tracer_match_1]
             expected_idx_of_tracer_in_pdata=expected_idx_of_tracer_in_pdata[tracer_match_1];del tracer_match_1    
 
-            pdata[ifile][0]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:].copy()# reindexing to tracer based
-            pdata[ifile][0]['ParticleIDs']=pdata_tcr_tracer_IDs_invol #set particle IDs as the tracer IDs
-            pdata[ifile][0].reset_index(drop=True,inplace=True)
-            numtcr_thisvol=pdata[ifile][0].shape[0]
+            pdata[ifile][3]=pdata[ifile][0].loc[expected_idx_of_tracer_in_pdata,:].copy()# reindexing to tracer based
+            pdata[ifile][3]['ParticleIDs']=pdata_tcr_tracer_IDs_invol #set particle IDs as the tracer IDs
+            pdata[ifile][3].reset_index(drop=True,inplace=True)
+            pdata[ifile][3]['Flag_Tracer']=np.ones(pdata[ifile][3].shape[0],dtype=np.int8) #
+            pdata[ifile][3]['Mass']=np.float32(np.ones(pdata[ifile][3].shape[0])*masstable[3]*10**10/hval)  
+            numtcr_thisvol=pdata[ifile][3].shape[0]
 
             print(f'Matched tracers for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
             pdata_ifile.close()#housekeeping
@@ -136,10 +142,12 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
         else:
             numtcr_thisvol=0
             print('No baryons in ifile for desired volume, will not match tracers')
-
         if numtcr_thisvol or numdm_thisvol:
             try:
-                pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1] if not pdata[ifile][ptype].shape[0]==0)
+                if idm:
+                    pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,1,3] if not pdata[ifile][ptype].shape[0]==0)
+                else:
+                    pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,3] if not pdata[ifile][ptype].shape[0]==0)
             except:
                 print('No particles in ifile for desired volume')
                 pdata[ifile]=pd.DataFrame([])

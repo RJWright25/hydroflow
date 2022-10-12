@@ -13,7 +13,7 @@ from read_eagle import EagleSnapshot
 from hydroflow.src_physics.utils import get_limits
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,ptypes=None):
+def read_subvol(path,ivol,nslice,ptypes=None,idm=False):
     file=h5py.File(path,'r')
     boxsize=file['Header'].attrs['BoxSize']
     hfac=file['Header'].attrs['HubbleParam']
@@ -22,8 +22,10 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     if not ptypes:
         ptypes={0:['Temperature','Metallicity','StarFormationRate'],
-                1:[],
                 4:['Metallicity']}
+
+    if idm:
+        ptypes[1]=[]
     
     snapshot=EagleSnapshot(path)
     snapshot.select_region(*lims)
@@ -32,6 +34,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     for iptype,ptype in enumerate(ptypes):
         pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
         pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')
+        pdata[ptype].loc[:,[f'Velocity_x{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')
         pdata[ptype].loc[:,'ParticleType']=ptype
         
         if ptype==1:
@@ -47,16 +50,16 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     snapshot.close()
 
-    
     #for star particles assign a crazy temp, density
-    npart_gas=pdata[0].shape[0]
-    npart_dm=pdata[1].shape[0]
     npart_star=pdata[4].shape[0]
+    if idm:
+        npart_dm=pdata[1].shape[0]
     for field in ptypes[0]:
         if not field in ptypes[4]:
             pdata[4][field]=np.ones(npart_star)*10**10
-        if not field in ptypes[1]:
-            pdata[1][field]=np.ones(npart_dm)*np.nan
+        if idm:
+            if not field in ptypes[1]:
+                pdata[1][field]=np.ones(npart_dm)*np.nan
 
     #concat all pdata into one df
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
@@ -76,11 +79,8 @@ def convert_pdata(path,pdata):
     # density in nH/cm^3; mass in Msun; SFR in msun/yr (grams per second)
     snapshot=h5py.File(path,'r')
     msun=snapshot[f'Constants'].attrs['SOLAR_MASS']
-    # mproton=snapshot[f'Constants'].attrs['PROTONMASS']
     secperyear=snapshot[f'Constants'].attrs['SEC_PER_YEAR']
     snapshot.close()
-
-    molecularweight=1.2285
     conversions={'Mass':1,
                  'StarFormationRate':secperyear/msun}
     for field,conversion in conversions.items():

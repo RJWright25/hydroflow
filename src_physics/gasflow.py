@@ -11,6 +11,13 @@ from hydroflow.src_physics.utils import calc_r200, vel_conversion
 def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
     gasflow_output={}
 
+    #grab out tracers
+    if 'Flag_Tracer' in list(pdata_snapi.keys()):
+        tracers_snap1=pdata_snapi['Flag_Tracer'].values>0
+        tracers_snap2=pdata_snapf['Flag_Tracer'].values>0
+        pdata_snapi=pdata_snapi.loc[tracers_snap1,:].copy();pdata_snapi.reset_index(drop=True,inplace=True)
+        pdata_snapf=pdata_snapf.loc[tracers_snap2,:].copy();pdata_snapf.reset_index(drop=True,inplace=True)
+
     mass_snap1=pdata_snapi['Mass'].values
     mass_snap2=pdata_snapf['Mass'].values
 
@@ -42,7 +49,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
     T_snap2=pdata_snapf['Temperature'].values
 
     #
-    arvel=(pdata_snapf['R_rel'].values-pdata_snapi['R_rel'].values)/dt*vel_conversion
+    arvel=(pdata_snapf['R_rel_phys'].values-pdata_snapi['R_rel_phys'].values)/dt*vel_conversion
 
     if Tcut: 
         cool_snap1=T_snap1<=Tcut
@@ -132,7 +139,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None,idm=False):
 
     return gasflow_output
 
-def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf):
+def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,maxrad=None):
 
     r200=calc_r200(galaxy_snapf)
 
@@ -140,7 +147,10 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     galaxy_com_snapf=np.array([galaxy_snapf[f'CentreOfPotential_{x}'] for x in 'xyz'],ndmin=2)
     
     #get gasflow candidates
-    rcut=2.5*r200#choose particles within rcut, which is chosen as 3*r200
+    if maxrad:
+        rcut=maxrad#choose particles within rcut, which is chosen as 3*r200
+    else:
+        rcut=2.5*r200
 
     pidx_candidates_snapi=kdtree_snapi.query_ball_point(galaxy_com_snapi[0],rcut)
     pidx_candidates_snapf=kdtree_snapf.query_ball_point(galaxy_com_snapf[0],rcut)
@@ -192,6 +202,11 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
 
         pdata_candidates_snapi['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapi),axis=1))
         pdata_candidates_snapf['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']]-galaxy_com_snapf),axis=1))
+
+        afac_snap1=1/(1+galaxy_snapi['Redshift']);afac_snap2=1/(1+galaxy_snapf['Redshift']);ave_a=(afac_snap1+afac_snap2)/2;hval=0.67
+        pdata_candidates_snapi['R_rel_phys']=pdata_candidates_snapi['R_rel']*ave_a/hval
+        pdata_candidates_snapf['R_rel_phys']=pdata_candidates_snapf['R_rel']*ave_a/hval
+
 
         return True,pdata_candidates_snapi,pdata_candidates_snapf
 
