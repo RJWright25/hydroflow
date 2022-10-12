@@ -49,14 +49,10 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     #for star particles assign a crazy temp, density
     npart_star=pdata[4].shape[0]
-    if idm:
-        npart_dm=pdata[1].shape[0]
+
     for field in ptypes[0]:
         if not field in ptypes[4]:
             pdata[4][field]=np.ones(npart_star)*10**10
-        if idm:
-            if not field in ptypes[1]:
-                pdata[1][field]=np.ones(npart_dm)*np.nan
 
     #concat all pdata into one df
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
