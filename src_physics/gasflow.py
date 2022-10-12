@@ -240,8 +240,8 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     else:
         rcut=2.5*r200
 
-    pidx_candidates_snapi=kdtree_snapi.query_ball_point(galaxy_com_snapi[0],rcut)
-    pidx_candidates_snapf=kdtree_snapf.query_ball_point(galaxy_com_snapf[0],rcut)
+    pidx_candidates_snapi=kdtree_snapi.query_ball_point(galaxy_com_snapi,rcut)
+    pidx_candidates_snapf=kdtree_snapf.query_ball_point(galaxy_com_snapf,rcut)
 
     pids_candidates_snapi=pdata_snapi.loc[pidx_candidates_snapi,'ParticleIDs'].values
     pids_candidates_snapf=pdata_snapf.loc[pidx_candidates_snapf,'ParticleIDs'].values
