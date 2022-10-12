@@ -248,10 +248,10 @@ if numgal:
                     gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,idm=False,vc=v200)
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad[key]
-                    gasflow_irad_euler=analyse_gasflow(pdata_candidates_snapf,radius=(rad*1e-3)*hval,vc=v200)
+                    gasflow_irad_euler=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=(rad*1e-3)*hval,vc=v200)
                     for key in list(gasflow_irad_euler.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad_euler[key]
-                        
+
                 ### user def
                 for user_radius in user_radii:
                     iuser_radius=galaxy_snapf[user_radius]
