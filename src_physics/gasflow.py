@@ -246,19 +246,15 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     #     print(f"{np.nanmean(pdata_candidates_idx_snapf_incorrectlyextracted)*100:.3f}% of candidates not in fof at final snap")
         
     bad=False
-    
+
     try:
-        print('Getting initial candidates')
         pdata_candidates_snapi=pdata_snapi.iloc[pdata_candidates_idx_snapi,:]
     except:
-        raise
         bad=True
 
     try:
-        print('Getting initial candidates')
         pdata_candidates_snapf=pdata_snapf.iloc[pdata_candidates_idx_snapf,:]
     except:
-        raise
         bad=True
 
     if not bad:

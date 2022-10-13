@@ -201,7 +201,6 @@ if numgal:
             if success:
                 t1_f=time.time()
                 if 'illustris' in code:
-                    print(pdata_candidates_cells_snapf)
                     fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_cells_snapf)
                 else:
                     fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf)
