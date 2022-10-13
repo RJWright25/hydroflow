@@ -107,8 +107,6 @@ logging.info(f'Output file: {outcat_fname} [runtime {time.time()-t1:.3f} sec]')
 subcat_limits=get_limits(ivol,nslice,boxsize,buffer=0)
 logging.info(f'Box limits: x - ({subcat_limits[0]:.1f},{subcat_limits[1]:.1f}); y - ({subcat_limits[2]:.1f},{subcat_limits[3]:.1f}); z - ({subcat_limits[4]:.1f},{subcat_limits[5]:.1f}) [runtime {time.time()-t1:.3f} sec]')
 
-print(np.log10(mcut))
-
 subcat_snapmask=np.logical_and.reduce([subcat[snap_key].values>=snapi,subcat[snap_key].values<=snapf,subcat[mass_key].values>=(mcut*0.25)])
 subcat_boxmask=np.logical_and.reduce([subcat['CentreOfPotential_x'].values>=subcat_limits[0],subcat['CentreOfPotential_x'].values<subcat_limits[1],
                                       subcat['CentreOfPotential_y'].values>=subcat_limits[2],subcat['CentreOfPotential_y'].values<subcat_limits[3],
@@ -117,6 +115,9 @@ subcat_selection=subcat.loc[np.logical_and(subcat_boxmask,subcat_snapmask),:].co
 subcat_selection.reset_index(drop=True,inplace=True)
 subcat_selection_final=subcat_selection.loc[np.logical_and(subcat_selection[snap_key].values==snapf,subcat_selection[mass_key].values>=mcut),:].copy()
 subcat_selection_final.reset_index(drop=True,inplace=True)
+
+logging.info(f'Mass limit: {np.log10(mcut):.1f} [runtime {time.time()-t1:.3f} sec]')
+logging.info(f'Frac above limit: {np.nanmean(subcat_selection[mass_key].values>=mcut)*100:.1f}% [runtime {time.time()-t1:.3f} sec]')
 
 del subcat
 numgal=subcat_selection_final.shape[0]
