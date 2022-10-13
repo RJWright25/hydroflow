@@ -156,7 +156,7 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
     #concat all pdata into one df
     pdata=pd.concat(pdata)
 
-    pdata_tracers=pdata_tracers.loc[pdata.Flag_Tracer==1,:].copy()
+    pdata_tracers=pdata.loc[pdata.Flag_Tracer==1,:].copy()
     pdata_baryons=pdata.loc[pdata.Flag_Tracer==0,:].copy()
 
     pdata_tracers.sort_values(by="ParticleIDs",inplace=True)
