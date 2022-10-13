@@ -9,7 +9,7 @@ import pandas as pd
 
 from hydroflow.run.tools_hpc import create_dir
 
-def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,mcut=8,verbose=False):
+def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,mcut=10,verbose=False):
     subcat=pd.read_hdf(path_subcat)
 
     snap_key='SnapNum'
@@ -23,6 +23,8 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
         snapmin=np.nanmin(subcat[snap_key].values);snapmax=np.nanmax(subcat[snap_key].values)
     else:
         snap_mask=np.logical_and(subcat[snap_key]>=snapmin,subcat[snap_key]<=(snapmax+1))
+
+    print(np.nanmean(subcat[mass_key].values>=10**mcut))
 
     subcat_mask=np.logical_and.reduce([snap_mask,subcat[mass_key].values>=10**mcut])
     subcat_masked=subcat.loc[subcat_mask,:].copy();del subcat
@@ -77,7 +79,6 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
                     continue
         
         if snap_outputs:
-
             snap_outputs=pd.concat(snap_outputs)
             snap_outputs.sort_values(by='HydroflowID',inplace=True)
             snap_outputs.reset_index(drop=True,inplace=True)
