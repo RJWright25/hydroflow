@@ -124,8 +124,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
 def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     gasflow_output={}
 
-    dr=0.4*radius
-    dr_phys=dr*afac/0.67
+    dr=0.333*radius
     
     if usetracers:
         tracersname='tcrs'
@@ -164,7 +163,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     for name,mask in zip([f'inflowflux{tracersname}',f'inflowflux_pristine{tracersname}'],[inflow_mask,inflow_pristine_mask]):
         inflow_mass=mass[mask]
         gasflow_output[f'{name}-n']=np.nansum(mask)
-        gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*vrad[mask]/afac)/dr_phys
+        gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*vrad[mask]/afac)/dr
         gasflow_output[f'{name}-fcov']=np.nanmean(mask)
         if gasflow_output[f'{name}-n']>0.:
             gasflow_output[f'{name}-Z_mean']=np.average(Zmet[mask],weights=inflow_mass)
@@ -277,20 +276,17 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapi['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']].values),axis=1))
         pdata_candidates_snapf['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']].values),axis=1))
 
-        pdata_candidates_snapi['R_rel_phys']=pdata_candidates_snapi['R_rel'].values*ave_a/hval
-        pdata_candidates_snapf['R_rel_phys']=pdata_candidates_snapf['R_rel'].values*ave_a/hval
-
-        vhalo_ave=(galaxy_com_snapf-galaxy_com_snapi)/dt*ave_a/hval
+        vhalo_ave=(galaxy_com_snapf-galaxy_com_snapi)/dt
 
         for idim,dim in enumerate('xyz'):
-            pdata_candidates_snapi[f'Relative_V{dim}']=pdata_candidates_snapi[f'Velocity_{dim}'].values/vel_conversion-vhalo_ave[idim]
-            pdata_candidates_snapf[f'Relative_V{dim}']=pdata_candidates_snapf[f'Velocity_{dim}'].values/vel_conversion-vhalo_ave[idim]
+            pdata_candidates_snapi[f'Relative_V{dim}']=pdata_candidates_snapi[f'Velocity_{dim}'].values/(vel_conversion/hval)-vhalo_ave[idim]
+            pdata_candidates_snapf[f'Relative_V{dim}']=pdata_candidates_snapf[f'Velocity_{dim}'].values/(vel_conversion/hval)-vhalo_ave[idim]
 
         pdata_candidates_snapf.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']].values),axis=1))
         pdata_candidates_snapi.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']].values),axis=1))
 
-        pdata_candidates_snapf.loc[:,'Relative_Vrad']=(pdata_candidates_snapf['Relative_Vx'].values*pdata_candidates_snapf['Relative_x'].values*ave_a/hval+pdata_candidates_snapf['Relative_Vy'].values*pdata_candidates_snapf['Relative_y'].values*ave_a/hval+pdata_candidates_snapf['Relative_Vz'].values*pdata_candidates_snapf['Relative_z'].values*ave_a/hval)/(pdata_candidates_snapf['R_rel_phys'].values)
-        pdata_candidates_snapi.loc[:,'Relative_Vrad']=(pdata_candidates_snapi['Relative_Vx'].values*pdata_candidates_snapi['Relative_x'].values*ave_a/hval+pdata_candidates_snapi['Relative_Vy'].values*pdata_candidates_snapi['Relative_y'].values*ave_a/hval+pdata_candidates_snapi['Relative_Vz'].values*pdata_candidates_snapi['Relative_z'].values*ave_a/hval)/(pdata_candidates_snapi['R_rel_phys'].values)
+        pdata_candidates_snapf.loc[:,'Relative_Vrad']=(pdata_candidates_snapf['Relative_Vx'].values*pdata_candidates_snapf['Relative_x'].values+pdata_candidates_snapf['Relative_Vy'].values*pdata_candidates_snapf['Relative_y'].values+pdata_candidates_snapf['Relative_Vz'].values*pdata_candidates_snapf['Relative_z'].values)/(pdata_candidates_snapf['R_rel'].values)
+        pdata_candidates_snapi.loc[:,'Relative_Vrad']=(pdata_candidates_snapi['Relative_Vx'].values*pdata_candidates_snapi['Relative_x'].values+pdata_candidates_snapi['Relative_Vy'].values*pdata_candidates_snapi['Relative_y'].values+pdata_candidates_snapi['Relative_Vz'].values*pdata_candidates_snapi['Relative_z'].values)/(pdata_candidates_snapi['R_rel'].values)
 
         return True,pdata_candidates_snapi,pdata_candidates_snapf
 
