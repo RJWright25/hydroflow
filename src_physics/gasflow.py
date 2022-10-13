@@ -136,9 +136,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     if 'StellarFormationTime' in pdata:
         gas=np.logical_or(gas,pdata['StellarFormationTime'].values<=0)
     
-
     boundary=np.abs(pdata['R_rel'].values-radius)<=(dr/2)
-
 
     pdata=pdata.loc[np.logical_and(boundary,gas),:].copy();pdata.reset_index(inplace=True,drop=True)
     mass=pdata['Mass'].values
