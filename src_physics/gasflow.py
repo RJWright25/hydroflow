@@ -160,7 +160,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     for name,mask in zip([f'inflowflux{tracersname}',f'inflowflux_pristine{tracersname}'],[inflow_mask,inflow_pristine_mask]):
         inflow_mass=mass[mask]
         gasflow_output[f'{name}-n']=np.nansum(mask)
-        gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*vrad[mask])/dr_phys
+        gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*vrad[mask]/afac)/dr_phys
         gasflow_output[f'{name}-fcov']=np.nanmean(mask)
         if gasflow_output[f'{name}-n']>0.:
             gasflow_output[f'{name}-Z_mean']=np.average(Zmet[mask],weights=inflow_mass)
@@ -179,7 +179,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
         ejected_mask=outflow_masks[vcut]
         outflow_mass=mass[ejected_mask]
         gasflow_output[f'{vcut}_outflowflux{tracersname}-n']=np.nansum(ejected_mask)
-        gasflow_output[f'{vcut}_outflowflux{tracersname}-m']=np.nansum(outflow_mass*vrad[ejected_mask])/dr_phys
+        gasflow_output[f'{vcut}_outflowflux{tracersname}-m']=np.nansum(outflow_mass*vrad[ejected_mask]/afac)/dr_phys
         gasflow_output[f'{vcut}_outflowflux{tracersname}-fcov']=np.nanmean(ejected_mask)
         if gasflow_output[f'{vcut}_outflowflux{tracersname}-n']>0.:
             gasflow_output[f'{vcut}_outflowflux{tracersname}-Z_mean']=np.average(Zmet[ejected_mask],weights=outflow_mass)
