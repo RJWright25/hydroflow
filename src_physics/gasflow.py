@@ -11,14 +11,6 @@ from hydroflow.src_physics.utils import calc_r200, vel_conversion
 def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     gasflow_output={}
 
-    #grab out tracers
-    if 'Flag_Tracer' in list(pdata_snapi.keys()):
-        tracers_snap1=pdata_snapi['Flag_Tracer'].values>0
-        tracers_snap2=pdata_snapf['Flag_Tracer'].values>0
-        pdata_snapi=pdata_snapi.loc[tracers_snap1,:].copy();pdata_snapi.reset_index(drop=True,inplace=True)
-        pdata_snapf=pdata_snapf.loc[tracers_snap2,:].copy();pdata_snapf.reset_index(drop=True,inplace=True)
-        print('Using tracers')
-
     mass_snap1=pdata_snapi['Mass'].values
     mass_snap2=pdata_snapf['Mass'].values
 
