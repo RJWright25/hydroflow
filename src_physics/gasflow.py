@@ -157,7 +157,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     #vcuts
     vcuts=['000kmps','50kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
     vcuts_val=[0,50,100,150,250,0.25*vc,0.5*vc,vc,2*vc]
-    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad*vel_conversion>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
+    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad*afac/0.67*vel_conversion>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
     for name,mask in zip([f'inflowflux{tracersname}',f'inflowflux_pristine{tracersname}'],[inflow_mask,inflow_pristine_mask]):
@@ -191,7 +191,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
             gasflow_output[f'{vcut}_outflowflux{tracersname}-T_median']=np.nanmedian(temp[ejected_mask])
             
             #ejection vel
-            arvel_ejected=vrad[ejected_mask]*vel_conversion
+            arvel_ejected=vrad[ejected_mask]*vel_conversion*afac/0.67
             arvel_mask=np.where(np.logical_and(np.isfinite(arvel_ejected),outflow_mass>=0))
             if np.nansum(arvel_mask):
                 gasflow_output[f'{vcut}_outflowflux{tracersname}-vrad_mean']=np.average(arvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
