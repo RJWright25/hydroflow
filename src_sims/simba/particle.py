@@ -55,7 +55,7 @@ def read_subvol(path,ivol,nslice):
                 # print('Loading')
                 pdata[iptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates
                 if not ptype==1:
-                    pdata[iptype].loc[:,[f'Velocity_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask]
+                    pdata[iptype].loc[:,[f'Velocity_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask]*afac**(1/2)
 
                 # print('Loading masses')
                 pdata[iptype]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*1e10/hval      
