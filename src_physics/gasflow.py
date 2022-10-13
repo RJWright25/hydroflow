@@ -183,7 +183,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
         gasflow_output[f'{vcut}_outflowflux{tracersname}-n']=np.nansum(ejected_mask)
         gasflow_output[f'{vcut}_outflowflux{tracersname}-m']=np.nansum(outflow_mass*vrad[ejected_mask])/dr_physical
         gasflow_output[f'{name}-fcov']=np.nanmean(ejected_mask)
-        if gasflow_output[f'{vcut}_outflowflux-n']>0.:
+        if gasflow_output[f'{vcut}_outflowflux{tracersname}-n']>0.:
             gasflow_output[f'{vcut}_outflowflux{tracersname}-Z_mean']=np.average(Zmet[ejected_mask],weights=outflow_mass)
             gasflow_output[f'{vcut}_outflowflux{tracersname}-Z_median']=np.nanmedian(Zmet[ejected_mask])
             gasflow_output[f'{vcut}_outflowflux{tracersname}-T_mean']=np.average(temp[ejected_mask],weights=outflow_mass)
