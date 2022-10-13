@@ -27,8 +27,6 @@ def analyse_galaxy(galaxy,pdata):
 					   'Temperature':'T',
 					   'R_rel':'R'}
 
-	if not ('StarFormationRate' in pdata):
-		pdata.loc[:,'StarFormationRate']=np.nan
 	
 	#remove tracers if present
 	if 'Flag_Tracer' in list(pdata.keys()):
@@ -38,7 +36,6 @@ def analyse_galaxy(galaxy,pdata):
 	#masks
 	gas=pdata['ParticleType'].values==0.
 	star=pdata['ParticleType'].values==4.
-	dm=pdata['ParticleType'].values==1.
 
 	if 'StellarFormationTime' in pdata:
 		gas=np.logical_or(gas,pdata.StellarFormationTime<0)
