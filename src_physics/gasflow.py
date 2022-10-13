@@ -257,6 +257,12 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     #### if ID not found, will come up  here 
     pdata_candidates_idx_snapi_incorrectlyextracted=pids_candidates_snapi_forcheck[(pdata_candidates_idx_snapi,)]!=pid_allcandidates
     pdata_candidates_idx_snapf_incorrectlyextracted=pids_candidates_snapf_forcheck[(pdata_candidates_idx_snapf,)]!=pid_allcandidates
+
+    print(np.nanmean(pdata_candidates_idx_snapi_incorrectlyextracted))
+    print(np.nanmean(pdata_candidates_idx_snapf_incorrectlyextracted))
+
+    print(pdata_candidates_idx_snapi)
+    print(pdata_snapi.shape[0])
     
     # if np.nansum(pdata_candidates_idx_snapi_incorrectlyextracted):
     #     print(f"{np.nanmean(pdata_candidates_idx_snapi_incorrectlyextracted)*100:.3f}% of candidates not in fof at initial snap")
