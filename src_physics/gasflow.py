@@ -3,6 +3,7 @@
 
 # src_physics/gasflow.py: routines to analyse reservoir between snapshots, find inflow/outflow particles, and characterise them.
 
+from fcntl import DN_RENAME
 import numpy as np
 import time
 
@@ -123,11 +124,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
 def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     gasflow_output={}
 
-    dr=0.02
-    if radius<0.02:
-        dr=0.01
-
-    dr_physical=dr*afac/0.67
+    dr=0.25*radius
     
     if usetracers:
         tracersname='tcrs'
@@ -138,7 +135,9 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     if 'StellarFormationTime' in pdata:
         gas=np.logical_or(gas,pdata['StellarFormationTime'].values<=0)
     
+
     boundary=np.abs(pdata['R_rel'].values-radius)<=(dr/2)
+
 
     pdata=pdata.loc[np.logical_and(boundary,gas),:].copy();pdata.reset_index(inplace=True,drop=True)
     mass=pdata['Mass'].values
@@ -147,8 +146,8 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     vrad=pdata['Relative_Vrad'].values
 
     #do gas calcs here
-    inflow_mask=vrad<=0
-    outflow_mask=vrad>=0
+    inflow_mask=vrad<0
+    outflow_mask=vrad>0
 
     ## pristine
     inflow_pristine_mask=np.logical_and(inflow_mask,Zmet<1e-4)
@@ -162,7 +161,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     for name,mask in zip([f'inflowflux{tracersname}',f'inflowflux_pristine{tracersname}'],[inflow_mask,inflow_pristine_mask]):
         inflow_mass=mass[mask]
         gasflow_output[f'{name}-n']=np.nansum(mask)
-        gasflow_output[f'{name}-m']=np.nansum(inflow_mass*vrad[mask])/dr_physical
+        gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*vrad[mask])/dr
         gasflow_output[f'{name}-fcov']=np.nanmean(mask)
         if gasflow_output[f'{name}-n']>0.:
             gasflow_output[f'{name}-Z_mean']=np.average(Zmet[mask],weights=inflow_mass)
@@ -181,8 +180,8 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
         ejected_mask=outflow_masks[vcut]
         outflow_mass=mass[ejected_mask]
         gasflow_output[f'{vcut}_outflowflux{tracersname}-n']=np.nansum(ejected_mask)
-        gasflow_output[f'{vcut}_outflowflux{tracersname}-m']=np.nansum(outflow_mass*vrad[ejected_mask])/dr_physical
-        gasflow_output[f'{name}-fcov']=np.nanmean(ejected_mask)
+        gasflow_output[f'{vcut}_outflowflux{tracersname}-m']=np.nansum(outflow_mass*vrad[ejected_mask])/dr
+        gasflow_output[f'{vcut}_outflowflux{tracersname}-fcov']=np.nanmean(ejected_mask)
         if gasflow_output[f'{vcut}_outflowflux{tracersname}-n']>0.:
             gasflow_output[f'{vcut}_outflowflux{tracersname}-Z_mean']=np.average(Zmet[ejected_mask],weights=outflow_mass)
             gasflow_output[f'{vcut}_outflowflux{tracersname}-Z_median']=np.nanmedian(Zmet[ejected_mask])
