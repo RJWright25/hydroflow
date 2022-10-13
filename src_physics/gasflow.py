@@ -143,8 +143,11 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     temp=pdata['Temperature'].values
     Zmet=pdata['Metallicity'].values
     vrad=pdata['Relative_Vrad'].values
-    print(vrad)
-    print(pdata['Relative_Vabs'].values)
+
+
+    print(np.nanmean(pdata['Relative_Vx']))
+    print(np.nanmean(pdata['Relative_Vy']))
+    print(np.nanmean(pdata['Relative_Vz']))
 
     #do gas calcs here
     inflow_mask=vrad<0
