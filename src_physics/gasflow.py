@@ -268,11 +268,14 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     try:
         pdata_candidates_snapi=pdata_snapi.iloc[pdata_candidates_idx_snapi,:]
     except:
+        raise
         bad=True
 
     try:
         pdata_candidates_snapf=pdata_snapf.iloc[pdata_candidates_idx_snapf,:]
     except:
+        raise
+
         print('Couldnt get all final particle candidates')
         bad=True
 

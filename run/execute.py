@@ -190,15 +190,18 @@ if numgal:
             maxrad=np.nanmax([2*r200_eff,(100*1e-3)/afac*hval])
 
             t1_c=time.time()
-            if 'illustris' in code:
-                success,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad,)
             success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad,)
+            if 'illustris' in code:
+                success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad,)
+                success=success and success_cells
+                
             t2_c=time.time()
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
 
             if success:
                 t1_f=time.time()
                 if 'illustris' in code:
+                    print(pdata_candidates_cells_snapf)
                     fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_cells_snapf)
                 else:
                     fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf)
