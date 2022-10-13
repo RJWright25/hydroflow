@@ -124,8 +124,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
 def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     gasflow_output={}
 
-    dr=0.25*radius
-    dr_phys=0.25*radius*afac/0.67
+    dr=0.4*radius
+    dr_phys=dr*afac/0.67
     
     if usetracers:
         tracersname='tcrs'
@@ -143,7 +143,6 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     temp=pdata['Temperature'].values
     Zmet=pdata['Metallicity'].values
     vrad=pdata['Relative_Vrad'].values
-
 
     print(np.nanmean(pdata['Relative_Vx']))
     print(np.nanmean(pdata['Relative_Vy']))
