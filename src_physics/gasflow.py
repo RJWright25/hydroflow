@@ -142,19 +142,6 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     else:
         tracersname=''
 
-
-    #grab out tracers
-    if 'Flag_Tracer' in list(pdata.keys()):
-        tracers=pdata['Flag_Tracer'].values>0
-        if usetracers:
-            pdata=pdata.loc[tracers,:].copy();pdata.reset_index(drop=True,inplace=True)
-            print('Grabbing tracers')
-        else:
-            pdata=pdata.loc[np.logical_not(tracers),:].copy();pdata.reset_index(drop=True,inplace=True)
-            print('Removing tracers')
-
-    print(pdata.shape[0])
-
     gas=pdata['ParticleType'].values==0
     if 'StellarFormationTime' in pdata:
         gas=np.logical_or(gas,pdata['StellarFormationTime'].values<=0)
