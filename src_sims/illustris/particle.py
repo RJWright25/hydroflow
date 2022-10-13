@@ -165,8 +165,11 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
     pdata_baryons.sort_values(by="ParticleIDs",inplace=True)
     pdata_baryons.reset_index(inplace=True,drop=True)
 
+    print(pdata_baryons)
+    print(pdata_tracers)
+
     #generate KDtree
     pdata_kdtree=cKDTree(pdata_tracers.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
     pdata_kdtree_cells=cKDTree(pdata_baryons.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
     
-    return pdata_tracers, pdata_kdtree, pdata_baryons,pdata_kdtree_cells
+    return pdata_tracers, pdata_kdtree, pdata_baryons, pdata_kdtree_cells
