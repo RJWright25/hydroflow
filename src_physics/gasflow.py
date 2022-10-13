@@ -258,11 +258,8 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     pdata_candidates_idx_snapi_incorrectlyextracted=pids_candidates_snapi_forcheck[(pdata_candidates_idx_snapi,)]!=pid_allcandidates
     pdata_candidates_idx_snapf_incorrectlyextracted=pids_candidates_snapf_forcheck[(pdata_candidates_idx_snapf,)]!=pid_allcandidates
 
-    print(np.nanmean(pdata_candidates_idx_snapi_incorrectlyextracted))
-    print(np.nanmean(pdata_candidates_idx_snapf_incorrectlyextracted))
-
-    print(pdata_candidates_idx_snapi)
-    print(pdata_snapi.shape[0])
+    pdata_candidates_idx_snapi[pdata_candidates_idx_snapi_incorrectlyextracted]=-1
+    pdata_candidates_idx_snapf[pdata_candidates_idx_snapf_incorrectlyextracted]=-1
     
     # if np.nansum(pdata_candidates_idx_snapi_incorrectlyextracted):
     #     print(f"{np.nanmean(pdata_candidates_idx_snapi_incorrectlyextracted)*100:.3f}% of candidates not in fof at initial snap")
@@ -272,17 +269,17 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     bad=False
     
     try:
+        print('Getting initial candidates')
         pdata_candidates_snapi=pdata_snapi.iloc[pdata_candidates_idx_snapi,:]
     except:
         raise
         bad=True
 
     try:
+        print('Getting initial candidates')
         pdata_candidates_snapf=pdata_snapf.iloc[pdata_candidates_idx_snapf,:]
     except:
         raise
-
-        print('Couldnt get all final particle candidates')
         bad=True
 
     if not bad:

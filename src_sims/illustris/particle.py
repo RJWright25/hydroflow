@@ -140,7 +140,7 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
         else:
             numtcr_thisvol=0
             print('No baryons in ifile for desired volume, will not match tracers')
-        if numtcr_thisvol:
+        if numtcr_thisvol or numbar_thisvol:
             try:
                 pdata[ifile]=pd.concat(pdata[ifile][ptype] for ptype in [0,3] if not pdata[ifile][ptype].shape[0]==0)
             except:
@@ -155,18 +155,14 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
 
     #concat all pdata into one df
     pdata=pd.concat(pdata)
+    pdata.sort_values(by="ParticleIDs",inplace=True)
+    pdata.reset_index(inplace=True,drop=True)
 
     pdata_tracers=pdata.loc[pdata.Flag_Tracer==1,:].copy()
     pdata_baryons=pdata.loc[pdata.Flag_Tracer==0,:].copy()
 
-    pdata_tracers.sort_values(by="ParticleIDs",inplace=True)
     pdata_tracers.reset_index(inplace=True,drop=True)
-
-    pdata_baryons.sort_values(by="ParticleIDs",inplace=True)
     pdata_baryons.reset_index(inplace=True,drop=True)
-
-    print(pdata_baryons)
-    print(pdata_tracers)
 
     #generate KDtree
     pdata_kdtree=cKDTree(pdata_tracers.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
