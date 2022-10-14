@@ -46,7 +46,7 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
         jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
         jobfile.writelines(f"#SBATCH --partition={partition}\n")
         jobfile.writelines(f"#SBATCH --ntasks={1}\n")
-        jobfile.writelines(f"#SBATCH --mem={memory}GB\n")
+        jobfile.writelines(f"#SBATCH --mem-per-cpu{memory}GB\n")
         jobfile.writelines(f"#SBATCH --time={time}\n")
         jobfile.writelines(f"#SBATCH --ntasks-per-node {ntaskspernode}\n")
         if dependency:
