@@ -288,6 +288,8 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapi['R_rel_phys']=pdata_candidates_snapi['R_rel']*ave_a/hval
         pdata_candidates_snapf['R_rel_phys']=pdata_candidates_snapf['R_rel']*ave_a/hval
 
+        print(galaxy_vcom_snapf)
+
         for idim,dim in enumerate('xyz'):
             pdata_candidates_snapi[f'Relative_V{dim}']=pdata_candidates_snapi[f'Velocity_{dim}'].values-galaxy_vcom_snapi[idim]
             pdata_candidates_snapf[f'Relative_V{dim}']=pdata_candidates_snapf[f'Velocity_{dim}'].values-galaxy_vcom_snapf[idim]
