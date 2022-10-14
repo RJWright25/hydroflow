@@ -260,9 +260,12 @@ if numgal:
                         for key in list(gasflow_irad_euler_tcr.keys()):
                             galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}pkpc_gas-'+key]=gasflow_irad_euler_tcr[key]
                 ### 100kpc
-                logging.info(f'100pkpc outputs:\n')
-                logging.info(f"Lagrangian: {gasflow_irad['inflow-m']:.2e} Msun/Gyr\n")
-                logging.info(f"Eulerian: {gasflow_irad_euler['inflowflux-m']:.2e} Msun/Gyr\n")
+                logging.info(f'100pkpc inflow outputs:')
+                logging.info(f"Lagrangian: {gasflow_irad['inflow-m']:.2e} Msun/Gyr")
+                logging.info(f"Eulerian: {gasflow_irad_euler['inflowflux-m']:.2e} Msun/Gyr")
+                logging.info(f'100pkpc outflow outputs:')
+                logging.info(f"Lagrangian: {gasflow_irad['000kmps_outflow-m']:.2e} Msun/Gyr")
+                logging.info(f"Eulerian: {gasflow_irad_euler['000kmps_outflow-m']:.2e} Msun/Gyr")
 
                 ### comoving units
                 for rad in [10,30,50,100]:
