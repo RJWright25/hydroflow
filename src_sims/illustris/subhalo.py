@@ -29,6 +29,7 @@ def read_subcat(basepath,snapnums=None):
 
         hfac=subfind_raw['header']['HubbleParam']
         zval=subfind_raw['header']['Redshift']
+        afac=1/(1+zval)
 
         group_df=pd.DataFrame()
         subhalo_df=pd.DataFrame()
@@ -59,14 +60,14 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df['StellarMass']=subcat['SubhaloMassType'][:,4]*10**10/hfac
         subhalo_df['Mass']=subcat['SubhaloMass'][:]*10**10/hfac
         subhalo_df.sort_values(by='Mass',inplace=True,ascending=False);subhalo_df.reset_index(inplace=True,drop=True)
-        subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=subcat['SubhaloVel'][:,:]
+        subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=subcat['SubhaloVel'][:,:]*np.sqrt(afac)
 
         subhalo_uniquegroupnums,subhalo_unique_indices=np.unique(subhalo_df['GroupNumber'].values,return_index=True)
         subhalo_mostmassive_indices=subhalo_df['SubfindID'].values[subhalo_unique_indices]
         subhalo_mostmassive_mass=subhalo_df['Mass'].values[subhalo_unique_indices]
         subhalo_mostmassive_SFR=subhalo_df['StarFormationRate'].values[subhalo_unique_indices]
         subhalo_mostmassive_StellarMass=subhalo_df['StellarMass'].values[subhalo_unique_indices]
-        subhalo_mostmassive_Velocities=np.column_stack([subhalo_df[f'Velocity_{x}'].values[subhalo_unique_indices] for x in 'xyz'])
+        subhalo_mostmassive_Velocities=np.column_stack([subhalo_df[f'Velocity_{x}'].values[subhalo_unique_indices] for x in 'xyz'])*afac**(0.5)
 
         subhalo_df=pd.DataFrame({'GroupNumber':subhalo_uniquegroupnums,'SubfindID':subhalo_mostmassive_indices,'Mass':subhalo_mostmassive_mass,'StarFormationRate':subhalo_mostmassive_SFR,'StellarMass':subhalo_mostmassive_StellarMass})
         for idim,dim in enumerate('xyz'):

@@ -88,4 +88,8 @@ constant_G=4.30073691e-09 #(km/s)^2*Mpc/Msun
 
 vel_conversion=1*units.Mpc/units.Gyr #from pMpc/Gyr to km/s
 vel_conversion=vel_conversion.to(units.km/units.s)
-vel_conversion=vel_conversion.value
+MpcpGyr_to_kmps=vel_conversion.value
+
+distance_conversion=1*units.Mpc
+distance_conversion=distance_conversion.to(units.km)
+Mpc_to_km=distance_conversion.value

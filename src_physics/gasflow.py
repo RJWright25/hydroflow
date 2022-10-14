@@ -7,7 +7,7 @@ from fcntl import DN_RENAME
 import numpy as np
 import time
 
-from hydroflow.src_physics.utils import calc_r200, vel_conversion
+from hydroflow.src_physics.utils import calc_r200, MpcpGyr_to_kmps, Mpc_to_km,
 
 def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     gasflow_output={}
@@ -43,7 +43,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     T_snap2=pdata_snapf['Temperature'].values
 
     #
-    arvel=(pdata_snapf['R_rel_phys'].values-pdata_snapi['R_rel_phys'].values)/dt*vel_conversion
+    arvel=(pdata_snapf['R_rel_phys'].values-pdata_snapi['R_rel_phys'].values)/dt*MpcpGyr_to_kmps
 
     if Tcut: 
         cool_snap1=T_snap1<=Tcut
@@ -124,8 +124,10 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
 def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     gasflow_output={}
 
-    dr=0.333*radius
-    dr_phys=dr*afac/0.67
+    #"radius" is h-1Mpc
+
+    dr=0.333*radius #use 1/3 of radius as buffer
+    dr_phys=dr*afac/0.67*Mpc_to_km #convert to km
     
     if usetracers:
         tracersname='tcrs'
@@ -142,11 +144,11 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     mass=pdata['Mass'].values
     temp=pdata['Temperature'].values
     Zmet=pdata['Metallicity'].values
-    vrad=pdata['Relative_Vrad'].values
+    rrel_physical=pdata['R_rel_physical'].values
+    xrel_physical=np.column_stack([pdata[f'Relative_{x}_phys'].values for x in 'xyz'])
+    vrel_physical=np.column_stack([pdata[f'Relative_V{x}'].values for x in 'xyz'])
 
-    print(np.nanmean(pdata['Relative_Vx']))
-    print(np.nanmean(pdata['Relative_Vy']))
-    print(np.nanmean(pdata['Relative_Vz']))
+    vrad=np.nansum(xrel_physical*vrel_physical,axis=1)/rrel_physical #kmps
 
     #do gas calcs here
     inflow_mask=vrad<0
@@ -158,7 +160,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     #vcuts
     vcuts=['000kmps','50kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
     vcuts_val=[0,50,100,150,250,0.25*vc,0.5*vc,vc,2*vc]
-    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad*vel_conversion>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
+    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
     for name,mask in zip([f'inflowflux{tracersname}',f'inflowflux_pristine{tracersname}'],[inflow_mask,inflow_pristine_mask]):
@@ -192,7 +194,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
             gasflow_output[f'{vcut}_outflowflux{tracersname}-T_median']=np.nanmedian(temp[ejected_mask])
             
             #ejection vel
-            arvel_ejected=vrad[ejected_mask]*vel_conversion*afac/0.67
+            arvel_ejected=vrad[ejected_mask]
             arvel_mask=np.where(np.logical_and(np.isfinite(arvel_ejected),outflow_mass>=0))
             if np.nansum(arvel_mask):
                 gasflow_output[f'{vcut}_outflowflux{tracersname}-vrad_mean']=np.average(arvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
@@ -210,10 +212,12 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
 def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=None,maxrad=None):
     afac_snap1=1/(1+galaxy_snapi['Redshift']);afac_snap2=1/(1+galaxy_snapf['Redshift']);ave_a=(afac_snap1+afac_snap2)/2;hval=0.67
 
-    r200=calc_r200(galaxy_snapf)
+    r200=galaxy_snapf['Group_R_Crit200']
 
     galaxy_com_snapi=np.array([galaxy_snapi[f'CentreOfPotential_{x}'] for x in 'xyz'])
     galaxy_com_snapf=np.array([galaxy_snapf[f'CentreOfPotential_{x}'] for x in 'xyz'])
+    galaxy_vcom_snapf=np.array([galaxy_snapf[f'Velocity_{x}'] for x in 'xyz'])
+    galaxy_vcom_snapi=np.array([galaxy_snapi[f'Velocity_{x}'] for x in 'xyz'])
     
     #get gasflow candidates
     if maxrad:
@@ -274,23 +278,19 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']]=(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-galaxy_com_snapi)
         pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']]=(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-galaxy_com_snapf)
 
-        pdata_candidates_snapi['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']].values),axis=1))
-        pdata_candidates_snapf['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']].values),axis=1))
+
+        pdata_candidates_snapi.loc[:,[f'Relative_{x}_phys' for x in 'xyz']]=pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']].values*ave_a/hval
+        pdata_candidates_snapf.loc[:,[f'Relative_{x}_phys' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']].values*ave_a/hval
+
+        pdata_candidates_snapi['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']].values),axis=1)) #h-1cMpc
+        pdata_candidates_snapf['R_rel']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']].values),axis=1)) #h-1cMpc
 
         pdata_candidates_snapi['R_rel_phys']=pdata_candidates_snapi['R_rel']*ave_a/hval
         pdata_candidates_snapf['R_rel_phys']=pdata_candidates_snapf['R_rel']*ave_a/hval
 
-        vhalo_ave=(galaxy_com_snapf-galaxy_com_snapi)/dt*ave_a/hval
-
         for idim,dim in enumerate('xyz'):
-            pdata_candidates_snapi[f'Relative_V{dim}']=pdata_candidates_snapi[f'Velocity_{dim}'].values/(vel_conversion)-vhalo_ave[idim]
-            pdata_candidates_snapf[f'Relative_V{dim}']=pdata_candidates_snapf[f'Velocity_{dim}'].values/(vel_conversion)-vhalo_ave[idim]
-
-        pdata_candidates_snapf.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapi.loc[:,[f'Relative_V{x}' for x in 'xyz']].values),axis=1))
-        pdata_candidates_snapi.loc[:,'Relative_Vabs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_V{x}' for x in 'xyz']].values),axis=1))
-
-        pdata_candidates_snapf.loc[:,'Relative_Vrad']=(pdata_candidates_snapf['Relative_Vx'].values*pdata_candidates_snapf['Relative_x'].values+pdata_candidates_snapf['Relative_Vy'].values*pdata_candidates_snapf['Relative_y'].values+pdata_candidates_snapf['Relative_Vz'].values*pdata_candidates_snapf['Relative_z'].values)/(pdata_candidates_snapf['R_rel'].values)
-        pdata_candidates_snapi.loc[:,'Relative_Vrad']=(pdata_candidates_snapi['Relative_Vx'].values*pdata_candidates_snapi['Relative_x'].values+pdata_candidates_snapi['Relative_Vy'].values*pdata_candidates_snapi['Relative_y'].values+pdata_candidates_snapi['Relative_Vz'].values*pdata_candidates_snapi['Relative_z'].values)/(pdata_candidates_snapi['R_rel'].values)
+            pdata_candidates_snapi[f'Relative_V{dim}']=pdata_candidates_snapi[f'Velocity_{dim}'].values-galaxy_vcom_snapi
+            pdata_candidates_snapf[f'Relative_V{dim}']=pdata_candidates_snapf[f'Velocity_{dim}'].values-galaxy_vcom_snapf
 
         return True,pdata_candidates_snapi,pdata_candidates_snapf
 
