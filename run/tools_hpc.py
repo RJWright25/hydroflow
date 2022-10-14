@@ -111,7 +111,7 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,ntaskspern
 
     with open(submitscriptfilepath,"w") as submitfile:
         submitfile.writelines(f"cd {disbatch_dir}\n")
-        submitfile.writelines(f"sbatch --time {time} -n {num} --ntasks-per-node {ntaskspernode} --partition {partition} --mem {memory}GB --output {jobfolder}{jobname}.out --job-name {jobname} disBatch {jobscriptfilepath}\n")
+        submitfile.writelines(f"sbatch --time {time} -n {num} --ntasks-per-node {ntaskspernode} --partition {partition} --mem-per-cpu {memory}GB --output {jobfolder}{jobname}.out --job-name {jobname} disBatch {jobscriptfilepath}\n")
         submitfile.writelines(f"cd {cwd}\n")
 
     submitfile.close()
