@@ -126,7 +126,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
 
     #"radius" is h-1Mpc
     radius_physical=radius*afac/0.67
-    dr_phys=0.4*radius_physical
+    dr_phys=0.1*radius_physical
     boundary_lo=radius_physical-dr_phys/2
     boundary_hi=radius_physical+dr_phys/2
     
@@ -142,7 +142,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     rrel_physical=pdata['R_rel_phys'].values
     boundary=np.logical_and(rrel_physical>boundary_lo,rrel_physical<boundary_hi)
 
-    pdata=pdata.loc[np.logical_and(boundary,gas),:].copy();pdata.reset_index(inplace=True,drop=True)
+    pdata=pdata.loc[np.logical_and(boundary,gas),:]
     mass=pdata['Mass'].values
     temp=pdata['Temperature'].values
     Zmet=pdata['Metallicity'].values
