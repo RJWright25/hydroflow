@@ -59,14 +59,19 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df['StellarMass']=subcat['SubhaloMassType'][:,4]*10**10/hfac
         subhalo_df['Mass']=subcat['SubhaloMass'][:]*10**10/hfac
         subhalo_df.sort_values(by='Mass',inplace=True,ascending=False);subhalo_df.reset_index(inplace=True,drop=True)
-        
+        subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=subcat['SubhaloVel'][:,:]
+
         subhalo_uniquegroupnums,subhalo_unique_indices=np.unique(subhalo_df['GroupNumber'].values,return_index=True)
         subhalo_mostmassive_indices=subhalo_df['SubfindID'].values[subhalo_unique_indices]
         subhalo_mostmassive_mass=subhalo_df['Mass'].values[subhalo_unique_indices]
         subhalo_mostmassive_SFR=subhalo_df['StarFormationRate'].values[subhalo_unique_indices]
         subhalo_mostmassive_StellarMass=subhalo_df['StellarMass'].values[subhalo_unique_indices]
+        subhalo_mostmassive_Velocities=np.column_stack([subhalo_df[f'Velocity_{x}'].values[subhalo_unique_indices] for x in 'xyz'])
 
         subhalo_df=pd.DataFrame({'GroupNumber':subhalo_uniquegroupnums,'SubfindID':subhalo_mostmassive_indices,'Mass':subhalo_mostmassive_mass,'StarFormationRate':subhalo_mostmassive_SFR,'StellarMass':subhalo_mostmassive_StellarMass})
+        for idim,dim in enumerate('xyz'):
+            subhalo_df[f'Velocity_{dim}']=subhalo_mostmassive_Velocities[:,idim]
+
         subhalo_df.sort_values(by='GroupNumber',inplace=True);subhalo_df.reset_index(inplace=True,drop=True)
 
         idx_of_igroup_in_subcat=subhalo_df['GroupNumber'].searchsorted(group_df['GroupNumber'].values)
@@ -75,6 +80,7 @@ def read_subcat(basepath,snapnums=None):
         group_df.loc[groupmatch,'SubfindID']=subhalo_df['SubfindID'].values[(idx_of_igroup_in_subcat,)]
         group_df.loc[groupmatch,'StarFormationRate']=subhalo_df['StarFormationRate'].values[(idx_of_igroup_in_subcat,)]
         group_df.loc[groupmatch,'StellarMass']=subhalo_df['StellarMass'].values[(idx_of_igroup_in_subcat,)]
+        group_df.loc[groupmatch,[f'Velocity_{x}' for x in 'xyz']]=np.column_stack([subhalo_df[f'Velocity_{x}'].values[(idx_of_igroup_in_subcat,)] for x in 'xyz'])
         group_df.loc[groupmatch,'GalaxyID']=np.uint64(snapnum*1e12+group_df.loc[groupmatch,'SubfindID'].values)
 
         subhalo_dfs.append(group_df)
