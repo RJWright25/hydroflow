@@ -7,7 +7,7 @@ from fcntl import DN_RENAME
 import numpy as np
 import time
 
-from hydroflow.src_physics.utils import calc_r200, MpcpGyr_to_kmps, Mpc_to_km,
+from hydroflow.src_physics.utils import  MpcpGyr_to_kmps, Mpc_to_km
 
 def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     gasflow_output={}
