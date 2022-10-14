@@ -125,9 +125,8 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     gasflow_output={}
 
     #"radius" is h-1Mpc
-
-    dr=0.15*radius #use 1/3 of radius as buffer
-    dr_phys=dr*afac/0.67 #convert to km
+    radius_physical=radius*afac/0.67
+    dr_phys=0.01
     
     if usetracers:
         tracersname='tcrs'
@@ -138,7 +137,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     if 'StellarFormationTime' in pdata:
         gas=np.logical_or(gas,pdata['StellarFormationTime'].values<=0)
     
-    boundary=np.abs(pdata['R_rel'].values-radius)<=(dr/2)
+    boundary=np.abs(pdata['R_rel_phys'].values-radius_physical)<=(dr_phys/2)
 
     pdata=pdata.loc[np.logical_and(boundary,gas),:].copy();pdata.reset_index(inplace=True,drop=True)
     mass=pdata['Mass'].values
