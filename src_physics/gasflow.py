@@ -127,7 +127,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     #"radius" is h-1Mpc
 
     dr=0.333*radius #use 1/3 of radius as buffer
-    dr_phys=dr*afac/0.67*Mpc_to_km #convert to km
+    dr_phys=dr*afac/0.67 #convert to km
     
     if usetracers:
         tracersname='tcrs'
@@ -166,7 +166,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     for name,mask in zip([f'inflowflux{tracersname}',f'inflowflux_pristine{tracersname}'],[inflow_mask,inflow_pristine_mask]):
         inflow_mass=mass[mask]
         gasflow_output[f'{name}-n']=np.nansum(mask)
-        gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*vrad[mask])/dr_phys
+        gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*(vrad[mask]/MpcpGyr_to_kmps)/dr_phys)
         gasflow_output[f'{name}-fcov']=np.nanmean(mask)
         if gasflow_output[f'{name}-n']>0.:
             gasflow_output[f'{name}-Z_mean']=np.average(Zmet[mask],weights=inflow_mass)

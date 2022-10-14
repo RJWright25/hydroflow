@@ -245,7 +245,7 @@ if numgal:
                         gasflow_ir200_euler_tcr=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=r200_eff*fac,vc=v200,usetracers=True,afac=afac)
                         for key in list(gasflow_ir200_euler_tcr.keys()):
                             galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200_euler_tcr[key]
-  
+
 
                 ### physical radii
                 for rad in [10,30,50,100]:
@@ -259,6 +259,10 @@ if numgal:
                         gasflow_irad_euler_tcr=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=(rad*1e-3)/afac*hval,usetracers=True,vc=v200,afac=afac)
                         for key in list(gasflow_irad_euler_tcr.keys()):
                             galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}pkpc_gas-'+key]=gasflow_irad_euler_tcr[key]
+                ### 100kpc
+                logging.info(f'100pkpc outputs:\n')
+                logging.info(f"Lagrangian: {gasflow_irad['inflow-m']:.2e} Msun/Gyr\n")
+                logging.info(f"Eulerian: {gasflow_irad_euler['inflowflux-m']:.2e} Msun/Gyr\n")
 
                 ### comoving units
                 for rad in [10,30,50,100]:
