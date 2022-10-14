@@ -144,7 +144,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     mass=pdata['Mass'].values
     temp=pdata['Temperature'].values
     Zmet=pdata['Metallicity'].values
-    rrel_physical=pdata['R_rel_physical'].values
+    rrel_physical=pdata['R_rel_phys'].values
     xrel_physical=np.column_stack([pdata[f'Relative_{x}_phys'].values for x in 'xyz'])
     vrel_physical=np.column_stack([pdata[f'Relative_V{x}'].values for x in 'xyz'])
 
