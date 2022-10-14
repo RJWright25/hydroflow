@@ -126,7 +126,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
 
     #"radius" is h-1Mpc
 
-    dr=0.1*radius #use 1/3 of radius as buffer
+    dr=0.15*radius #use 1/3 of radius as buffer
     dr_phys=dr*afac/0.67 #convert to km
     
     if usetracers:
