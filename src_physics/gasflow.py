@@ -126,7 +126,9 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
 
     #"radius" is h-1Mpc
     radius_physical=radius*afac/0.67
-    dr_phys=0.01
+    dr_phys=0.4*radius_physical
+    boundary_lo=radius_physical-dr_phys/2
+    boundary_hi=radius_physical+dr_phys/2
     
     if usetracers:
         tracersname='tcrs'
@@ -136,8 +138,9 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     gas=pdata['ParticleType'].values==0
     if 'StellarFormationTime' in pdata:
         gas=np.logical_or(gas,pdata['StellarFormationTime'].values<=0)
-    
-    boundary=np.abs(pdata['R_rel_phys'].values-radius_physical)<=(dr_phys/2)
+
+    rrel_physical=pdata['R_rel_phys'].values
+    boundary=np.logical_and(rrel_physical>boundary_lo,rrel_physical<boundary_hi)
 
     pdata=pdata.loc[np.logical_and(boundary,gas),:].copy();pdata.reset_index(inplace=True,drop=True)
     mass=pdata['Mass'].values
@@ -146,7 +149,6 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     rrel_physical=pdata['R_rel_phys'].values
     xrel_physical=np.column_stack([pdata[f'Relative_{x}_phys'].values for x in 'xyz'])
     vrel_physical=np.column_stack([pdata[f'Relative_V{x}'].values for x in 'xyz'])
-
     vrad=np.nansum(xrel_physical*vrel_physical,axis=1)/rrel_physical #kmps
 
     #do gas calcs here
