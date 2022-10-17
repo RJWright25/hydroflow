@@ -263,11 +263,13 @@ if numgal:
                 logging.info(f'100pkpc inflow outputs:')
                 logging.info(f"Lagrangian: {gasflow_irad['inflow-m']:.2e} Msun/Gyr")
                 logging.info(f"Eulerian: {gasflow_irad_euler['inflowflux-m']:.2e} Msun/Gyr")
-                logging.info(f"Eulerian w trcs: {gasflow_irad_euler_tcr['inflowfluxtcrs-m']:.2e} Msun/Gyr")
+                if 'illustris' in code:
+                    logging.info(f"Eulerian w trcs: {gasflow_irad_euler_tcr['inflowfluxtcrs-m']:.2e} Msun/Gyr")
                 logging.info(f'100pkpc outflow outputs:')
                 logging.info(f"Lagrangian: {gasflow_irad['000kmps_outflow-m']:.2e} Msun/Gyr")
                 logging.info(f"Eulerian: {gasflow_irad_euler['000kmps_outflowflux-m']:.2e} Msun/Gyr")
-                logging.info(f"Eulerian w trcs: {gasflow_irad_euler_tcr['000kmps_outflowfluxtcrs-m']:.2e} Msun/Gyr")
+                if 'illustris' in code:
+                    logging.info(f"Eulerian w trcs: {gasflow_irad_euler_tcr['000kmps_outflowfluxtcrs-m']:.2e} Msun/Gyr")
 
                 ### comoving units
                 for rad in [10,30,50,100]:
