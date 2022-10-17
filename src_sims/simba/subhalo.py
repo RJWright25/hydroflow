@@ -61,6 +61,7 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df['StarFormationRate']=rockstarfile['/galaxy_data/sfr'][:]
         subhalo_df['StellarMass']=rockstarfile['/galaxy_data/dicts/masses.stellar'][:]
         subhalo_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=rockstarfile['/galaxy_data/minpotpos'][:]*1e-3*hfac
+        subhalo_df.loc[:,[f'Velocity_x{x}' for x in 'xyz']]=rockstarfile['/galaxy_data/minpotvel'][:]
 
         subhalo_df.reset_index(inplace=True,drop=True)
         subhalo_df.loc[:,'SnapNum']=snapnum
