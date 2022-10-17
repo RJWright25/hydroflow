@@ -155,11 +155,14 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     inflow_mask=vrad<0
     outflow_mask=vrad>0
 
+    print(np.nanmedian(vrad))
+    print(np.nanmedian(vrad[outflow_mask]))
+
     ## pristine
     inflow_pristine_mask=np.logical_and(inflow_mask,Zmet<1e-4)
 
     #vcuts
-    vcuts=['000kmps','50kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
+    vcuts=['000kmps','050kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
     vcuts_val=[0,50,100,150,250,0.25*vc,0.5*vc,vc,2*vc]
     outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
