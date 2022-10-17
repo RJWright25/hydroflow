@@ -147,13 +147,11 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     temp=pdata['Temperature'].values
     Zmet=pdata['Metallicity'].values
     rrel_physical=pdata['R_rel_phys'].values
-    print(rrel_physical)
 
     xrel_physical=np.column_stack([pdata[f'Relative_{x}_phys'].values for x in 'xyz'])
     vrel_physical=np.column_stack([pdata[f'Relative_V{x}'].values for x in 'xyz'])
 
     vrad=np.nansum(xrel_physical*vrel_physical,axis=1)/rrel_physical #kmps
-    print(vrad)
 
     #do gas calcs here
     inflow_mask=vrad<0
@@ -224,8 +222,6 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
 
     galaxy_com_snapi=np.array([galaxy_snapi[f'CentreOfPotential_{x}'] for x in 'xyz'])
     galaxy_com_snapf=np.array([galaxy_snapf[f'CentreOfPotential_{x}'] for x in 'xyz'])
-    galaxy_vcom_snapf=np.array([galaxy_snapf[f'Velocity_{x}'] for x in 'xyz'])
-    galaxy_vcom_snapi=np.array([galaxy_snapi[f'Velocity_{x}'] for x in 'xyz'])
     
     #get gasflow candidates
     if maxrad:
@@ -286,7 +282,6 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']]=(pdata_candidates_snapi.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-galaxy_com_snapi)
         pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']]=(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-galaxy_com_snapf)
 
-
         pdata_candidates_snapi.loc[:,[f'Relative_{x}_phys' for x in 'xyz']]=pdata_candidates_snapi.loc[:,[f'Relative_{x}' for x in 'xyz']].values*ave_a/hval
         pdata_candidates_snapf.loc[:,[f'Relative_{x}_phys' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']].values*ave_a/hval
 
@@ -296,11 +291,12 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapi['R_rel_phys']=pdata_candidates_snapi['R_rel'].values*ave_a/hval
         pdata_candidates_snapf['R_rel_phys']=pdata_candidates_snapf['R_rel'].values*ave_a/hval
 
-        print(galaxy_vcom_snapf)
+        vhalo_mean_snapi=[np.nanmean(pdata_candidates_snapi[f'Velocity_{x}']) for x in 'xyz']
+        vhalo_mean_snapf=[np.nanmean(pdata_candidates_snapf[f'Velocity_{x}']) for x in 'xyz']
 
         for idim,dim in enumerate('xyz'):
-            pdata_candidates_snapi[f'Relative_V{dim}']=pdata_candidates_snapi[f'Velocity_{dim}'].values-galaxy_vcom_snapi[idim]
-            pdata_candidates_snapf[f'Relative_V{dim}']=pdata_candidates_snapf[f'Velocity_{dim}'].values-galaxy_vcom_snapf[idim]
+            pdata_candidates_snapi[f'Relative_V{dim}']=pdata_candidates_snapi[f'Velocity_{dim}'].values-vhalo_mean_snapi[idim]
+            pdata_candidates_snapf[f'Relative_V{dim}']=pdata_candidates_snapf[f'Velocity_{dim}'].values-vhalo_mean_snapf[idim]
 
         return True,pdata_candidates_snapi,pdata_candidates_snapf
 
