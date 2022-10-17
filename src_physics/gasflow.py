@@ -147,9 +147,13 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     temp=pdata['Temperature'].values
     Zmet=pdata['Metallicity'].values
     rrel_physical=pdata['R_rel_phys'].values
+    print(rrel_physical)
+
     xrel_physical=np.column_stack([pdata[f'Relative_{x}_phys'].values for x in 'xyz'])
     vrel_physical=np.column_stack([pdata[f'Relative_V{x}'].values for x in 'xyz'])
+
     vrad=np.nansum(xrel_physical*vrel_physical,axis=1)/rrel_physical #kmps
+    print(vrad)
 
     #do gas calcs here
     inflow_mask=vrad<0
