@@ -248,7 +248,7 @@ if numgal:
 
 
                 ### physical radii
-                for rad in [10,30,50,100]:
+                for rad in [10,30,50,100][::-1]:
                     gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)/afac*hval,dt=dt,Tcut=None,vc=v200)
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}pkpc_gas-'+key]=gasflow_irad[key]
@@ -260,12 +260,12 @@ if numgal:
                         for key in list(gasflow_irad_euler_tcr.keys()):
                             galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}pkpc_gas-'+key]=gasflow_irad_euler_tcr[key]
                 ### 100kpc
-                logging.info(f'100pkpc inflow outputs:')
+                logging.info(f'10pkpc inflow outputs:')
                 logging.info(f"Lagrangian: {gasflow_irad['inflow-m']:.2e} Msun/Gyr")
                 logging.info(f"Eulerian: {gasflow_irad_euler['inflowflux-m']:.2e} Msun/Gyr")
                 if 'illustris' in code:
                     logging.info(f"Eulerian w trcs: {gasflow_irad_euler_tcr['inflowfluxtcrs-m']:.2e} Msun/Gyr")
-                logging.info(f'100pkpc outflow outputs:')
+                logging.info(f'10pkpc outflow outputs:')
                 logging.info(f"Lagrangian: {gasflow_irad['000kmps_outflow-m']:.2e} Msun/Gyr")
                 logging.info(f"Eulerian: {gasflow_irad_euler['000kmps_outflowflux-m']:.2e} Msun/Gyr")
                 if 'illustris' in code:
