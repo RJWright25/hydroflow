@@ -126,7 +126,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
 
     #"radius" is h-1Mpc
     radius_physical=radius*afac/0.67
-    dr_phys=0.25*radius_physical
+    dr_phys=0.4*radius_physical
     boundary_lo=radius_physical-dr_phys/2
     boundary_hi=radius_physical+dr_phys/2
     
