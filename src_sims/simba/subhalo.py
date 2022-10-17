@@ -63,7 +63,6 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=rockstarfile['/galaxy_data/minpotpos'][:]*1e-3*hfac
         subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=rockstarfile['/galaxy_data/minpotvel'][:]
 
-
         subhalo_df.reset_index(inplace=True,drop=True)
         subhalo_df.loc[:,'SnapNum']=snapnum
         subhalo_df.loc[:,'Redshift']=zval
@@ -78,6 +77,9 @@ def read_subcat(basepath,snapnums=None):
         subhalo_df.reset_index(inplace=True,drop=True)
 
         subhalo_dfs.append(subhalo_df)
+
+        print(subhalo_df['Velocity_x'])
+
 
     logging.info(f'')
     logging.info(f'*********************************************')
