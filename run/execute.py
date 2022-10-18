@@ -265,8 +265,9 @@ if numgal:
                     gasflow_irad_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,vc=v200_eff,afac=afac,hval=hval)
                     gasflow_irad_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=(rad*1e-3)*hval,vc=v200_eff,afac=afac,hval=hval)
                     for key in list(gasflow_irad_euler_i.keys()):
-                        galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=(gasflow_irad_euler_i[key]+gasflow_irad_euler_f[key])/2
-
+                        if key in list(gasflow_irad_euler_f.keys()):
+                            galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=(gasflow_irad_euler_i[key]+gasflow_irad_euler_f[key])/2
+                            
                 logging.info(f'30ckpc outflow outputs:')
                 logging.info(f"Lagrangian: {galaxy_output['050ckpc_gas-000kmps_outflow-m'].values[0]:.2e} Msun/Gyr")
                 logging.info(f"Eulerian: {galaxy_output['050ckpc_gas-000kmps_outflowflux-m'].values[0]:.2e} Msun/Gyr")
