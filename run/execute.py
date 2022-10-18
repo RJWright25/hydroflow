@@ -268,8 +268,8 @@ if numgal:
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=(gasflow_irad_euler_i[key]+gasflow_irad_euler_f[key])/2
 
                 logging.info(f'30ckpc outflow outputs:')
-                logging.info(f"Lagrangian: {galaxy_output[f'050ckpc_gas-000kmps_outflow-m']:.2e} Msun/Gyr")
-                logging.info(f"Eulerian: {galaxy_output[f'050ckpc_gas-000kmps_outflowflux-m']:.2e} Msun/Gyr")
+                logging.info(f"Lagrangian: {galaxy_output['050ckpc_gas-000kmps_outflow-m'].values[0]:.2e} Msun/Gyr")
+                logging.info(f"Eulerian: {galaxy_output['050ckpc_gas-000kmps_outflowflux-m'].values[0]:.2e} Msun/Gyr")
 
                             
                 ### user def
