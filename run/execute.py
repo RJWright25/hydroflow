@@ -78,6 +78,7 @@ snap_key='SnapNum'
 galid_key='GalaxyID'
 descid_key='DescendantID'
 mass_key='Mass'
+tracers=False
 
 #determine sim type
 if code=='eaglesnip':#eagle snipshots
@@ -86,10 +87,11 @@ elif code=='eaglesnap':
     from hydroflow.src_sims.eaglesnap.particle import read_subvol
 elif code=='camels.simba':
     from hydroflow.src_sims.camels.simba.particle import read_subvol
-elif code=='illustris':
-    from hydroflow.src_sims.illustris.particle import read_subvol
 elif code=='simba':
     from hydroflow.src_sims.simba.particle import read_subvol
+elif code=='illustris':
+    from hydroflow.src_sims.illustris.particle import read_subvol
+    tracers=True
 
 #metadata
 metadata=pd.read_pickle(path+'/redshifts.dat')
@@ -124,30 +126,28 @@ numgal=subcat_selection_final.shape[0]
 galaxy_outputs=[]
 
 if numgal:
-    #check for user requested outputs
+    logging.info(f'Will generate outputs for {numgal} galaxies at this snapshot')
+
+    #Check for user requested outputs
     user_radii=[]
     for key in list(subcat_selection_final.keys()):
         if '*' in key:
             user_radii.append(key)
-    logging.info(f'Will generate outputs for {numgal} galaxies at this snapshot')
 
-    #load pdata
+    #Load in initial particle data
     logging.info(f'Loading final snap particle data: {snapf_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
-    if 'illustris' in code:
+    if tracers:
         pdata_snapf,kdtree_snapf,pdata_cells_snapf,kdtree_cells_snapf=read_subvol(snapf_pdata_fname,ivol,nslice)
     else:
         pdata_snapf,kdtree_snapf=read_subvol(snapf_pdata_fname,ivol,nslice)
 
-    # pdata_snapf.sort_values("ParticleIDs",inplace=True)
-    # pdata_snapf.reset_index(inplace=True,drop=True)
+    #Load in final particle data
     logging.info(f'Loading initial snap particle data: {snapi_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
-    if 'illustris' in code:
+    if tracers:
         pdata_snapi,kdtree_snapi,pdata_cells_snapi,kdtree_cells_snapi=read_subvol(snapi_pdata_fname,ivol,nslice)
     else:
         pdata_snapi,kdtree_snapi=read_subvol(snapi_pdata_fname,ivol,nslice)
 
-    # pdata_snapf.sort_values("ParticleIDs",inplace=True)
-    # pdata_snapf.reset_index(inplace=True,drop=True)
     logging.info(f'')
     logging.info(f'****** Entering main galaxy loop [runtime {time.time()-t1:.3f} sec] ******')
 
@@ -156,13 +156,14 @@ if numgal:
     afac=(1/1+file['Header'].attrs['Redshift'])
     file.close()
 
-    #main loop
+    #Main halo loop
     for igal,galaxy_snapf in subcat_selection_final.iterrows():
         logging.info(f'')
         logging.info(f"Galaxy {igal+1}/{subcat_selection_final.shape[0]:.0f}: subhalo mass - {galaxy_snapf[mass_key]:.1e}, sgn - {galaxy_snapf['SubGroupNumber']} [runtime {time.time()-t1:.3f} sec]")
 
         nmin,nmaj,progid=get_progidx(subcat_selection,galaxy_snapf[galid_key],depth)
         
+        #INITIALISE OUTPUTS
         galaxy_output=pd.DataFrame([])
         galaxy_output.loc[0,'HydroflowID']=galaxy_snapf[galid_key]
         galaxy_output.loc[0,'HydroflowProgID']=progid
@@ -173,60 +174,71 @@ if numgal:
         progmatch=progid==subcat_selection[galid_key].values
         central=galaxy_snapf['SubGroupNumber']==0
 
+        #CONTINUE IF PROGENITOR FOUND
         if progid and np.nansum(progmatch) and central:
 
             galaxy_snapi=subcat_selection.loc[progmatch,:].iloc[0]
 
+            #RECORD AVERAGE GALAXY PROPERTIES OVER TIME-STEP
             r200_eff_f=calc_r200(galaxy_snapf)
             r200_eff_i=calc_r200(galaxy_snapi)
             r200_eff=(r200_eff_f+r200_eff_i)/2
+
             m200_eff=(galaxy_snapi['Group_M_Crit200']+galaxy_snapf['Group_M_Crit200'])/2
+            v200_eff=np.sqrt(constant_G*m200_eff/(r200_eff*afac/hval))
             inst_sfr=(galaxy_snapi['StarFormationRate']+galaxy_snapf['StarFormationRate'])/2
             ave_sfr=(galaxy_snapf['StellarMass']-galaxy_snapi['StellarMass'])/dt
-
+            
             galaxy_output.loc[0,'r200_eff']=r200_eff
             galaxy_output.loc[0,'m200_eff']=m200_eff
             galaxy_output.loc[0,'inst_SFR']=inst_sfr
             galaxy_output.loc[0,'ave_SFR']=ave_sfr
 
-            maxrad=np.nanmax([2*r200_eff,(100*1e-3)/afac*hval])
+            maxrad=np.nanmax([3*r200_eff,(100*1e-3)/afac*hval])
 
+            #PROCESS FOR CANDIDATES
             t1_c=time.time()
+
+            #RETRIEVE RELEVANT PARTICLES
             success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad,)
-            if 'illustris' in code:
-                success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad,)
-                success=success and success_cells
-                
+            
+            #RETRIEVE RELEVANT CELLS
+            if tracers:
+                success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad,);success=(success and success_cells)
+
             t2_c=time.time()
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
 
+            #CONTINUE IF CANDIDATES RETRIEVED
             if success:
+                #### CHARACTERISE GALAXY
                 t1_f=time.time()
-                if 'illustris' in code:
+                if tracers:#if have tracers, use cells for galaxy analysis
                     fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_cells_snapf)
                 else:
                     fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf)
-
-                t2_f=time.time()
-                logging.info(f"Galaxy: {t2_f-t1_f:.3f} sec")
-
-                t1_g=time.time()
+                
                 if fitf:
                     #add galaxy outputs
                     for key in list(galaxy_properties_snapf.keys()):
                         galaxy_output.loc[0,key]=galaxy_properties_snapf[key]
+
+                t2_f=time.time()
+                logging.info(f"Galaxy: {t2_f-t1_f:.3f} sec")
+
+                #### CHARACTERISE GAS FLOW
+                t1_g=time.time()
+
+                if tracers:
+                    pdata_euler_snapi=pdata_candidates_cells_snapi
+                    pdata_euler_snapf=pdata_candidates_cells_snapf
                 else:
-                    logging.info(f'Could not determine properties of galaxy')
+                    pdata_euler_snapi=pdata_candidates_snapi
+                    pdata_euler_snapf=pdata_candidates_snapf
+                    
 
-                euler_pdata=pdata_candidates_snapf
-                if 'illustris' in code:
-                    euler_pdata=pdata_candidates_cells_snapf
-
-                #v200
-                v200=np.sqrt(constant_G*m200_eff/(r200_eff*afac/hval))
-
-                ### ism
-                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4,vc=v200)
+                ### Lagrangian ISM calculation
+                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4,vc=v200_eff)
                 for key in list(gasflow_ism.keys()):
                     galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
 
@@ -234,50 +246,43 @@ if numgal:
                 r200_facs=[0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.75,1,1.5,2]
 
                 for fac in r200_facs:
-                    gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,vc=v200)
+                    gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,vc=v200_eff)
                     for key in list(gasflow_ir200.keys()):
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200[key]
                     
                     if fac<=1:
-                        gasflow_ir200_euler=analyse_gasflow_eulerian(euler_pdata,radius=r200_eff*fac,vc=v200,usetracers=False,afac=afac)
-                        for key in list(gasflow_ir200_euler.keys()):
-                            galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200_euler[key]
-                        if 'illustris' in code:
-                            gasflow_ir200_euler_tcr=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=r200_eff*fac,vc=v200,usetracers=True,afac=afac)
-                            for key in list(gasflow_ir200_euler_tcr.keys()):
-                                galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200_euler_tcr[key]                
+                        gasflow_ir200_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=r200_eff*fac,afac=afac,hval=hval,vc=v200_eff)
+                        for key in list(gasflow_ir200_euler_f.keys()):
+                            galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key+'-f']=gasflow_ir200_euler_f[key]
+                        gasflow_ir200_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=r200_eff*fac,afac=afac,hval=hval,vc=v200_eff)
+                        for key in list(gasflow_ir200_euler_i.keys()):
+                            galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key+'-i']=gasflow_ir200_euler_i[key]
 
                 ### comoving units
                 for rad in [5,10,15,20,25,30,35,40,45,50]:
-                    gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,vc=v200)
+                    gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,vc=v200_eff)
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad[key]
-                    gasflow_irad_euler=analyse_gasflow_eulerian(euler_pdata,radius=(rad*1e-3)*hval,vc=v200,afac=afac,usetracers=False)
-                    for key in list(gasflow_irad_euler.keys()):
-                        galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad_euler[key]
-                    if 'illustris' in code:
-                        gasflow_irad_euler_tcr=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=(rad*1e-3)*hval,usetracers=True,vc=v200,afac=afac)
-                        for key in list(gasflow_irad_euler_tcr.keys()):
-                            galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad_euler_tcr[key]
-                    
+                    gasflow_irad_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,vc=v200_eff,afac=afac,hval=hval)
+                    for key in list(gasflow_irad_euler_f.keys()):
+                        galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key+'-f']=gasflow_irad_euler_f[key]
+                    gasflow_irad_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=(rad*1e-3)*hval,vc=v200_eff,afac=afac,hval=hval)
+                    for key in list(gasflow_irad_euler_i.keys()):
+                        galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key+'-i']=gasflow_irad_euler_i[key]                    
                 ### 100kpc
                 logging.info(f'50pkpc inflow outputs:')
                 logging.info(f"Lagrangian: {gasflow_irad['inflow-m']:.2e} Msun/Gyr")
-                logging.info(f"Eulerian: {gasflow_irad_euler['inflowflux-m']:.2e} Msun/Gyr")
-                if 'illustris' in code:
-                    logging.info(f"Eulerian w trcs: {gasflow_irad_euler_tcr['inflowfluxtcrs-m']:.2e} Msun/Gyr")
+                logging.info(f"Eulerian: {gasflow_irad_euler_f['inflowflux-m']:.2e} Msun/Gyr")
+
                 logging.info(f'50pkpc outflow outputs:')
                 logging.info(f"Lagrangian: {gasflow_irad['000kmps_outflow-m']:.2e} Msun/Gyr")
-                logging.info(f"Eulerian: {gasflow_irad_euler['000kmps_outflowflux-m']:.2e} Msun/Gyr")
-                if 'illustris' in code:
-                    logging.info(f"Eulerian w trcs: {gasflow_irad_euler_tcr['000kmps_outflowfluxtcrs-m']:.2e} Msun/Gyr")
+                logging.info(f"Eulerian: {gasflow_irad_euler_f['000kmps_outflowflux-m']:.2e} Msun/Gyr")
+
                             
-
-
                 ### user def
                 for user_radius in user_radii:
                     iuser_radius=galaxy_snapf[user_radius]
-                    gasflow_iuser=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=iuser_radius,dt=dt,Tcut=None,vc=v200)
+                    gasflow_iuser=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=iuser_radius,dt=dt,Tcut=None,vc=v200_eff)
                     for key in list(gasflow_iuser.keys()):
                         galaxy_output.loc[0,f'{user_radius}-'+key]=gasflow_iuser[key]
                     

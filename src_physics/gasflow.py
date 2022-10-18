@@ -86,6 +86,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
             if np.nansum(arvel_mask):
                 gasflow_output[f'{name}-arvel_mean']=np.average(arvel_inflow[arvel_mask],weights=inflow_mass[arvel_mask])
                 gasflow_output[f'{name}-arvel_median']=np.nanmedian(arvel_inflow[arvel_mask])
+
         else:
             remove=[f'{name}-Z_mean',f'{name}-Z_median',f'{name}-T_mean',f'{name}-T_median',f'{name}-arvel_mean',f'{name}-arvel_median']
             for field in remove:
@@ -121,19 +122,14 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
 
     return gasflow_output
 
-def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
+def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1,hval=0.67):
     gasflow_output={}
-
+    
     #"radius" is h-1Mpc
-    radius_physical=radius*afac/0.67
+    radius_physical=radius*afac/hval
     dr_phys=0.4*radius_physical
     boundary_lo=radius_physical-dr_phys/2
     boundary_hi=radius_physical+dr_phys/2
-    
-    if usetracers:
-        tracersname='tcrs'
-    else:
-        tracersname=''
 
     gas=pdata['ParticleType'].values==0
     if 'StellarFormationTime' in pdata:
@@ -166,7 +162,7 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
-    for name,mask in zip([f'inflowflux{tracersname}',f'inflowflux_pristine{tracersname}'],[inflow_mask,inflow_pristine_mask]):
+    for name,mask in zip([f'inflowflux',f'inflowflux_pristine'],[inflow_mask,inflow_pristine_mask]):
         inflow_mass=mass[mask]
         gasflow_output[f'{name}-n']=np.nansum(mask)
         gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*(vrad[mask]/MpcpGyr_to_kmps)/dr_phys)
@@ -177,42 +173,82 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
             gasflow_output[f'{name}-T_mean']=np.average(temp[mask],weights=inflow_mass)
             gasflow_output[f'{name}-T_median']=np.nanmedian(temp[mask])
 
+            vrad_infall=vrad[mask]
+            vabs_infall=vabs[mask]
+            vtan_infall=np.sqrt(vabs_infall**2-vrad_infall**2)
+            vel_mask=np.where(np.logical_and(np.isfinite(vrad_infall),inflow_mass>=0))
+
+            if np.nansum(vel_mask):
+                gasflow_output[f'{name}-vrad_mean']=np.average(vrad_infall[vel_mask],weights=inflow_mass[vel_mask])
+                gasflow_output[f'{name}-vrad_median']=np.nanmedian(vrad_infall[vel_mask])
+                gasflow_output[f'{name}-vrad_05P']=np.nanpercentile(vrad_infall[vel_mask],5)
+                gasflow_output[f'{name}-vrad_95P']=np.nanpercentile(vrad_infall[vel_mask],95)
+
+                gasflow_output[f'{name}-vabs_mean']=np.average(vabs_infall[vel_mask],weights=inflow_mass[vel_mask])
+                gasflow_output[f'{name}-vabs_median']=np.nanmedian(vabs_infall[vel_mask])
+                gasflow_output[f'{name}-vabs_05P']=np.nanpercentile(vabs_infall[vel_mask],5)
+                gasflow_output[f'{name}-vabs_95P']=np.nanpercentile(vabs_infall[vel_mask],95)
+
+                gasflow_output[f'{name}-vtan_mean']=np.average(vtan_infall[vel_mask],weights=inflow_mass[vel_mask])
+                gasflow_output[f'{name}-vtan_median']=np.nanmedian(vtan_infall[vel_mask])
+                gasflow_output[f'{name}-vtan_05P']=np.nanpercentile(vtan_infall[vel_mask],5)
+                gasflow_output[f'{name}-vtan_95P']=np.nanpercentile(vtan_infall[vel_mask],95)
+
         else:
-            remove=[f'{name}-Z_mean',f'{name}-Z_median',f'{name}-T_mean',f'{name}-T_median',f'{name}-arvel_mean',f'{name}-arvel_median']
+            remove=[f'{name}-Z_mean',f'{name}-Z_median',f'{name}-T_mean',f'{name}-T_median']
+            for veltype in ['vrad','vabs','vtan']:
+                remove.append(f'{name}-{veltype}_mean')
+                remove.append(f'{name}-{veltype}_median')
+                remove.append(f'{name}-{veltype}_05P')
+                remove.append(f'{name}-{veltype}_95P')
+
             for field in remove:
                 gasflow_output[field]=np.nan
-
 
     #### outflows
     for vcut,vcut_val in zip(vcuts,vcuts_val):
         ejected_mask=outflow_masks[vcut]
         outflow_mass=mass[ejected_mask]
-        gasflow_output[f'{vcut}_outflowflux{tracersname}-n']=np.nansum(ejected_mask)
-        gasflow_output[f'{vcut}_outflowflux{tracersname}-m']=np.nansum(outflow_mass*(vrad[ejected_mask]/MpcpGyr_to_kmps)/dr_phys)
-        gasflow_output[f'{vcut}_outflowflux{tracersname}-fcov']=np.nanmean(ejected_mask)
-        if gasflow_output[f'{vcut}_outflowflux{tracersname}-n']>0.:
-            gasflow_output[f'{vcut}_outflowflux{tracersname}-Z_mean']=np.average(Zmet[ejected_mask],weights=outflow_mass)
-            gasflow_output[f'{vcut}_outflowflux{tracersname}-Z_median']=np.nanmedian(Zmet[ejected_mask])
-            gasflow_output[f'{vcut}_outflowflux{tracersname}-T_mean']=np.average(temp[ejected_mask],weights=outflow_mass)
-            gasflow_output[f'{vcut}_outflowflux{tracersname}-T_median']=np.nanmedian(temp[ejected_mask])
+        gasflow_output[f'{vcut}_outflowflux-n']=np.nansum(ejected_mask)
+        gasflow_output[f'{vcut}_outflowflux-m']=np.nansum(outflow_mass*(vrad[ejected_mask]/MpcpGyr_to_kmps)/dr_phys)
+        gasflow_output[f'{vcut}_outflowflux-fcov']=np.nanmean(ejected_mask)
+        
+        if gasflow_output[f'{vcut}_outflowflux-n']>0.:
+            gasflow_output[f'{vcut}_outflowflux-Z_mean']=np.average(Zmet[ejected_mask],weights=outflow_mass)
+            gasflow_output[f'{vcut}_outflowflux-Z_median']=np.nanmedian(Zmet[ejected_mask])
+            gasflow_output[f'{vcut}_outflowflux-T_mean']=np.average(temp[ejected_mask],weights=outflow_mass)
+            gasflow_output[f'{vcut}_outflowflux-T_median']=np.nanmedian(temp[ejected_mask])
             
             #ejection vel
             arvel_ejected=vrad[ejected_mask]
             absvel_ejected=vabs[ejected_mask]
+            tanvel_ejected=np.sqrt(absvel_ejected**2-arvel_ejected**2)
+
             arvel_mask=np.where(np.logical_and(np.isfinite(arvel_ejected),outflow_mass>=0))
             if np.nansum(arvel_mask):
-                gasflow_output[f'{vcut}_outflowflux{tracersname}-vrad_mean']=np.average(arvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
-                gasflow_output[f'{vcut}_outflowflux{tracersname}-vrad_median']=np.nanmedian(arvel_ejected[arvel_mask])
-                gasflow_output[f'{vcut}_outflowflux{tracersname}-vrad_05P']=np.nanpercentile(arvel_ejected[arvel_mask],5)
-                gasflow_output[f'{vcut}_outflowflux{tracersname}-vrad_95P']=np.nanpercentile(arvel_ejected[arvel_mask],95)
+                gasflow_output[f'{vcut}_outflowflux-vrad_mean']=np.average(arvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vrad_median']=np.nanmedian(arvel_ejected[arvel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vrad_05P']=np.nanpercentile(arvel_ejected[arvel_mask],5)
+                gasflow_output[f'{vcut}_outflowflux-vrad_95P']=np.nanpercentile(arvel_ejected[arvel_mask],95)
 
-                gasflow_output[f'{vcut}_outflowflux{tracersname}-vabs_mean']=np.average(absvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
-                gasflow_output[f'{vcut}_outflowflux{tracersname}-vabs_median']=np.nanmedian(absvel_ejected[arvel_mask])
-                gasflow_output[f'{vcut}_outflowflux{tracersname}-vabs_05P']=np.nanpercentile(absvel_ejected[arvel_mask],5)
-                gasflow_output[f'{vcut}_outflowflux{tracersname}-vabs_95P']=np.nanpercentile(absvel_ejected[arvel_mask],95)
+                gasflow_output[f'{vcut}_outflowflux-vabs_mean']=np.average(absvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vabs_median']=np.nanmedian(absvel_ejected[arvel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vabs_05P']=np.nanpercentile(absvel_ejected[arvel_mask],5)
+                gasflow_output[f'{vcut}_outflowflux-vabs_95P']=np.nanpercentile(absvel_ejected[arvel_mask],95)
+
+                gasflow_output[f'{vcut}_outflowflux-vtan_mean']=np.average(tanvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vtan_median']=np.nanmedian(tanvel_ejected[arvel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vtan_05P']=np.nanpercentile(tanvel_ejected[arvel_mask],5)
+                gasflow_output[f'{vcut}_outflowflux-vtan_95P']=np.nanpercentile(tanvel_ejected[arvel_mask],95)
 
         else:
-            remove=[f'{vcut}_outflowflux{tracersname}-Z_mean',f'{vcut}_outflowflux{tracersname}-Z_median',f'{vcut}_outflowflux{tracersname}-T_mean',f'{vcut}_outflowflux{tracersname}-T_median',f'{vcut}_outflowflux{tracersname}-vrad_mean',f'{vcut}_outflowflux{tracersname}-vrad_median',f'{vcut}_outflowflux{tracersname}-vrad_05P',f'{vcut}_outflowflux{tracersname}-vrad_95P']
+            remove=[f'{vcut}_outflowflux-Z_mean',f'{vcut}_outflowflux-Z_median',f'{vcut}_outflowflux-T_mean',f'{vcut}_outflowflux-T_median']
+            for veltype in ['vrad','vabs','vtan']:
+                remove.append(f'{vcut}_outflowflux-{veltype}_mean')
+                remove.append(f'{vcut}_outflowflux-{veltype}_median')
+                remove.append(f'{vcut}_outflowflux-{veltype}_05P')
+                remove.append(f'{vcut}_outflowflux-{veltype}_95P')
+                
             for field in remove:
                 gasflow_output[field]=np.nan
 
@@ -228,9 +264,9 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     
     #get gasflow candidates
     if maxrad:
-        rcut=maxrad#choose particles within rcut, which is chosen as 3*r200
+        rcut=maxrad#choose particles within rcut
     else:
-        rcut=2.5*r200
+        rcut=3*r200
 
     pidx_candidates_snapi=kdtree_snapi.query_ball_point(galaxy_com_snapi,rcut)
     pidx_candidates_snapf=kdtree_snapf.query_ball_point(galaxy_com_snapf,rcut)
