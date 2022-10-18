@@ -267,6 +267,8 @@ if numgal:
                     for key in list(gasflow_irad_euler_i.keys()):
                         if key in list(gasflow_irad_euler_f.keys()):
                             galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=(gasflow_irad_euler_i[key]+gasflow_irad_euler_f[key])/2
+                        else:
+                            galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=np.nan
                             
                 logging.info(f'30ckpc outflow outputs:')
                 logging.info(f"Lagrangian: {galaxy_output['050ckpc_gas-000kmps_outflow-m'].values[0]:.2e} Msun/Gyr")
