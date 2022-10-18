@@ -238,12 +238,12 @@ if numgal:
                     
 
                 ### Lagrangian ISM calculation
-                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.15,dt=dt,Tcut=5*10**4,vc=v200_eff)
+                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.2,dt=dt,Tcut=5*10**4,vc=v200_eff)
                 for key in list(gasflow_ism.keys()):
-                    galaxy_output.loc[0,f'0p15r200_coolgas-'+key]=gasflow_ism[key]
+                    galaxy_output.loc[0,f'0p20r200_coolgas-'+key]=gasflow_ism[key]
 
                 ### r200 facs
-                r200_facs=[0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.75,1,1.5,2]
+                r200_facs=[0.1,0.2,0.25,0.3,0.4,0.5,0.75,1,1.5,2,3]
 
                 for fac in r200_facs:
                     gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,vc=v200_eff)
@@ -252,31 +252,24 @@ if numgal:
                     
                     if fac<=1:
                         gasflow_ir200_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=r200_eff*fac,afac=afac,hval=hval,vc=v200_eff)
-                        for key in list(gasflow_ir200_euler_f.keys()):
-                            galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key+'-f']=gasflow_ir200_euler_f[key]
                         gasflow_ir200_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=r200_eff*fac,afac=afac,hval=hval,vc=v200_eff)
                         for key in list(gasflow_ir200_euler_i.keys()):
-                            galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key+'-i']=gasflow_ir200_euler_i[key]
+                            galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=(gasflow_ir200_euler_i[key]+gasflow_ir200_euler_f[key])/2
 
                 ### comoving units
-                for rad in [5,10,15,20,25,30,35,40,45,50]:
+                for rad in [10,20,30,40,50]:
                     gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,vc=v200_eff)
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad[key]
+                    
                     gasflow_irad_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,vc=v200_eff,afac=afac,hval=hval)
-                    for key in list(gasflow_irad_euler_f.keys()):
-                        galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key+'-f']=gasflow_irad_euler_f[key]
                     gasflow_irad_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=(rad*1e-3)*hval,vc=v200_eff,afac=afac,hval=hval)
                     for key in list(gasflow_irad_euler_i.keys()):
-                        galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key+'-i']=gasflow_irad_euler_i[key]                    
-                ### 100kpc
-                logging.info(f'50pkpc inflow outputs:')
-                logging.info(f"Lagrangian: {gasflow_irad['inflow-m']:.2e} Msun/Gyr")
-                logging.info(f"Eulerian: {gasflow_irad_euler_f['inflowflux-m']:.2e} Msun/Gyr")
+                        galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=(gasflow_irad_euler_i[key]+gasflow_irad_euler_f[key])/2
 
-                logging.info(f'50pkpc outflow outputs:')
-                logging.info(f"Lagrangian: {gasflow_irad['000kmps_outflow-m']:.2e} Msun/Gyr")
-                logging.info(f"Eulerian: {gasflow_irad_euler_f['000kmps_outflowflux-m']:.2e} Msun/Gyr")
+                logging.info(f'30ckpc outflow outputs:')
+                logging.info(f"Lagrangian: {galaxy_output[f'050ckpc_gas-000kmps_outflow-m']:.2e} Msun/Gyr")
+                logging.info(f"Eulerian: {galaxy_output[f'050ckpc_gas-000kmps_outflowflux-m']:.2e} Msun/Gyr")
 
                             
                 ### user def
