@@ -47,6 +47,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
 
         snapdirs=sorted(os.listdir(path_gasflow))
         snapdirs=[snapdir for snapdir in snapdirs if (f'd{str(depth).zfill(2)}' in snapdir) and ('gas' not in snapdir)]
+        snap_insnapdirs=[snapdir.split('snap')[-1] for snapdir in snap_insnapdirs]
 
         snap_outputs=[]
         for snapdir in snapdirs:
@@ -110,11 +111,15 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
 
 
     create_dir(outpath)
+    
+    mask_output=np.zeros(subcat_masked.shape[0])
+    for snap in snap_insnapdirs:
+        mask_output=np.logical_or(mask_output,subcat_masked.SnapNum==snap)
+
+
+    subcat_masked=subcat_masked.loc[mask_output,:].copy()
     subcat_masked=subcat_masked.sort_values(by=['SnapNum','Mass'],ascending=[False,False],ignore_index=True)
     subcat_masked.reset_index(inplace=True)
-
     subcat_masked.to_hdf(outpath,key='Gasflow')
-
-
      
     return subcat_masked
