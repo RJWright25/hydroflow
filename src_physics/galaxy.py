@@ -80,7 +80,7 @@ def analyse_galaxy(galaxy,pdata):
 	reservoir_edges=np.concatenate([np.linspace(0,1,21),np.linspace(1.1,2,10),np.linspace(2.1,2.5,5)])
 	reservoir_names_gas=[f'{fachi:.2f}'.replace('.','p')+'r200_gasprof' for fachi in reservoir_edges[1:]]
 	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>faclo*r200,rrel<=fachi*r200]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
-	reservoir_volume={name[:-8]:4/3*np.pi*((fachi*r200*afac/hfac)**3-(faclo*r200*afac/hfac)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
+	reservoir_volume={name:4/3*np.pi*((fachi*r200*afac/hfac)**3-(faclo*r200*afac/hfac)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
 
 	for name, mask in zip(reservoir_names_gas,reservoir_masks_gas):
 		galaxy_reservoirs[name]=mask
@@ -90,7 +90,7 @@ def analyse_galaxy(galaxy,pdata):
 	reservoir_edges=np.linspace(0,1,21)
 	reservoir_names_star=[f'{fachi:.2f}'.replace('.','p')+'r200_starprof' for fachi in reservoir_edges[1:]]
 	reservoir_masks_star=[np.logical_and.reduce([star,rrel>faclo*r200,rrel<=fachi*r200]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
-	reservoir_volume={name[:-9]:4/3*np.pi*((fachi*r200*afac/hfac)**3-(faclo*r200*afac/hfac)**3) for name,faclo,fachi in zip(reservoir_names_star,reservoir_edges[:-1],reservoir_edges[1:])}
+	reservoir_volume={name:4/3*np.pi*((fachi*r200*afac/hfac)**3-(faclo*r200*afac/hfac)**3) for name,faclo,fachi in zip(reservoir_names_star,reservoir_edges[:-1],reservoir_edges[1:])}
 
 	for name, mask in zip(reservoir_names_star,reservoir_masks_star):
 		galaxy_reservoirs[name]=mask
@@ -100,7 +100,7 @@ def analyse_galaxy(galaxy,pdata):
 	reservoir_edges=np.concatenate([np.linspace(0,20,21),np.linspace(22,100,40)])
 	reservoir_names_gas=[f'{str(fachi).zfill(3)}'.replace('.','p')+'ckpc_gasprof' for fachi in reservoir_edges[1:]]
 	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>(faclo*hfac*1e-3),rrel<=(fachi*hfac*1e-3)]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
-	reservoir_volume={name[:-8]:4/3*np.pi*((fachi*1e-3*afac)**3-(faclo*1e-3*afac)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
+	reservoir_volume={name:4/3*np.pi*((fachi*1e-3*afac)**3-(faclo*1e-3*afac)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
 
 	for name, mask in zip(reservoir_names_gas,reservoir_masks_gas):
 		galaxy_reservoirs[name]=mask
@@ -110,7 +110,7 @@ def analyse_galaxy(galaxy,pdata):
 	reservoir_edges=np.concatenate([np.linspace(0,20,21),np.linspace(22,100,40)])
 	reservoir_names_star=[f'{fachi:.2f}'.replace('.','p')+'ckpc_starprof' for fachi in reservoir_edges[1:]]
 	reservoir_masks_star=[np.logical_and.reduce([star,rrel>(faclo*hfac*1e-3),rrel<=(fachi*hfac*1e-3)]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
-	reservoir_volume={name[:-9]:4/3*np.pi*((fachi*1e-3*afac)**3-(faclo*1e-3*afac)**3) for name,faclo,fachi in zip(reservoir_names_star,reservoir_edges[:-1],reservoir_edges[1:])}
+	reservoir_volume={name:4/3*np.pi*((fachi*1e-3*afac)**3-(faclo*1e-3*afac)**3) for name,faclo,fachi in zip(reservoir_names_star,reservoir_edges[:-1],reservoir_edges[1:])}
 
 	for name, mask in zip(reservoir_names_star,reservoir_masks_star):
 		galaxy_reservoirs[name]=mask
