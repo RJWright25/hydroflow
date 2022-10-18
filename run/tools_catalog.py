@@ -47,7 +47,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
 
         snapdirs=sorted(os.listdir(path_gasflow))
         snapdirs=[snapdir for snapdir in snapdirs if (f'd{str(depth).zfill(2)}' in snapdir) and ('gas' not in snapdir)]
-        snap_insnapdirs=[snapdir.split('snap')[-1] for snapdir in snapdirs]
+        snap_insnapdirs=[int(snapdir.split('snap')[-1][:3]) for snapdir in snapdirs]
 
         snap_outputs=[]
         for snapdir in snapdirs:
@@ -115,7 +115,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
     mask_output=np.zeros(subcat_masked.shape[0])
     for snap in snap_insnapdirs:
         print(snap)
-        mask_output=np.logical_or(mask_output,int(subcat_masked.SnapNum)==snap)
+        mask_output=np.logical_or(mask_output,subcat_masked.SnapNum==snap)
 
 
     subcat_masked=subcat_masked.loc[mask_output,:].copy()
