@@ -53,13 +53,12 @@ def analyse_galaxy(galaxy,pdata):
 	galaxy_reservoirs['1p00r200_star']=np.logical_and(star,r200_mask)
 	galaxy_reservoirs['1p00r200_gas']=np.logical_and(gas,r200_mask)
 
-
 	#kpc calc
-	p30kpc_mask=rrel<=(30*1e-3)/afac*hfac
+	p30kpc_mask=rrel<=((30*1e-3)/afac*hfac)
 	galaxy_reservoirs['030pkpc_star']=np.logical_and(star,p30kpc_mask)
 	galaxy_reservoirs['030pkpc_gas']=np.logical_and(gas,p30kpc_mask)
 	
-	c30kpc_mask=rrel<=(30*1e-3)*hfac
+	c30kpc_mask=rrel<=((30*1e-3)*hfac)
 	galaxy_reservoirs['030ckpc_star']=np.logical_and(star,c30kpc_mask)
 	galaxy_reservoirs['030ckpc_gas']=np.logical_and(gas,c30kpc_mask)
 
@@ -75,18 +74,44 @@ def analyse_galaxy(galaxy,pdata):
 	galaxy_reservoirs['0p15r200_halostar']=np.logical_and(star,halo)
 	galaxy_reservoirs['0p15r200_halogas']=np.logical_and(gas,halo)
 
-	#
-
-	### mass profiles
-	reservoir_edges=[0.00,0.05,0.1,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.00,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
+	######### PROFILES
+	#gas mass profile (r200)
+	reservoir_edges=np.concatenate([np.linspace(0,1,21),np.linspace(1.1,2,10),np.linspace(2.1,2.5,5)])
 	reservoir_names_gas=[f'{fachi:.2f}'.replace('.','p')+'r200_gasprof' for fachi in reservoir_edges[1:]]
 	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>faclo*r200,rrel<=fachi*r200]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
-	reservoir_volume={name[:-8]:4/3*np.pi*((fachi*r200*afac/0.67)**3-(faclo*r200*afac/0.67)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
+	reservoir_volume={name[:-8]:4/3*np.pi*((fachi*r200*afac/hfac)**3-(faclo*r200*afac/hfac)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
 
 	for name, mask in zip(reservoir_names_gas,reservoir_masks_gas):
 		galaxy_reservoirs[name]=mask
 
-    #metallicity, sfr, temperature
+	#star mass profile (r200)
+	reservoir_edges=np.linspace(0,1,21)
+	reservoir_names_star=[f'{fachi:.2f}'.replace('.','p')+'r200_starprof' for fachi in reservoir_edges[1:]]
+	reservoir_masks_star=[np.logical_and.reduce([star,rrel>faclo*r200,rrel<=fachi*r200]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
+	reservoir_volume={name[:-8]:4/3*np.pi*((fachi*r200*afac/hfac)**3-(faclo*r200*afac/hfac)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
+
+	for name, mask in zip(reservoir_names_star,reservoir_masks_star):
+		galaxy_reservoirs[name]=mask
+
+	#gas mass profile (ckpc)
+	reservoir_edges=np.concatenate([np.linspace(0,20,21),np.linspace(22,100,40)])
+	reservoir_names_gas=[f'{fachi:.2f}'.replace('.','p')+'ckpc_gasprof' for fachi in reservoir_edges[1:]]
+	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>(faclo*hfac*1e-3),rrel<=(fachi*hfac*1e-3)]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
+	reservoir_volume={name[:-8]:4/3*np.pi*((fachi*1e-3*afac)**3-(faclo*1e-3*afac)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
+
+	for name, mask in zip(reservoir_names_gas,reservoir_masks_gas):
+		galaxy_reservoirs[name]=mask
+
+	#star mass profile (ckpc)
+	reservoir_edges=np.concatenate([np.linspace(0,20,21),np.linspace(22,100,40)])
+	reservoir_names_star=[f'{fachi:.2f}'.replace('.','p')+'ckpc_starprof' for fachi in reservoir_edges[1:]]
+	reservoir_masks_star=[np.logical_and.reduce([star,rrel>(faclo*hfac*1e-3),rrel<=(fachi*hfac*1e-3)]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
+	reservoir_volume={name[:-8]:4/3*np.pi*((fachi*1e-3*afac)**3-(faclo*1e-3*afac)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
+
+	for name, mask in zip(reservoir_names_star,reservoir_masks_star):
+		galaxy_reservoirs[name]=mask
+
+    #Calculate average properties of each reservoir
 	for reservoir in galaxy_reservoirs:
 		mask=galaxy_reservoirs[reservoir]
 		partmass=mass[np.where(mask)]
@@ -109,7 +134,6 @@ def analyse_galaxy(galaxy,pdata):
 				galaxy_output[f'{reservoir}-{properties_abbrev[prop]}_mean']=np.average(partprop,weights=partmass)
 			if ('kpc' in reservoir or 'cool' in reservoir) and 'gas' in reservoir:
 				galaxy_output[f'{reservoir}-SFR']=np.nansum(pdata.loc[mask,'StarFormationRate'].values)
-
 		else:
 			for prop in reservoir_props:
 				galaxy_output[f'{reservoir}-{properties_abbrev[prop]}_median']=np.nan

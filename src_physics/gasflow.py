@@ -152,20 +152,17 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
     vrel_physical=np.column_stack([pdata[f'Relative_V{x}'].values for x in 'xyz'])
 
     vrad=np.nansum(xrel_physical*vrel_physical,axis=1)/rrel_physical #kmps
+    vabs=np.sqrt(np.nansum(np.square(vrel_physical),axis=1))
 
-    #do gas calcs here
     inflow_mask=vrad<0
     outflow_mask=vrad>0
-
-    print(np.nanmedian(vrad))
-    print(np.nanmedian(vrad[outflow_mask]))
 
     ## pristine
     inflow_pristine_mask=np.logical_and(inflow_mask,Zmet<1e-4)
 
     #vcuts
-    vcuts=['000kmps','050kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
-    vcuts_val=[0,50,100,150,250,0.25*vc,0.5*vc,vc,2*vc]
+    vcuts=['000kmps','050kmps','100kmps','200kmps','400kmps','0p25vc','0p50vc','1p00vc','2p00vc']
+    vcuts_val=[0,50,100,200,400,0.25*vc,0.5*vc,1.0*vc,2*vc]
     outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
@@ -201,12 +198,18 @@ def analyse_gasflow_eulerian(pdata,radius,usetracers=False,vc=0,afac=None):
             
             #ejection vel
             arvel_ejected=vrad[ejected_mask]
+            absvel_ejected=vabs[ejected_mask]
             arvel_mask=np.where(np.logical_and(np.isfinite(arvel_ejected),outflow_mass>=0))
             if np.nansum(arvel_mask):
                 gasflow_output[f'{vcut}_outflowflux{tracersname}-vrad_mean']=np.average(arvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
                 gasflow_output[f'{vcut}_outflowflux{tracersname}-vrad_median']=np.nanmedian(arvel_ejected[arvel_mask])
                 gasflow_output[f'{vcut}_outflowflux{tracersname}-vrad_05P']=np.nanpercentile(arvel_ejected[arvel_mask],5)
                 gasflow_output[f'{vcut}_outflowflux{tracersname}-vrad_95P']=np.nanpercentile(arvel_ejected[arvel_mask],95)
+
+                gasflow_output[f'{vcut}_outflowflux{tracersname}-vabs_mean']=np.average(absvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
+                gasflow_output[f'{vcut}_outflowflux{tracersname}-vabs_median']=np.nanmedian(absvel_ejected[arvel_mask])
+                gasflow_output[f'{vcut}_outflowflux{tracersname}-vabs_05P']=np.nanpercentile(absvel_ejected[arvel_mask],5)
+                gasflow_output[f'{vcut}_outflowflux{tracersname}-vabs_95P']=np.nanpercentile(absvel_ejected[arvel_mask],95)
 
         else:
             remove=[f'{vcut}_outflowflux{tracersname}-Z_mean',f'{vcut}_outflowflux{tracersname}-Z_median',f'{vcut}_outflowflux{tracersname}-T_mean',f'{vcut}_outflowflux{tracersname}-T_median',f'{vcut}_outflowflux{tracersname}-vrad_mean',f'{vcut}_outflowflux{tracersname}-vrad_median',f'{vcut}_outflowflux{tracersname}-vrad_05P',f'{vcut}_outflowflux{tracersname}-vrad_95P']
@@ -249,14 +252,8 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
 
     pdata_candidates_idx_snapi[pdata_candidates_idx_snapi_incorrectlyextracted]=-1
     pdata_candidates_idx_snapf[pdata_candidates_idx_snapf_incorrectlyextracted]=-1
-    
-    # if np.nansum(pdata_candidates_idx_snapi_incorrectlyextracted):
-    #     print(f"{np.nanmean(pdata_candidates_idx_snapi_incorrectlyextracted)*100:.3f}% of candidates not in fof at initial snap")
-    # if np.nansum(pdata_candidates_idx_snapf_incorrectlyextracted):
-    #     print(f"{np.nanmean(pdata_candidates_idx_snapf_incorrectlyextracted)*100:.3f}% of candidates not in fof at final snap")
-        
-    bad=False
 
+    bad=False
     try:
         pdata_candidates_snapi=pdata_snapi.iloc[pdata_candidates_idx_snapi,:]
     except:
