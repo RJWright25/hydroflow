@@ -72,7 +72,6 @@ def read_subcat(path,snapidxmin=0):
 
             subcat_file.close()
 
-            subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=5e9,:].copy()
             subhalo_df.reset_index(drop=True,inplace=True)
 
             for groupnum in list(range(group_df.shape[0])):
