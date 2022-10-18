@@ -47,7 +47,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
 
         snapdirs=sorted(os.listdir(path_gasflow))
         snapdirs=[snapdir for snapdir in snapdirs if (f'd{str(depth).zfill(2)}' in snapdir) and ('gas' not in snapdir)]
-        snap_insnapdirs=[snapdir.split('snap')[-1] for snapdir in snap_insnapdirs]
+        snap_insnapdirs=[snapdir.split('snap')[-1] for snapdir in snapdirs]
 
         snap_outputs=[]
         for snapdir in snapdirs:
