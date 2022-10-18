@@ -114,7 +114,8 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
     
     mask_output=np.zeros(subcat_masked.shape[0])
     for snap in snap_insnapdirs:
-        mask_output=np.logical_or(mask_output,subcat_masked.SnapNum==snap)
+        print(snap)
+        mask_output=np.logical_or(mask_output,int(subcat_masked.SnapNum)==snap)
 
 
     subcat_masked=subcat_masked.loc[mask_output,:].copy()
