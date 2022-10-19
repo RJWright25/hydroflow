@@ -73,7 +73,7 @@ def analyse_galaxy(galaxy,pdata):
 	galaxy_reservoirs['0p20r200_sfrgas']=np.logical_and(galaxy_reservoirs['0p20r200_gas'],sfr)
 
 	#not in 0p15r200, within r200
-	halo=np.logical_and.reduce([np.logical_not(np.logical_or(galaxy_reservoirs['0p15r200_gas'],galaxy_reservoirs['0p15r200_star'])),r200_mask])
+	halo=np.logical_and.reduce([np.logical_not(np.logical_or(galaxy_reservoirs['0p20r200_gas'],galaxy_reservoirs['0p20r200_star'])),r200_mask])
 	galaxy_reservoirs['0p20r200_halostar']=np.logical_and(star,halo)
 	galaxy_reservoirs['0p20r200_halogas']=np.logical_and(gas,halo)
 
