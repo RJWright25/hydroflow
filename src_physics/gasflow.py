@@ -109,7 +109,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
             #ejection vel
             arvel_ejected=arvel[ejected_mask]
             arvel_mask=np.where(np.logical_and(np.isfinite(arvel_ejected),outflow_mass>=0))
-            if np.nansum(arvel_mask):
+            if np.nansum(arvel_mask) and vcut=='000kmps':
                 gasflow_output[f'{vcut}_outflow-arvel_mean']=np.average(arvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
                 gasflow_output[f'{vcut}_outflow-arvel_median']=np.nanmedian(arvel_ejected[arvel_mask])
                 gasflow_output[f'{vcut}_outflow-arvel_05P']=np.nanpercentile(arvel_ejected[arvel_mask],5)
@@ -127,9 +127,7 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1,hval=0.67):
     
     #"radius" is h-1Mpc
     radius_physical=radius*afac/hval
-
-    dr=np.nanmax([0.01,])#cMpc
-    dr_phys=dr*afac/hval*1e-3
+    dr_phys=radius_physical*0.3
     boundary_lo=radius_physical-dr_phys/2
     boundary_hi=radius_physical+dr_phys/2
 
