@@ -64,8 +64,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Z_snap2<1e-4,Z_snap1<1e-4))
 
     #vcuts
-    vcuts=['000kmps','050kmps','100kmps','200kmps','400kmps','0p25vc','0p50vc','1p00vc','2p00vc']
-    vcuts_val=[0,50,100,200,400,0.25*vc,0.5*vc,1.0*vc,2*vc]
+    vcuts=['000kmps','050kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
+    vcuts_val=[0,50,100,200,0.5*vc,1.0*vc,2*vc]
     outflow_masks={vcut:np.logical_and.reduce([outflow_mask,arvel>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
@@ -127,7 +127,9 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1,hval=0.67):
     
     #"radius" is h-1Mpc
     radius_physical=radius*afac/hval
-    dr_phys=0.4*radius_physical
+
+    dr=np.nanmax([0.01,])#cMpc
+    dr_phys=dr*afac/hval*1e-3
     boundary_lo=radius_physical-dr_phys/2
     boundary_hi=radius_physical+dr_phys/2
 
@@ -157,8 +159,8 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1,hval=0.67):
     inflow_pristine_mask=np.logical_and(inflow_mask,Zmet<1e-4)
 
     #vcuts
-    vcuts=['000kmps','050kmps','100kmps','200kmps','400kmps','0p25vc','0p50vc','1p00vc','2p00vc']
-    vcuts_val=[0,50,100,200,400,0.25*vc,0.5*vc,1.0*vc,2*vc]
+    vcuts=['000kmps','050kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
+    vcuts_val=[0,50,100,200,0.5*vc,1.0*vc,2*vc]
     outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
@@ -225,7 +227,7 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1,hval=0.67):
             tanvel_ejected=np.sqrt(absvel_ejected**2-arvel_ejected**2)
 
             arvel_mask=np.where(np.logical_and(np.isfinite(arvel_ejected),outflow_mass>=0))
-            if np.nansum(arvel_mask):
+            if np.nansum(arvel_mask) and vcut=='000kmps':
                 gasflow_output[f'{vcut}_outflowflux-vrad_mean']=np.average(arvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
                 gasflow_output[f'{vcut}_outflowflux-vrad_median']=np.nanmedian(arvel_ejected[arvel_mask])
                 gasflow_output[f'{vcut}_outflowflux-vrad_05P']=np.nanpercentile(arvel_ejected[arvel_mask],5)
@@ -243,12 +245,12 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1,hval=0.67):
 
         else:
             remove=[f'{vcut}_outflowflux-Z_mean',f'{vcut}_outflowflux-Z_median',f'{vcut}_outflowflux-T_mean',f'{vcut}_outflowflux-T_median']
-            for veltype in ['vrad','vabs','vtan']:
-                remove.append(f'{vcut}_outflowflux-{veltype}_mean')
-                remove.append(f'{vcut}_outflowflux-{veltype}_median')
-                remove.append(f'{vcut}_outflowflux-{veltype}_05P')
-                remove.append(f'{vcut}_outflowflux-{veltype}_95P')
-
+            if vcut=='000kmps':
+                for veltype in ['vrad','vabs','vtan']:
+                    remove.append(f'{vcut}_outflowflux-{veltype}_mean')
+                    remove.append(f'{vcut}_outflowflux-{veltype}_median')
+                    remove.append(f'{vcut}_outflowflux-{veltype}_05P')
+                    remove.append(f'{vcut}_outflowflux-{veltype}_95P')
             for field in remove:
                 gasflow_output[field]=np.nan
 
@@ -330,6 +332,8 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         for idim,dim in enumerate('xyz'):
             pdata_candidates_snapi[f'Relative_V{dim}']=pdata_candidates_snapi[f'Velocity_{dim}'].values-vhalo_mean_snapi[idim]
             pdata_candidates_snapf[f'Relative_V{dim}']=pdata_candidates_snapf[f'Velocity_{dim}'].values-vhalo_mean_snapf[idim]
+
+        
 
         return True,pdata_candidates_snapi,pdata_candidates_snapf
 
