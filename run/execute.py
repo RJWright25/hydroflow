@@ -243,7 +243,7 @@ if numgal:
                     galaxy_output.loc[0,f'0p20r200_coolgas-'+key]=gasflow_ism[key]
 
                 ### r200 facs
-                r200_facs=[0.1,0.2,0.25,0.3,0.4,0.5,0.75,1,1.5,2,3]
+                r200_facs=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,3]
 
                 for fac in r200_facs:
                     gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,vc=v200_eff)
@@ -260,7 +260,7 @@ if numgal:
                                 galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=np.nan
 
                 ### comoving units
-                for rad in [10,20,30,40,50]:
+                for rad in [10,20,30,40,50,75,100]:
                     gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,vc=v200_eff)
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad[key]
