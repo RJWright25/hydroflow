@@ -64,9 +64,9 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Z_snap2<1e-4,Z_snap1<1e-4))
 
     #vcuts
-    vcuts=['000kmps','50kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
-    vcuts_val=[0,50,100,150,250,0.25*vc,0.5*vc,vc,2*vc]
-    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,np.logical_or(arvel>=vcut_val,nopdata_snap2)]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
+    vcuts=['000kmps','050kmps','100kmps','200kmps','400kmps','0p25vc','0p50vc','1p00vc','2p00vc']
+    vcuts_val=[0,50,100,200,400,0.25*vc,0.5*vc,1.0*vc,2*vc]
+    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,arvel>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
     for name,mask in zip(['inflow','inflow_pristine'],[inflow_mask,inflow_pristine_mask]):
@@ -248,7 +248,7 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1,hval=0.67):
                 remove.append(f'{vcut}_outflowflux-{veltype}_median')
                 remove.append(f'{vcut}_outflowflux-{veltype}_05P')
                 remove.append(f'{vcut}_outflowflux-{veltype}_95P')
-                
+
             for field in remove:
                 gasflow_output[field]=np.nan
 
