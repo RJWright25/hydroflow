@@ -114,6 +114,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,afac=1,Tcut=None):
                 gasflow_output[f'{vcut}_outflow-arvel_mean']=np.average(arvel_ejected[arvel_mask],weights=outflow_mass[arvel_mask])
                 gasflow_output[f'{vcut}_outflow-arvel_median']=np.nanmedian(arvel_ejected[arvel_mask])
                 gasflow_output[f'{vcut}_outflow-arvel_05P']=np.nanpercentile(arvel_ejected[arvel_mask],5)
+                gasflow_output[f'{vcut}_outflow-arvel_75P']=np.nanpercentile(arvel_ejected[arvel_mask],75)
                 gasflow_output[f'{vcut}_outflow-arvel_95P']=np.nanpercentile(arvel_ejected[arvel_mask],95)
 
         else:
@@ -191,11 +192,13 @@ def analyse_gasflow_eulerian(pdata,radius,dr=None,vc=0,afac=1,hval=0.67):
                 gasflow_output[f'{name}-vabs_mean']=np.average(vabs_infall[vel_mask],weights=inflow_mass[vel_mask])
                 gasflow_output[f'{name}-vabs_median']=np.nanmedian(vabs_infall[vel_mask])
                 gasflow_output[f'{name}-vabs_05P']=np.nanpercentile(vabs_infall[vel_mask],5)
+                gasflow_output[f'{name}-vabs_75P']=np.nanpercentile(vabs_infall[vel_mask],75)
                 gasflow_output[f'{name}-vabs_95P']=np.nanpercentile(vabs_infall[vel_mask],95)
 
                 gasflow_output[f'{name}-vtan_mean']=np.average(vtan_infall[vel_mask],weights=inflow_mass[vel_mask])
                 gasflow_output[f'{name}-vtan_median']=np.nanmedian(vtan_infall[vel_mask])
                 gasflow_output[f'{name}-vtan_05P']=np.nanpercentile(vtan_infall[vel_mask],5)
+                gasflow_output[f'{name}-vabs_75P']=np.nanpercentile(vtan_infall[vel_mask],75)
                 gasflow_output[f'{name}-vtan_95P']=np.nanpercentile(vtan_infall[vel_mask],95)
 
         else:
