@@ -9,7 +9,7 @@ import time
 
 from hydroflow.src_physics.utils import  MpcpGyr_to_kmps, Mpc_to_km
 
-def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
+def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,afac=1,Tcut=None):
     gasflow_output={}
 
     mass_snap1=pdata_snapi['Mass'].values
@@ -42,8 +42,9 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     T_snap1=pdata_snapi['Temperature'].values
     T_snap2=pdata_snapf['Temperature'].values
 
+
     #
-    arvel=(pdata_snapf['R_rel_phys'].values-pdata_snapi['R_rel_phys'].values)/dt*MpcpGyr_to_kmps
+    arvel=(pdata_snapf['R_rel'].values-pdata_snapi['R_rel'].values)/dt*MpcpGyr_to_kmps
 
     if Tcut: 
         cool_snap1=T_snap1<=Tcut
@@ -64,8 +65,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Z_snap2<1e-4,Z_snap1<1e-4))
 
     #vcuts
-    vcuts=['000kmps','050kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
-    vcuts_val=[0,50,100,200,0.5*vc,1.0*vc,2*vc]
+    vcuts=['000kmps','050kmps','150kmps','250kmps','0p25vc','0p50vc','1p00vc']
+    vcuts_val=[0,50,150,250,0.25*vc,0.5*vc,1.0*vc]
     outflow_masks={vcut:np.logical_and.reduce([outflow_mask,arvel>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
@@ -122,23 +123,26 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
 
     return gasflow_output
 
-def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1,hval=0.67):
+def analyse_gasflow_eulerian(pdata,radius,dr=None,vc=0,afac=1,hval=0.67):
     gasflow_output={}
     
-    #"radius" is h-1Mpc
-    radius_physical=radius*afac/hval
-    dr_phys=radius_physical*0.3
-    boundary_lo=radius_physical-dr_phys/2
-    boundary_hi=radius_physical+dr_phys/2
+    if not dr:
+        dr=radius*0.2
+
+    boundary_lo=radius-dr/2
+    boundary_hi=radius+dr/2
+
+    dr_phys=dr*afac/hval
 
     gas=pdata['ParticleType'].values==0
     if 'StellarFormationTime' in pdata:
         gas=np.logical_or(gas,pdata['StellarFormationTime'].values<=0)
 
+    rrel_comoving=pdata['R_rel'].values
     rrel_physical=pdata['R_rel_phys'].values
-    boundary=np.logical_and(rrel_physical>boundary_lo,rrel_physical<boundary_hi)
+    boundary=np.logical_and(rrel_comoving>boundary_lo,rrel_comoving<boundary_hi)
 
-    pdata=pdata.loc[np.logical_and(boundary,gas),:]
+    pdata=pdata.loc[np.logical_and(boundary,gas),:].copy()
     mass=pdata['Mass'].values
     temp=pdata['Temperature'].values
     Zmet=pdata['Metallicity'].values
@@ -157,9 +161,9 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1,hval=0.67):
     inflow_pristine_mask=np.logical_and(inflow_mask,Zmet<1e-4)
 
     #vcuts
-    vcuts=['000kmps','050kmps','100kmps','200kmps','0p50vc','1p00vc','2p00vc']
-    vcuts_val=[0,50,100,200,0.5*vc,1.0*vc,2*vc]
-    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
+    vcuts=['000kmps','050kmps','150kmps','250kmps','0p25vc','0p50vc','1p00vc']
+    vcuts_val=[0,50,150,250,0.25*vc,0.5*vc,1.0*vc]
+    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad/np.sqrt(afac)>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
     for name,mask in zip([f'inflowflux',f'inflowflux_pristine'],[inflow_mask,inflow_pristine_mask]):
@@ -173,8 +177,8 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1,hval=0.67):
             gasflow_output[f'{name}-T_mean']=np.average(temp[mask],weights=inflow_mass)
             gasflow_output[f'{name}-T_median']=np.nanmedian(temp[mask])
 
-            vrad_infall=vrad[mask]
-            vabs_infall=vabs[mask]
+            vrad_infall=vrad[mask]/np.sqrt(afac)
+            vabs_infall=vabs[mask]/np.sqrt(afac)
             vtan_infall=np.sqrt(vabs_infall**2-vrad_infall**2)
             vel_mask=np.where(np.logical_and(np.isfinite(vrad_infall),inflow_mass>=0))
 
@@ -220,8 +224,8 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1,hval=0.67):
             gasflow_output[f'{vcut}_outflowflux-T_median']=np.nanmedian(temp[ejected_mask])
             
             #ejection vel
-            arvel_ejected=vrad[ejected_mask]
-            absvel_ejected=vabs[ejected_mask]
+            arvel_ejected=vrad[ejected_mask]/np.sqrt(afac)
+            absvel_ejected=vabs[ejected_mask]/np.sqrt(afac)
             tanvel_ejected=np.sqrt(absvel_ejected**2-arvel_ejected**2)
 
             arvel_mask=np.where(np.logical_and(np.isfinite(arvel_ejected),outflow_mass>=0))

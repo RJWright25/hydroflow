@@ -165,7 +165,7 @@ if numgal:
         
         #INITIALISE OUTPUTS
         galaxy_output=pd.DataFrame([])
-        galaxy_output.loc[0,'HydroflowID']=galaxy_snapf[galid_key]
+        galaxy_output.loc[0,'HydroflowID']=np.int64(galaxy_snapf[galid_key])
         galaxy_output.loc[0,'HydroflowProgID']=progid
         galaxy_output.loc[0,'nmerger_minor']=nmin
         galaxy_output.loc[0,'nmerger_major']=nmaj
@@ -238,7 +238,7 @@ if numgal:
                     
 
                 ### Lagrangian ISM calculation
-                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.2,dt=dt,Tcut=5*10**4,vc=v200_eff)
+                gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.2,dt=dt,Tcut=5*10**4,vc=v200_eff,afac=afac)
                 for key in list(gasflow_ism.keys()):
                     galaxy_output.loc[0,f'0p20r200_coolgas-'+key]=gasflow_ism[key]
 
@@ -246,13 +246,13 @@ if numgal:
                 r200_facs=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,3]
 
                 for fac in r200_facs:
-                    gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,vc=v200_eff)
+                    gasflow_ir200=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,vc=v200_eff,afac=afac)
                     for key in list(gasflow_ir200.keys()):
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200[key]
                     
                     if fac<=1:
-                        gasflow_ir200_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=r200_eff*fac,afac=afac,hval=hval,vc=v200_eff)
-                        gasflow_ir200_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=r200_eff*fac,afac=afac,hval=hval,vc=v200_eff)
+                        gasflow_ir200_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=r200_eff*fac,dr=0.1*r200_eff,afac=afac,hval=hval,vc=v200_eff)
+                        gasflow_ir200_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=r200_eff*fac,dr=0.1*r200_eff,afac=afac,hval=hval,vc=v200_eff)
                         for key in list(gasflow_ir200_euler_i.keys()):
                             if key in list(gasflow_ir200_euler_f.keys()):
                                 galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=(gasflow_ir200_euler_i[key]+gasflow_ir200_euler_f[key])/2
@@ -261,12 +261,12 @@ if numgal:
 
                 ### comoving units
                 for rad in [10,20,30,40,50,75,100]:
-                    gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,vc=v200_eff)
+                    gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,vc=v200_eff,afac=afac)
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad[key]
                     
-                    gasflow_irad_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,vc=v200_eff,afac=afac,hval=hval)
-                    gasflow_irad_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=(rad*1e-3)*hval,vc=v200_eff,afac=afac,hval=hval)
+                    gasflow_irad_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,dr=None,vc=v200_eff,afac=afac,hval=hval)
+                    gasflow_irad_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=(rad*1e-3)*hval,dr=None,vc=v200_eff,afac=afac,hval=hval)
                     for key in list(gasflow_irad_euler_i.keys()):
                         if key in list(gasflow_irad_euler_f.keys()):
                             galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=(gasflow_irad_euler_i[key]+gasflow_irad_euler_f[key])/2
@@ -281,7 +281,7 @@ if numgal:
                 ### user def
                 for user_radius in user_radii:
                     iuser_radius=galaxy_snapf[user_radius]
-                    gasflow_iuser=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=iuser_radius,dt=dt,Tcut=None,vc=v200_eff)
+                    gasflow_iuser=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=iuser_radius,dt=dt,Tcut=None,vc=v200_eff,afac=afac)
                     for key in list(gasflow_iuser.keys()):
                         galaxy_output.loc[0,f'{user_radius}-'+key]=gasflow_iuser[key]
                     
