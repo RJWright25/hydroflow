@@ -202,12 +202,13 @@ if numgal:
             #RETRIEVE RELEVANT PARTICLES
             success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad,hval=hval)
             
+            logging.info(f"vave mean: {np.nanmean(pdata_candidates_snapi['Average_v_rad'].values)} km/s")
             #RETRIEVE RELEVANT CELLS
             if tracers:
                 success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad,hval=hval);success=(success and success_cells)
-
             t2_c=time.time()
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
+
 
             #CONTINUE IF CANDIDATES RETRIEVED
             if success:
