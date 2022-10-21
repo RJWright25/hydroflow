@@ -138,8 +138,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
 def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67):
     gasflow_output={}
     
-    if not dr:
-        dr=radius*0.2
+    dr=radius*0.2
 
     boundary_lo=radius-dr/2
     boundary_hi=radius+dr/2
