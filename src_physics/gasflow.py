@@ -18,8 +18,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     Z_snap1=pdata_snapi['Metallicity'].values
     Z_snap2=pdata_snapf['Metallicity'].values
 
-    rcut_snap1=pdata_snapi['R_rel'].values<=radius
-    rcut_snap2=pdata_snapf['R_rel'].values<=radius
+    rcut_snap1=pdata_snapi['Relative_r'].values<=radius
+    rcut_snap2=pdata_snapf['Relative_r'].values<=radius
 
     nopdata_snap1=np.logical_not(pdata_snapi['inpdata'].values)
     nopdata_snap2=np.logical_not(pdata_snapf['inpdata'].values)
