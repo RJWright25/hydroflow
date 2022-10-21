@@ -91,7 +91,6 @@ elif code=='simba':
     from hydroflow.src_sims.simba.particle import read_subvol
 elif code=='illustris':
     from hydroflow.src_sims.illustris.particle import read_subvol
-    tracers=True
 
 #metadata
 metadata=pd.read_pickle(path+'/redshifts.dat')

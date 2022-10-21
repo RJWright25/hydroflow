@@ -72,7 +72,7 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
         os.system(f"sbatch --array=0-{nvol-1} {jobscriptfilepath}")
         print(f"sbatch --array=0-{nvol-1} {jobscriptfilepath}")
 
-def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,ntaskspernode=None,volumes=None):
+def submit_gasflow_disBatch(repo,arguments,memory,time,memtot=False,partition=None,ntaskspernode=None,volumes=None):
     
     code=arguments['code']
     pathcat=arguments['path']
@@ -83,6 +83,11 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,ntaskspern
     mcut=arguments['mcut']
     namecat=pathcat.split('/')[-1][:-5]
     cwd=pathcat.split('catalogues')[0]
+
+    if memtot:
+        memory_string=f'--mem {memory}GB' 
+    else:
+        memory_string=f'--mem-per-cpu {memory}GB' 
 
     if not ntaskspernode:
         ntaskspernode=64
@@ -111,7 +116,7 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,partition=None,ntaskspern
 
     with open(submitscriptfilepath,"w") as submitfile:
         submitfile.writelines(f"cd {disbatch_dir}\n")
-        submitfile.writelines(f"sbatch --time {time} -n {num} --ntasks-per-node {ntaskspernode} --partition {partition} --mem-per-cpu {memory}GB --output {jobfolder}{jobname}.out --job-name {jobname} disBatch {jobscriptfilepath}\n")
+        submitfile.writelines(f"sbatch --time {time} -n {num} --ntasks-per-node {ntaskspernode} --partition {partition} {memory_string} --output {jobfolder}{jobname}.out --job-name {jobname} disBatch {jobscriptfilepath}\n")
         submitfile.writelines(f"cd {cwd}\n")
 
     submitfile.close()
