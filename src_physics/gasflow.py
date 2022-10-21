@@ -248,20 +248,20 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67):
                 gasflow_output[f'{vcut}_outflowflux-ave_05P']=np.nanpercentile(vave_ejected[vel_mask],5)
                 gasflow_output[f'{vcut}_outflowflux-ave_95P']=np.nanpercentile(vave_ejected[vel_mask],95)
 
-                gasflow_output[f'{vcut}_outflowflux-vrad_mean']=np.average(vrad_ejected[ejected_mask],weights=outflow_mass[ejected_mask])
-                gasflow_output[f'{vcut}_outflowflux-vrad_median']=np.nanmedian(vrad_ejected[ejected_mask])
-                gasflow_output[f'{vcut}_outflowflux-vrad_05P']=np.nanpercentile(vrad_ejected[ejected_mask],5)
-                gasflow_output[f'{vcut}_outflowflux-vrad_95P']=np.nanpercentile(vrad_ejected[ejected_mask],95)
+                gasflow_output[f'{vcut}_outflowflux-vrad_mean']=np.average(vrad_ejected[vel_mask],weights=outflow_mass[vel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vrad_median']=np.nanmedian(vrad_ejected[vel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vrad_05P']=np.nanpercentile(vrad_ejected[vel_mask],5)
+                gasflow_output[f'{vcut}_outflowflux-vrad_95P']=np.nanpercentile(vrad_ejected[vel_mask],95)
 
-                gasflow_output[f'{vcut}_outflowflux-vabs_mean']=np.average(vabs_ejected[ejected_mask],weights=outflow_mass[ejected_mask])
-                gasflow_output[f'{vcut}_outflowflux-vabs_median']=np.nanmedian(vabs_ejected[ejected_mask])
-                gasflow_output[f'{vcut}_outflowflux-vabs_05P']=np.nanpercentile(vabs_ejected[ejected_mask],5)
-                gasflow_output[f'{vcut}_outflowflux-vabs_95P']=np.nanpercentile(vabs_ejected[ejected_mask],95)
+                gasflow_output[f'{vcut}_outflowflux-vabs_mean']=np.average(vabs_ejected[vel_mask],weights=outflow_mass[vel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vabs_median']=np.nanmedian(vabs_ejected[vel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vabs_05P']=np.nanpercentile(vabs_ejected[vel_mask],5)
+                gasflow_output[f'{vcut}_outflowflux-vabs_95P']=np.nanpercentile(vabs_ejected[vel_mask],95)
 
-                gasflow_output[f'{vcut}_outflowflux-vtan_mean']=np.average(vtan_ejected[ejected_mask],weights=outflow_mass[ejected_mask])
-                gasflow_output[f'{vcut}_outflowflux-vtan_median']=np.nanmedian(vtan_ejected[ejected_mask])
-                gasflow_output[f'{vcut}_outflowflux-vtan_05P']=np.nanpercentile(vtan_ejected[ejected_mask],5)
-                gasflow_output[f'{vcut}_outflowflux-vtan_95P']=np.nanpercentile(vtan_ejected[ejected_mask],95)
+                gasflow_output[f'{vcut}_outflowflux-vtan_mean']=np.average(vtan_ejected[vel_mask],weights=outflow_mass[vel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vtan_median']=np.nanmedian(vtan_ejected[vel_mask])
+                gasflow_output[f'{vcut}_outflowflux-vtan_05P']=np.nanpercentile(vtan_ejected[vel_mask],5)
+                gasflow_output[f'{vcut}_outflowflux-vtan_95P']=np.nanpercentile(vtan_ejected[vel_mask],95)
 
         else:
             remove=[f'{vcut}_outflowflux-Z_mean',f'{vcut}_outflowflux-Z_median',f'{vcut}_outflowflux-T_mean',f'{vcut}_outflowflux-T_median']
