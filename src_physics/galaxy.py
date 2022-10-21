@@ -8,25 +8,24 @@ import numpy as np
 
 from hydroflow.src_physics.utils import calc_r200
 
-def analyse_galaxy(galaxy,pdata):
+def analyse_galaxy(galaxy,pdata,hval=0.67):
 	galaxy_output={}
 	galaxy_reservoirs={}
 	galaxy_reservoirs_vol={}
-
-	afac=1/(1+galaxy['Redshift'])
-	hfac=0.67
 	
 	#which properties to analyse
 	properties_ptype={0:['Metallicity',
 			             'Temperature',
-						 'vrad',
-						 'vtan'], 
-		   			  4:['Metallicity']}
+						 'Relative_v_rad',
+						 'Relative_v_tan'], 
+		   			  4:['Metallicity',
+						 'Relative_v_rad',
+						 'Relative_v_tan']}
 		  
 	properties_abbrev={'Metallicity':'Z',
 					   'Temperature':'T',
-					   'vrad':'vrad',
-					   'vtan':'vtan'}
+					   'Relative_v_rad':'vrad',
+					   'Relative_v_tan':'vtan'}
 
 	
 	#remove tracers if present
@@ -45,28 +44,23 @@ def analyse_galaxy(galaxy,pdata):
 	mass=pdata['Mass'].values
 	cool=pdata['Temperature'].values<5*10**4
 	sfr=pdata['StarFormationRate'].values>0
-	rrel=pdata['R_rel'].values
+	rrel=pdata['Relative_r'].values
+	# vrad=pdata['Relative_v_rad'].values
+	# vtan=pdata['Relative_v_tan'].values
 
-	rrel_physical=pdata['R_rel_phys'].values
-	xrel_physical=np.column_stack([pdata[f'Relative_{x}_phys'].values for x in 'xyz'])
-	vrel_physical=np.column_stack([pdata[f'Relative_V{x}'].values for x in 'xyz'])
-	
-	pdata['vrad']=np.nansum(xrel_physical*vrel_physical,axis=1)/rrel_physical #kmps
-	pdata['vtan']=np.nansum(np.square(vrel_physical),axis=1)**2-pdata['vrad'].values**2
+	r200=galaxy['Group_R_Crit200']
 
-	#within 
-	r200=calc_r200(galaxy)
-
+	#masking
 	r200_mask=rrel<=r200
 	galaxy_reservoirs['1p00r200_star']=np.logical_and(star,r200_mask)
 	galaxy_reservoirs['1p00r200_gas']=np.logical_and(gas,r200_mask)
 
-	c30kpc_mask=rrel<=((30*1e-3)*hfac)
+	c30kpc_mask=rrel<=((30*1e-3)*hval)
 	galaxy_reservoirs['030ckpc_star']=np.logical_and(star,c30kpc_mask)
 	galaxy_reservoirs['030ckpc_gas']=np.logical_and(gas,c30kpc_mask)
 
 	#within ISM
-	disk=rrel<=(0.15*r200)
+	disk=rrel<=(0.20*r200)
 	galaxy_reservoirs['0p20r200_star']=np.logical_and(star,disk)
 	galaxy_reservoirs['0p20r200_gas']=np.logical_and(gas,disk)
 	galaxy_reservoirs['0p20r200_coolgas']=np.logical_and(galaxy_reservoirs['0p20r200_gas'],np.logical_or(cool,sfr))
@@ -82,7 +76,7 @@ def analyse_galaxy(galaxy,pdata):
 	reservoir_edges=np.concatenate([[0,0.02,0.04,0.06,0.08],np.linspace(0.1,1,10),np.linspace(1.2,2,5),np.linspace(2.2,2,5)])
 	reservoir_names_gas=[f'{fachi:.2f}'.replace('.','p')+'r200_gasprof' for fachi in reservoir_edges[1:]]
 	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>faclo*r200,rrel<=fachi*r200]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
-	reservoir_volume={name:4/3*np.pi*((fachi*r200*afac/hfac)**3-(faclo*r200*afac/hfac)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
+	reservoir_volume={name:4/3*np.pi*((fachi*r200/hval)**3-(faclo*r200/hval)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
 
 	for name, mask in zip(reservoir_names_gas,reservoir_masks_gas):
 		galaxy_reservoirs[name]=mask
@@ -92,8 +86,8 @@ def analyse_galaxy(galaxy,pdata):
 	#gas mass profile (ckpc)
 	reservoir_edges=np.concatenate([np.linspace(0,20,5),np.linspace(30,100,8)])
 	reservoir_names_gas=[f'{str(fachi).zfill(3)}'.replace('.','p')+'ckpc_gasprof' for fachi in reservoir_edges[1:]]
-	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>(faclo*hfac*1e-3),rrel<=(fachi*hfac*1e-3)]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
-	reservoir_volume={name:4/3*np.pi*((fachi*1e-3*afac)**3-(faclo*1e-3*afac)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
+	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>(faclo*hval*1e-3),rrel<=(fachi*hval*1e-3)]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
+	reservoir_volume={name:4/3*np.pi*((fachi*1e-3)**3-(faclo*1e-3)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
 
 	for name, mask in zip(reservoir_names_gas,reservoir_masks_gas):
 		galaxy_reservoirs[name]=mask
