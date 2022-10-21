@@ -227,7 +227,7 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67,afac=1):
             vtan_ejected=vtan[ejected_mask]
             vave_ejected=vave[ejected_mask]
 
-            vel_mask=np.where(outflow_mask>=0)
+            vel_mask=np.where(outflow_mass>=0)
             if np.nansum(vel_mask) and vcut=='000kmps':
                 gasflow_output[f'{vcut}_outflowflux-ave_mean']=np.average(vave_ejected[vel_mask],weights=outflow_mass[vel_mask])
                 gasflow_output[f'{vcut}_outflowflux-ave_median']=np.nanmedian(vave_ejected[vel_mask])
