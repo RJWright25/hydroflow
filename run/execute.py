@@ -253,8 +253,8 @@ if numgal:
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200[key]
                     
                     if fac<=1:
-                        gasflow_ir200_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=r200_eff*fac,hval=hval,vc=v200_eff)
-                        gasflow_ir200_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=r200_eff*fac,hval=hval,vc=v200_eff)
+                        gasflow_ir200_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=r200_eff*fac,hval=hval,vc=v200_eff,afac=afac)
+                        gasflow_ir200_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=r200_eff*fac,hval=hval,vc=v200_eff,afac=afac)
                         for key in list(gasflow_ir200_euler_i.keys()):
                             if key in list(gasflow_ir200_euler_f.keys()):
                                 galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=(gasflow_ir200_euler_i[key]+gasflow_ir200_euler_f[key])/2
