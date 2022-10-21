@@ -72,13 +72,13 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
                     # print('Loading')
                     pdata[ifile][ptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates;del coordinates
                     if not ptype==1:
-                        pdata[ifile][ptype].loc[:,[f'Velocity_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask]*afac**(1/2)
+                        pdata[ifile][ptype].loc[:,[f'Velocity_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask]
 
                     # print('Loading masses')
                     if not ptype==1:
                         pdata[ifile][ptype]['Mass']=np.float32(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*1e10/hval)
                     else:
-                        pdata[ifile][ptype]['Mass']=np.float32(np.ones(npart_ifile_invol)*masstable[ptype]*10**10/hval)      
+                        pdata[ifile][ptype]['Mass']=np.float32(np.ones(npart_ifile_invol)*masstable[ptype]*1e10/hval)      
 
                     # print('Loading rest')
                     for field in ptype_fields[ptype]:

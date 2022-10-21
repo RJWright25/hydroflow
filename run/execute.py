@@ -180,12 +180,12 @@ if numgal:
             galaxy_snapi=subcat_selection.loc[progmatch,:].iloc[0]
 
             #RECORD AVERAGE GALAXY PROPERTIES OVER TIME-STEP
-            r200_eff_f=calc_r200(galaxy_snapf)
-            r200_eff_i=calc_r200(galaxy_snapi)
+            r200_eff_f=galaxy_snapf['Group_R_Crit200']
+            r200_eff_i=galaxy_snapi['Group_R_Crit200']
             r200_eff=(r200_eff_f+r200_eff_i)/2
 
             m200_eff=(galaxy_snapi['Group_M_Crit200']+galaxy_snapf['Group_M_Crit200'])/2
-            v200_eff=np.sqrt(constant_G*m200_eff/(r200_eff*afac/hval))
+            v200_eff=np.sqrt(constant_G*m200_eff/(r200_eff/hval))
             inst_sfr=(galaxy_snapi['StarFormationRate']+galaxy_snapf['StarFormationRate'])/2
             ave_sfr=(galaxy_snapf['StellarMass']-galaxy_snapi['StellarMass'])/dt
             
@@ -194,17 +194,17 @@ if numgal:
             galaxy_output.loc[0,'inst_SFR']=inst_sfr
             galaxy_output.loc[0,'ave_SFR']=ave_sfr
 
-            maxrad=np.nanmax([3*r200_eff,(100*1e-3)/afac*hval])
+            maxrad=3*r200_eff
 
             #PROCESS FOR CANDIDATES
             t1_c=time.time()
 
             #RETRIEVE RELEVANT PARTICLES
-            success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad,)
+            success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad,hval=hval)
             
             #RETRIEVE RELEVANT CELLS
             if tracers:
-                success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad,);success=(success and success_cells)
+                success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad,hval=hval);success=(success and success_cells)
 
             t2_c=time.time()
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")

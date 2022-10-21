@@ -31,7 +31,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
     for iptype,ptype in enumerate(ptypes):
         pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
         pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')
-        pdata[ptype].loc[:,[f'Velocity_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*afac**(1/2)
+        pdata[ptype].loc[:,[f'Velocity_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')
         pdata[ptype].loc[:,'ParticleType']=ptype
         
         if ptype==1:
