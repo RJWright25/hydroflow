@@ -144,7 +144,6 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67,afac=1):
     vrad=pdata['Relative_v_rad'].values
     vabs=pdata['Relative_v_abs'].values
     vtan=pdata['Relative_v_tan'].values
-
     vave=pdata['Average_v_rad'].values
 
     inflow_mask=vrad<0
@@ -213,7 +212,7 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67,afac=1):
         ejected_mask=outflow_masks[vcut]
         outflow_mass=mass[ejected_mask]
         gasflow_output[f'{vcut}_outflowflux-n']=np.nansum(ejected_mask)
-        gasflow_output[f'{vcut}_outflowflux-m']=-np.nansum(outflow_mass*(vrad[ejected_mask]/MpcpGyr_to_kmps))/dr
+        gasflow_output[f'{vcut}_outflowflux-m']=np.nansum(outflow_mass*(vrad[ejected_mask]/MpcpGyr_to_kmps))/dr
         gasflow_output[f'{vcut}_outflowflux-fcov']=np.nanmean(ejected_mask)
         
         if gasflow_output[f'{vcut}_outflowflux-n']>0.:
