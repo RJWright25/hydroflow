@@ -251,8 +251,8 @@ if numgal:
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200[key]
                     
                     if fac<=1:
-                        gasflow_ir200_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=r200_eff*fac,hval=hval,vc=v200_eff,afac=afac)
-                        gasflow_ir200_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=r200_eff*fac,hval=hval,vc=v200_eff,afac=afac)
+                        gasflow_ir200_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=r200_eff*fac,hval=hval,vc=v200_eff)
+                        gasflow_ir200_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=r200_eff*fac,hval=hval,vc=v200_eff)
                         for key in list(gasflow_ir200_euler_i.keys()):
                             if key in list(gasflow_ir200_euler_f.keys()):
                                 galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=(gasflow_ir200_euler_i[key]+gasflow_ir200_euler_f[key])/2
@@ -265,8 +265,8 @@ if numgal:
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad[key]
                     
-                    gasflow_irad_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,vc=v200_eff,hval=hval,afac=afac)
-                    gasflow_irad_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=(rad*1e-3)*hval,vc=v200_eff,hval=hval,afac=afac)
+                    gasflow_irad_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,vc=v200_eff,hval=hval)
+                    gasflow_irad_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=(rad*1e-3)*hval,vc=v200_eff,hval=hval)
                     for key in list(gasflow_irad_euler_i.keys()):
                         if key in list(gasflow_irad_euler_f.keys()):
                             galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=(gasflow_irad_euler_i[key]+gasflow_irad_euler_f[key])/2
