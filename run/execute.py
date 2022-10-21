@@ -203,6 +203,7 @@ if numgal:
             success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad,hval=hval)
             
             logging.info(f"vave mean: {np.nanmean(pdata_candidates_snapi['Average_v_rad'].values)} km/s")
+            logging.info(f"vrad mean: {np.nanmean(pdata_candidates_snapi['Relative_v_rad'].values)} km/s")
             #RETRIEVE RELEVANT CELLS
             if tracers:
                 success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad,hval=hval);success=(success and success_cells)
@@ -277,7 +278,9 @@ if numgal:
                 logging.info(f'r200 outflow outputs:')
                 logging.info(f"Lagrangian: {galaxy_output['1p00r200_gas-000kmps_outflow-m'].values[0]:.2e} Msun/Gyr")
                 logging.info(f"Eulerian: {galaxy_output['1p00r200_gas-000kmps_outflowflux-m'].values[0]:.2e} Msun/Gyr")
-
+                logging.info(f'r200 inflow outputs:')
+                logging.info(f"Lagrangian: {galaxy_output['1p00r200_gas-inflow-m'].values[0]:.2e} Msun/Gyr")
+                logging.info(f"Eulerian: {galaxy_output['1p00r200_gas-inflowflux-m'].values[0]:.2e} Msun/Gyr")
                             
                 ### user def
                 for user_radius in user_radii:
