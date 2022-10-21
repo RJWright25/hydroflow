@@ -44,12 +44,6 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
 
     #
     vave=(pdata_snapf['Relative_r_comoving'].values-pdata_snapi['Relative_r_comoving'].values)/dt*MpcpGyr_to_kmps
-    vabs=pdata_snapi['Relative_v_abs'].values
-    vtan=pdata_snapi['Relative_v_tan'].values
-    vave2=pdata_snapi['Average_v_rad'].values
-
-    print(vave)
-    print(vave2)
 
     if Tcut: 
         cool_snap1=T_snap1<=Tcut
@@ -150,8 +144,8 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67,afac=1):
     vrad=pdata['Relative_v_rad'].values
     vabs=pdata['Relative_v_abs'].values
     vtan=pdata['Relative_v_tan'].values
+
     vave=pdata['Average_v_rad'].values
-    # rad=pdata['Relative_r_comoving'].values
 
     inflow_mask=vrad<0
     outflow_mask=vrad>0
@@ -168,7 +162,7 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67,afac=1):
     for name,mask in zip([f'inflowflux',f'inflowflux_pristine'],[inflow_mask,inflow_pristine_mask]):
         inflow_mass=mass[mask]
         gasflow_output[f'{name}-n']=np.nansum(mask)
-        gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*(vrad[mask]/MpcpGyr_to_kmps)/(dr/hval))/afac
+        gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*(vrad[mask]/MpcpGyr_to_kmps))/dr
         gasflow_output[f'{name}-fcov']=np.nanmean(mask)
         if gasflow_output[f'{name}-n']>0.:
             gasflow_output[f'{name}-Z_mean']=np.average(Zmet[mask],weights=inflow_mass)
@@ -180,7 +174,7 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67,afac=1):
             vabs_infall=vabs[mask]
             vtan_infall=vtan[mask]
             vave_infall=vave[mask]
-            vel_mask=np.where(np.logical_and(np.isfinite(vrad_infall),inflow_mass>=0))
+            vel_mask=np.where(inflow_mass>=0)
 
             if np.nansum(vel_mask):
                 gasflow_output[f'{name}-vrad_mean']=np.average(vrad_infall[vel_mask],weights=inflow_mass[vel_mask])
@@ -219,7 +213,7 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67,afac=1):
         ejected_mask=outflow_masks[vcut]
         outflow_mass=mass[ejected_mask]
         gasflow_output[f'{vcut}_outflowflux-n']=np.nansum(ejected_mask)
-        gasflow_output[f'{vcut}_outflowflux-m']=-np.nansum(outflow_mass*(vrad[ejected_mask]/MpcpGyr_to_kmps)/(dr/hval))/afac
+        gasflow_output[f'{vcut}_outflowflux-m']=-np.nansum(outflow_mass*(vrad[ejected_mask]/MpcpGyr_to_kmps))/dr
         gasflow_output[f'{vcut}_outflowflux-fcov']=np.nanmean(ejected_mask)
         
         if gasflow_output[f'{vcut}_outflowflux-n']>0.:
@@ -234,7 +228,7 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67,afac=1):
             vtan_ejected=vtan[ejected_mask]
             vave_ejected=vave[ejected_mask]
 
-            vel_mask=np.where(np.logical_and(np.isfinite(vrad_ejected),outflow_mass>=0))
+            vel_mask=np.where(outflow_mask>=0)
             if np.nansum(vel_mask) and vcut=='000kmps':
                 gasflow_output[f'{vcut}_outflowflux-ave_mean']=np.average(vave_ejected[vel_mask],weights=outflow_mass[vel_mask])
                 gasflow_output[f'{vcut}_outflowflux-ave_median']=np.nanmedian(vave_ejected[vel_mask])
@@ -358,8 +352,8 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         pdata_candidates_snapi[f'Relative_v_tan']=np.sqrt(pdata_candidates_snapi[f'Relative_v_abs'].values**2-pdata_candidates_snapi[f'Relative_v_rad'].values**2)
         pdata_candidates_snapf[f'Relative_v_tan']=np.sqrt(pdata_candidates_snapf[f'Relative_v_abs'].values**2-pdata_candidates_snapf[f'Relative_v_rad'].values**2)
 
-        pdata_candidates_snapi[f'Average_v_rad']=(pdata_candidates_snapf['Relative_r_comoving']-pdata_candidates_snapi['Relative_r_comoving'])/dt*MpcpGyr_to_kmps
-        pdata_candidates_snapf[f'Average_v_rad']=(pdata_candidates_snapf['Relative_r_comoving']-pdata_candidates_snapi['Relative_r_comoving'])/dt*MpcpGyr_to_kmps
+        pdata_candidates_snapi[f'Average_v_rad']=(pdata_candidates_snapf['Relative_r_comoving'].values-pdata_candidates_snapi['Relative_r_comoving'].values)/dt*MpcpGyr_to_kmps
+        pdata_candidates_snapf[f'Average_v_rad']=(pdata_candidates_snapf['Relative_r_comoving'].values-pdata_candidates_snapi['Relative_r_comoving'].values)/dt*MpcpGyr_to_kmps
 
         return True,pdata_candidates_snapi,pdata_candidates_snapf
 

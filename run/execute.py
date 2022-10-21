@@ -202,8 +202,6 @@ if numgal:
             #RETRIEVE RELEVANT PARTICLES
             success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad,hval=hval)
             
-            logging.info(f"vave mean: {np.nanmean(pdata_candidates_snapi['Average_v_rad'].values)} km/s")
-            logging.info(f"vrad mean: {np.nanmean(pdata_candidates_snapi['Relative_v_rad'].values)} km/s")
             #RETRIEVE RELEVANT CELLS
             if tracers:
                 success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad,hval=hval);success=(success and success_cells)
@@ -267,8 +265,8 @@ if numgal:
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad[key]
                     
-                    gasflow_irad_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,vc=v200_eff,hval=hval)
-                    gasflow_irad_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=(rad*1e-3)*hval,vc=v200_eff,hval=hval)
+                    gasflow_irad_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,vc=v200_eff,hval=hval,afac=afac)
+                    gasflow_irad_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=(rad*1e-3)*hval,vc=v200_eff,hval=hval,afac=afac)
                     for key in list(gasflow_irad_euler_i.keys()):
                         if key in list(gasflow_irad_euler_f.keys()):
                             galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=(gasflow_irad_euler_i[key]+gasflow_irad_euler_f[key])/2
