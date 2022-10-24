@@ -3,11 +3,9 @@
 
 # src_physics/gasflow.py: routines to analyse reservoir between snapshots, find inflow/outflow particles, and characterise them.
 
-from fcntl import DN_RENAME
 import numpy as np
-import time
 
-from hydroflow.src_physics.utils import  MpcpGyr_to_kmps, Mpc_to_km
+from hydroflow.src_physics.utils import  MpcpGyr_to_kmps
 
 def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     gasflow_output={}
@@ -161,7 +159,7 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67,afac=1):
     for name,mask in zip([f'inflowflux',f'inflowflux_pristine'],[inflow_mask,inflow_pristine_mask]):
         inflow_mass=mass[mask]
         gasflow_output[f'{name}-n']=np.nansum(mask)
-        gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*(vrad[mask]/afac/MpcpGyr_to_kmps))/(dr/hval*afac)
+        gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*(vrad[mask]/MpcpGyr_to_kmps))/dr
         gasflow_output[f'{name}-fcov']=np.nanmean(mask)
         if gasflow_output[f'{name}-n']>0.:
             gasflow_output[f'{name}-Z_mean']=np.average(Zmet[mask],weights=inflow_mass)
@@ -212,7 +210,7 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,hval=0.67,afac=1):
         ejected_mask=outflow_masks[vcut]
         outflow_mass=mass[ejected_mask]
         gasflow_output[f'{vcut}_outflowflux-n']=np.nansum(ejected_mask)
-        gasflow_output[f'{vcut}_outflowflux-m']=np.nansum(outflow_mass*(vrad[ejected_mask]/afac/MpcpGyr_to_kmps))/(dr/hval*afac)
+        gasflow_output[f'{vcut}_outflowflux-m']=np.nansum(outflow_mass*(vrad[ejected_mask]/MpcpGyr_to_kmps))/(dr)
         gasflow_output[f'{vcut}_outflowflux-fcov']=np.nanmean(ejected_mask)
         
         if gasflow_output[f'{vcut}_outflowflux-n']>0.:
