@@ -120,7 +120,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,afac=1,Tcut=None):
 
     return gasflow_output
 
-def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1):
+def analyse_gasflow_eulerian(pdata,radius,Tcut=0,vc=0,afac=1):
     gasflow_output={}
     
     dr=radius*0.2
@@ -132,13 +132,17 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1):
     if 'StellarFormationTime' in pdata:
         gas=np.logical_or(gas,pdata['StellarFormationTime'].values<=0)
 
+
     boundary=np.logical_and(pdata['Relative_r'].values>boundary_lo,pdata['Relative_r'].values<boundary_hi)
+    if Tcut:
+        boundary=np.logical_and(boundary,pdata['Temperature'].values<=Tcut)
+
     pdata=pdata.loc[np.logical_and(boundary,gas),:].copy()
+
 
     mass=pdata['Mass'].values
     temp=pdata['Temperature'].values
     Zmet=pdata['Metallicity'].values
-    
     vrad=pdata['Relative_v_rad'].values
     vabs=pdata['Relative_v_abs'].values
     vtan=pdata['Relative_v_tan'].values

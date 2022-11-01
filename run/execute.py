@@ -242,6 +242,10 @@ if numgal:
                 gasflow_ism=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.2,dt=dt,Tcut=5*10**4,vc=v200_eff,afac=afac)
                 for key in list(gasflow_ism.keys()):
                     galaxy_output.loc[0,f'0p20r200_coolgas-'+key]=gasflow_ism[key]
+                
+                gasflow_ism_euler=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=r200_eff*0.2,Tcut=5*10**4,vc=v200_eff,afac=afac)
+                for key in list(gasflow_ism_euler.keys()):
+                    galaxy_output.loc[0,f'0p20r200_coolgas-'+key]=gasflow_ism_euler[key]
 
                 ### r200 facs
                 r200_facs=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,3]
