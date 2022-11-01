@@ -7,7 +7,7 @@ import numpy as np
 
 from hydroflow.src_physics.utils import  MpcpGyr_to_kmps
 
-def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
+def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,afac=1,Tcut=None):
     gasflow_output={}
 
     mass_snap1=pdata_snapi['Mass'].values
@@ -62,8 +62,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,Tcut=None):
     inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Z_snap2<1e-4,Z_snap1<1e-4))
 
     #vcuts
-    vcuts=['000kmps','050kmps','150kmps','250kmps','0p25vc','0p50vc','1p00vc']
-    vcuts_val=[0,50,150,250,0.25*vc,0.5*vc,1.0*vc]
+    vcuts=['000kmps','050kmps','050pkmps','150kmps','150pkmps','250kmps','250pkmps','0p25vc','0p50vc','1p00vc']
+    vcuts_val=[0,50,50/np.sqrt(afac),150,150/np.sqrt(afac),250,250/np.sqrt(afac),0.25*vc,0.5*vc,1.0*vc]
     outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vave>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
@@ -151,9 +151,9 @@ def analyse_gasflow_eulerian(pdata,radius,vc=0,afac=1):
     inflow_pristine_mask=np.logical_and(inflow_mask,Zmet<1e-4)
 
     # vcuts
-    vcuts=['000kmps','050kmps','150kmps','250kmps','0p25vc','0p50vc','1p00vc']
-    vcuts_val=[0,50,150,250,0.25*vc,0.5*vc,1.0*vc]
-    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad*np.sqrt(afac)>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
+    vcuts=['000kmps','050kmps','050pkmps','150kmps','150pkmps','250kmps','250pkmps','0p25vc','0p50vc','1p00vc']
+    vcuts_val=[0,50,50/np.sqrt(afac),150,150/np.sqrt(afac),250,250/np.sqrt(afac),0.25*vc,0.5*vc,1.0*vc]
+    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
     for name,mask in zip([f'inflowflux',f'inflowflux_pristine'],[inflow_mask,inflow_pristine_mask]):
