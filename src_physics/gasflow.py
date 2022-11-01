@@ -132,13 +132,11 @@ def analyse_gasflow_eulerian(pdata,radius,Tcut=0,vc=0,afac=1):
     if 'StellarFormationTime' in pdata:
         gas=np.logical_or(gas,pdata['StellarFormationTime'].values<=0)
 
-
     boundary=np.logical_and(pdata['Relative_r'].values>boundary_lo,pdata['Relative_r'].values<boundary_hi)
     if Tcut:
         boundary=np.logical_and(boundary,pdata['Temperature'].values<=Tcut)
 
     pdata=pdata.loc[np.logical_and(boundary,gas),:].copy()
-
 
     mass=pdata['Mass'].values
     temp=pdata['Temperature'].values
@@ -301,27 +299,29 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     pdata_candidates_idx_snapi[pdata_candidates_idx_snapi_incorrectlyextracted]=-1
     pdata_candidates_idx_snapf[pdata_candidates_idx_snapf_incorrectlyextracted]=-1
 
-    bad=False
+    failed=False
     try:
         pdata_candidates_snapi=pdata_snapi.iloc[pdata_candidates_idx_snapi,:]
-    except:
-        bad=True
-
-    try:
         pdata_candidates_snapf=pdata_snapf.iloc[pdata_candidates_idx_snapf,:]
     except:
-        bad=True
+        failed=True
 
-    if not bad:
+    numcdt_snapi=pdata_candidates_snapi.shape[0]
+    numcdt_snapf=pdata_candidates_snapf.shape[0]
+
+    if not failed and (numcdt_snapi>0 and numcdt_snapf>0):
 
         pdata_candidates_snapi.loc[pdata_candidates_idx_snapi_incorrectlyextracted,:]=np.nan
         pdata_candidates_snapf.loc[pdata_candidates_idx_snapf_incorrectlyextracted,:]=np.nan
 
-        pdata_candidates_snapi.loc[:,'inpdata']=1
-        pdata_candidates_snapf.loc[:,'inpdata']=1
-        pdata_candidates_snapi.loc[pdata_candidates_idx_snapi_incorrectlyextracted,'inpdata']=0
-        pdata_candidates_snapf.loc[pdata_candidates_idx_snapf_incorrectlyextracted,'inpdata']=0
-        
+        try:
+            pdata_candidates_snapi.loc[:,'inpdata']=1
+            pdata_candidates_snapf.loc[:,'inpdata']=1
+            pdata_candidates_snapi.loc[pdata_candidates_idx_snapi_incorrectlyextracted,'inpdata']=0
+            pdata_candidates_snapf.loc[pdata_candidates_idx_snapf_incorrectlyextracted,'inpdata']=0
+        except:
+            return False,None,None
+                        
         pdata_candidates_snapi['ParticleIDs']=pid_allcandidates
         pdata_candidates_snapf['ParticleIDs']=pid_allcandidates
 
