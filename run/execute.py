@@ -185,12 +185,13 @@ if numgal:
             r200_eff=(r200_eff_f+r200_eff_i)/2
 
             m200_eff=(galaxy_snapi['Group_M_Crit200']+galaxy_snapf['Group_M_Crit200'])/2
-            v200_eff=np.sqrt(constant_G*m200_eff/(r200_eff/hval))
+            v200_eff=np.sqrt(constant_G*m200_eff/(r200_eff*afac))
             inst_sfr=(galaxy_snapi['StarFormationRate']+galaxy_snapf['StarFormationRate'])/2
             ave_sfr=(galaxy_snapf['StellarMass']-galaxy_snapi['StellarMass'])/dt
             
             galaxy_output.loc[0,'r200_eff']=r200_eff
             galaxy_output.loc[0,'m200_eff']=m200_eff
+            galaxy_output.loc[0,'v200_eff']=v200_eff
             galaxy_output.loc[0,'inst_SFR']=inst_sfr
             galaxy_output.loc[0,'ave_SFR']=ave_sfr
 
@@ -251,8 +252,8 @@ if numgal:
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200[key]
                     
                     if fac<=1:
-                        gasflow_ir200_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=r200_eff*fac,hval=hval,vc=v200_eff)
-                        gasflow_ir200_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=r200_eff*fac,hval=hval,vc=v200_eff)
+                        gasflow_ir200_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=r200_eff*fac,vc=v200_eff,afac=afac)
+                        gasflow_ir200_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=r200_eff*fac,vc=v200_eff,afac=afac)
                         for key in list(gasflow_ir200_euler_i.keys()):
                             if key in list(gasflow_ir200_euler_f.keys()):
                                 galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=(gasflow_ir200_euler_i[key]+gasflow_ir200_euler_f[key])/2
@@ -265,14 +266,15 @@ if numgal:
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad[key]
                     
-                    gasflow_irad_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,vc=v200_eff,hval=hval)
-                    gasflow_irad_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=(rad*1e-3)*hval,vc=v200_eff,hval=hval)
+                    gasflow_irad_euler_f=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,vc=v200_eff,afac=afac)
+                    gasflow_irad_euler_i=analyse_gasflow_eulerian(pdata_euler_snapi,radius=(rad*1e-3)*hval,vc=v200_eff,afac=afac)
                     for key in list(gasflow_irad_euler_i.keys()):
                         if key in list(gasflow_irad_euler_f.keys()):
                             galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=(gasflow_irad_euler_i[key]+gasflow_irad_euler_f[key])/2
                         else:
                             galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=np.nan
-                            
+                
+ 
                 logging.info(f'r200 outflow outputs:')
                 logging.info(f"Lagrangian: {galaxy_output['1p00r200_gas-000kmps_outflow-m'].values[0]:.2e} Msun/Gyr")
                 logging.info(f"Eulerian: {galaxy_output['1p00r200_gas-000kmps_outflowflux-m'].values[0]:.2e} Msun/Gyr")
