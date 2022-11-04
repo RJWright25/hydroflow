@@ -265,7 +265,7 @@ if numgal:
                                 galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=np.nan
 
                 ### comoving units
-                for rad in [10,20,30,40,50,75,100]:
+                for rad in [3.33,10,20,30,40,50,75,100]:
                     gasflow_irad=analyse_gasflow(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,vc=v200_eff,afac=afac)
                     for key in list(gasflow_irad.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad[key]
