@@ -153,8 +153,8 @@ def analyse_gasflow_eulerian(pdata,radius,Tcut=0,vc=0,afac=1):
     inflow_pristine_mask=np.logical_and(inflow_mask,Zmet<1e-4)
 
     # vcuts
-    vcuts=['000kmps','050kmps','050pkmps','150kmps','150pkmps','250kmps','250pkmps','0p25vc','0p50vc','1p00vc']
-    vcuts_val=[0,50,50/np.sqrt(afac),150,150/np.sqrt(afac),250,250/np.sqrt(afac),0.25*vc,0.5*vc,1.0*vc]
+    vcuts=['000kmps','050kmps','050pkmps','150kmps','150pkmps','250kmps','250pkmps','350kmps','350pkmps','0p25vc','0p50vc','1p00vc','2p00vc']
+    vcuts_val=[0,50,50/np.sqrt(afac),150,150/np.sqrt(afac),250,250/np.sqrt(afac),350,350/np.sqrt(afac),0.25*vc,0.5*vc,1.0*vc,2*vc]
     outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
 
     #### inflow
@@ -162,6 +162,7 @@ def analyse_gasflow_eulerian(pdata,radius,Tcut=0,vc=0,afac=1):
         inflow_mass=mass[mask]
         gasflow_output[f'{name}-n']=np.nansum(mask)
         gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*(vrad[mask]/MpcpGyr_to_kmps))/dr
+        gasflow_output[f'{name}-mp']=-np.nansum(inflow_mass*(vrad[mask]*np.sqrt(afac)/MpcpGyr_to_kmps))/(afac*dr)
         gasflow_output[f'{name}-fcov']=np.nanmean(mask)
         if gasflow_output[f'{name}-n']>0.:
             gasflow_output[f'{name}-Z_mean']=np.average(Zmet[mask],weights=inflow_mass)
