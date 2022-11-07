@@ -68,7 +68,6 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,afac=1,Tcut=None,vcuts=[0,
     vcuts=np.concatenate([vcuts,vcutsprop])
     vcut_keys=np.concatenate([vcut_keys,vcutsprop_keys])
     outflow_masks={vcut_key:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut_key,vcut_val in zip(vcut_keys,vcuts)}
-    print(np.column_stack([vcuts,np.array([np.nanmean(outflow_masks[vcut]) for vcut in vcut_keys])]))
 
     #### inflow
     for name,mask in zip(['inflow','inflow_pristine'],[inflow_mask,inflow_pristine_mask]):
@@ -165,7 +164,6 @@ def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,15
     vcuts=np.concatenate([vcuts,vcutsprop])
     vcut_keys=np.concatenate([vcut_keys,vcutsprop_keys])
     outflow_masks={vcut_key:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut_key,vcut_val in zip(vcut_keys,vcuts)}
-    print(np.column_stack([vcuts,np.array([np.nanmean(outflow_masks[vcut]) for vcut in vcut_keys])]))
 
     #### inflow
     for name,mask in zip([f'inflowflux',f'inflowflux_pristine'],[inflow_mask,inflow_pristine_mask]):
