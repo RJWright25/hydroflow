@@ -128,12 +128,15 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
     print(f'Compressing output for desired fields')
     outputs=list(subcat_masked)
     outputs_subset=[]
-    for output in outputs_subset:
+    for output in outputs:
         if ('mean' in output) or ('median' in output):
             continue
-        if ('prof' in output) or ('vrad' in output):
+        elif ('prof' in output) or ('v' in output):
             continue
-        if ('')
+        else:
+            outputs_subset.append(output)
+    
+    subcat_masked_subset=subcat_masked.loc[:,outputs_subset].copy()
+    subcat_masked_subset.to_hdf(outpath_compressed,key='Gasflow')
 
-     
     return subcat_masked
