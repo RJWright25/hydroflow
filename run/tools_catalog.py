@@ -40,8 +40,10 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
 
     if snapmax-snapmin==0:
         outpath=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmax)}.hdf5'
+        outpath_compressed=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmax)}_subset.hdf5'
     else:
         outpath=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmin)}to{int(snapmax)}.hdf5'
+        outpath_compressed=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmin)}to{int(snapmax)}_subset.hdf5'
 
     for depth in depths:
 
@@ -117,10 +119,13 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
         print(snap)
         mask_output=np.logical_or(mask_output,subcat_masked.SnapNum==snap)
 
-
     subcat_masked=subcat_masked.loc[mask_output,:].copy()
     subcat_masked=subcat_masked.sort_values(by=['SnapNum','Mass'],ascending=[False,False],ignore_index=True)
     subcat_masked.reset_index(inplace=True)
+
+    outputs=list(subcat_masked)
+    
+
     subcat_masked.to_hdf(outpath,key='Gasflow')
      
     return subcat_masked

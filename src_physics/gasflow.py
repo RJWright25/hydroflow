@@ -7,8 +7,9 @@ import numpy as np
 
 from hydroflow.src_physics.utils import  MpcpGyr_to_kmps
 
-def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,afac=1,Tcut=None,vcuts=[0,50,150,250,350]):
+def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,afac=1,Tcut=None):
     gasflow_output={}
+    vcuts=[0,50,150,250,350]
 
     mass_snap1=pdata_snapi['Mass'].values
     mass_snap2=pdata_snapf['Mass'].values
@@ -126,7 +127,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,afac=1,Tcut=None,vcuts=[0,
 
 def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,150,250,350]):
     gasflow_output={}
-    
+    vcuts=[0,50,150,250,350]
+
     dr=radius*0.2
 
     boundary_lo=radius-dr/2
@@ -161,7 +163,7 @@ def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,15
     #outflow
     vcut_keys=[f'{str(int(vcut)).zfill(3)}kmps' for vcut in vcuts]
     vcutsprop=np.array(vcuts[1:])/np.sqrt(afac)
-    vcutsprop_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts]
+    vcutsprop_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts[1:]]
     vcuts=np.concatenate([vcuts,vcutsprop])
     vcut_keys=np.concatenate([vcut_keys,vcutsprop_keys])
     outflow_masks={vcut_key:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut_key,vcut_val in zip(vcut_keys,vcuts)}
