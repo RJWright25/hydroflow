@@ -153,7 +153,7 @@ if numgal:
 
     file=h5py.File(snapf_pdata_fname)
     hval=file['Header'].attrs['HubbleParam']
-    afac=(1/1+file['Header'].attrs['Redshift'])
+    afac=1/(1+file['Header'].attrs['Redshift'])
     file.close()
 
     #Main halo loop
