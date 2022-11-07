@@ -7,7 +7,7 @@ import numpy as np
 
 from hydroflow.src_physics.utils import  MpcpGyr_to_kmps
 
-def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,afac=1,Tcut=None):
+def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,afac=1,Tcut=None,vcuts=[0,50,150,250,350]):
     gasflow_output={}
 
     mass_snap1=pdata_snapi['Mass'].values
@@ -62,10 +62,13 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,afac=1,Tcut=None):
     inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Z_snap2<1e-4,Z_snap1<1e-4))
 
     #vcuts
-    # vcuts
-    vcuts=['000kmps','050kmps','050pkmps','150kmps','150pkmps','250kmps','250pkmps','350kmps','350pkmps','0p25vc','0p50vc','1p00vc','2p00vc']
-    vcuts_val=[0,50,50/np.sqrt(afac),150,150/np.sqrt(afac),250,250/np.sqrt(afac),350,350/np.sqrt(afac),0.25*vc,0.5*vc,1.0*vc,2*vc]
-    outflow_masks={vcut:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut,vcut_val in zip(vcuts,vcuts_val)}
+    vcut_keys=[f'{str(int(vcut)).zfill(3)}kmps' for vcut in vcuts]
+    vcutsprop=np.array(vcuts[1:])/np.sqrt(afac)
+    vcutsprop_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts]
+    vcuts=np.concatenate([vcuts,vcutsprop])
+    vcut_keys=np.concatenate([vcut_keys,vcutsprop_keys])
+    outflow_masks={vcut_key:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut_key,vcut_val in zip(vcut_keys,vcuts)}
+    print(np.column_stack([vcuts,np.array([np.nanmean(outflow_masks[vcut]) for vcut in vcut_keys])]))
 
     #### inflow
     for name,mask in zip(['inflow','inflow_pristine'],[inflow_mask,inflow_pristine_mask]):
@@ -93,17 +96,17 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,afac=1,Tcut=None):
 
 
     #### outflows
-    for vcut,vcut_val in zip(vcuts,vcuts_val):
-        ejected_mask=outflow_masks[vcut]
+    for vcut_key in vcut_keys:
+        ejected_mask=outflow_masks[vcut_key]
         outflow_mass=mass_snap1[ejected_mask]
-        gasflow_output[f'{vcut}_outflow-n']=np.nansum(ejected_mask)
-        gasflow_output[f'{vcut}_outflow-m']=np.nansum(outflow_mass)/dt
-        gasflow_output[f'{vcut}_outflow-flost']=np.nanmean(nopdata_snap2[ejected_mask])
-        if gasflow_output[f'{vcut}_outflow-n']>0.:
-            gasflow_output[f'{vcut}_outflow-Z_mean']=np.average(Z_snap1[ejected_mask],weights=outflow_mass)
-            gasflow_output[f'{vcut}_outflow-Z_median']=np.nanmedian(Z_snap1[ejected_mask])
-            gasflow_output[f'{vcut}_outflow-T_mean']=np.average(T_snap1[ejected_mask],weights=outflow_mass)
-            gasflow_output[f'{vcut}_outflow-T_median']=np.nanmedian(T_snap1[ejected_mask])
+        gasflow_output[f'{vcut_key}_outflow-n']=np.nansum(ejected_mask)
+        gasflow_output[f'{vcut_key}_outflow-m']=np.nansum(outflow_mass)/dt
+        gasflow_output[f'{vcut_key}_outflow-flost']=np.nanmean(nopdata_snap2[ejected_mask])
+        if gasflow_output[f'{vcut_key}_outflow-n']>0.:
+            gasflow_output[f'{vcut_key}_outflow-Z_mean']=np.average(Z_snap1[ejected_mask],weights=outflow_mass)
+            gasflow_output[f'{vcut_key}_outflow-Z_median']=np.nanmedian(Z_snap1[ejected_mask])
+            gasflow_output[f'{vcut_key}_outflow-T_mean']=np.average(T_snap1[ejected_mask],weights=outflow_mass)
+            gasflow_output[f'{vcut_key}_outflow-T_median']=np.nanmedian(T_snap1[ejected_mask])
             
             #ejection vel
             vave_outflow=vrad[ejected_mask]
@@ -121,13 +124,16 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,vc=0,afac=1,Tcut=None):
 
     return gasflow_output
 
-def analyse_gasflow_eulerian(pdata,radius,Tcut=0,vc=0,afac=1):
+def analyse_gasflow_eulerian(pdata,radius,Tcut=0,vc=0,afac=1,hval=0.67):
     gasflow_output={}
     
     dr=radius*0.2
 
     boundary_lo=radius-dr/2
     boundary_hi=radius+dr/2
+
+    #######
+    dr*=hval
 
     gas=pdata['ParticleType'].values==0
     if 'StellarFormationTime' in pdata:
