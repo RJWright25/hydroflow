@@ -45,6 +45,7 @@ def read_subcat(basepath,snapnums=None):
         group_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=np.nan
         group_df.loc[:,'SnapNum']=snapnum
         group_df.loc[:,'Redshift']=zval
+        group_df.loc[:,'GalaxyID']=np.int64(snapnum*1e12+group_df.loc[:,'GroupNumber'])
 
         group_df.sort_values('GroupNumber',inplace=True)
         group_df.reset_index(drop=True,inplace=True)
