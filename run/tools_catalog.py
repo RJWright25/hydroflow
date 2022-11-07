@@ -91,6 +91,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
             hydroflow=snap_outputs['HydroflowID'].values
             nodeidx=subcat_masked[idx_key].values
 
+            print('Matching hydroflow and subcat outputs')
             valid_idx_hydroflow_in_subcat=np.searchsorted(a=nodeidx,v=hydroflow)
             valid_idx_hydroflow_in_hydroflow=np.array(list(range(len(hydroflow))))
             valid=valid_idx_hydroflow_in_subcat<len(nodeidx)
@@ -98,6 +99,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
             valid_idx_hydroflow_in_subcat=valid_idx_hydroflow_in_subcat[np.where(valid)]
             valid_idx_hydroflow_in_hydroflow=valid_idx_hydroflow_in_hydroflow[np.where(valid)]
 
+            print('Verifying hydroflow and subcat outputs')
             for index,(ihydro,isubcat) in enumerate(zip(valid_idx_hydroflow_in_hydroflow,valid_idx_hydroflow_in_subcat)):
                 if not nodeidx[isubcat]==hydroflow[ihydro]:
                     print(nodeidx[isubcat],hydroflow[ihydro])
@@ -111,21 +113,27 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
             output_columns=[column+f'-d{str(depth).zfill(2)}' for column in list(snap_outputs.columns)]
             subcat_masked.loc[subcat_idxs,output_columns]=snap_outputs.loc[hydroflow_idxs,:].values
 
-
     create_dir(outpath)
     
+    print(f'Compressing output for desired snaps')
     mask_output=np.zeros(subcat_masked.shape[0])
     for snap in snap_insnapdirs:
-        print(snap)
         mask_output=np.logical_or(mask_output,subcat_masked.SnapNum==snap)
 
     subcat_masked=subcat_masked.loc[mask_output,:].copy()
     subcat_masked=subcat_masked.sort_values(by=['SnapNum','Mass'],ascending=[False,False],ignore_index=True)
     subcat_masked.reset_index(inplace=True)
-
-    outputs=list(subcat_masked)
-    
-
     subcat_masked.to_hdf(outpath,key='Gasflow')
+
+    print(f'Compressing output for desired fields')
+    outputs=list(subcat_masked)
+    outputs_subset=[]
+    for output in outputs_subset:
+        if ('mean' in output) or ('median' in output):
+            continue
+        if ('prof' in output) or ('vrad' in output):
+            continue
+        if ('')
+
      
     return subcat_masked

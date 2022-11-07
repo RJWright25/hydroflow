@@ -237,10 +237,10 @@ def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,15
 
             vel_mask=np.where(outflow_mass>=0)
             if np.nansum(vel_mask) and vcut_key=='000kmps':
-                gasflow_output[f'{vcut_key}_outflowflux-ave_mean']=np.average(vave_ejected[vel_mask],weights=outflow_mass[vel_mask])
-                gasflow_output[f'{vcut_key}_outflowflux-ave_median']=np.nanmedian(vave_ejected[vel_mask])
-                gasflow_output[f'{vcut_key}_outflowflux-ave_05P']=np.nanpercentile(vave_ejected[vel_mask],5)
-                gasflow_output[f'{vcut_key}_outflowflux-ave_95P']=np.nanpercentile(vave_ejected[vel_mask],95)
+                gasflow_output[f'{vcut_key}_outflowflux-vave_mean']=np.average(vave_ejected[vel_mask],weights=outflow_mass[vel_mask])
+                gasflow_output[f'{vcut_key}_outflowflux-vave_median']=np.nanmedian(vave_ejected[vel_mask])
+                gasflow_output[f'{vcut_key}_outflowflux-vave_05P']=np.nanpercentile(vave_ejected[vel_mask],5)
+                gasflow_output[f'{vcut_key}_outflowflux-vave_95P']=np.nanpercentile(vave_ejected[vel_mask],95)
 
                 gasflow_output[f'{vcut_key}_outflowflux-vrad_mean']=np.average(vrad_ejected[vel_mask],weights=outflow_mass[vel_mask])
                 gasflow_output[f'{vcut_key}_outflowflux-vrad_median']=np.nanmedian(vrad_ejected[vel_mask])
