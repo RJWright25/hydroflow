@@ -45,9 +45,6 @@ def analyse_galaxy(galaxy,pdata,hval=0.67):
 	cool=pdata['Temperature'].values<5*10**4
 	sfr=pdata['StarFormationRate'].values>0
 	rrel=pdata['Relative_r'].values
-	# vrad=pdata['Relative_v_rad'].values
-	# vtan=pdata['Relative_v_tan'].values
-
 	r200=galaxy['Group_R_Crit200']
 
 	#masking
@@ -114,13 +111,13 @@ def analyse_galaxy(galaxy,pdata,hval=0.67):
 				partprop=pdata.loc[mask,prop].values
 				galaxy_output[f'{reservoir}-{properties_abbrev[prop]}_median']=np.nanmedian(partprop)
 				galaxy_output[f'{reservoir}-{properties_abbrev[prop]}_mean']=np.average(partprop,weights=partmass)
-			if ('kpc' in reservoir or 'cool' in reservoir) and 'gas' in reservoir:
+			if ('kpc' in reservoir or 'coolgas' in reservoir) and 'gas' in reservoir:
 				galaxy_output[f'{reservoir}-SFR']=np.nansum(pdata.loc[mask,'StarFormationRate'].values)
 		else:
 			for prop in reservoir_props:
 				galaxy_output[f'{reservoir}-{properties_abbrev[prop]}_median']=np.nan
 				galaxy_output[f'{reservoir}-{properties_abbrev[prop]}_mean']=np.nan
-			if ('kpc' in reservoir or 'cool' in reservoir) and 'gas' in reservoir:
+			if ('kpc' in reservoir or 'coolgas' in reservoir) and 'gas' in reservoir:
 				galaxy_output[f'{reservoir}-SFR']=0
 
 	return True, galaxy_output

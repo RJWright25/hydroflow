@@ -7,7 +7,7 @@ import numpy as np
 
 from hydroflow.src_physics.utils import  MpcpGyr_to_kmps
 
-def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,afac=1,Tcut=None,vcuts=[0,50,150,250,350]):
+def analyse_gasflow_lagrangian(pdata_snapi,pdata_snapf,radius,dt,afac=1,Tcut=None,vcuts=[0,50,100,150,250]):
     gasflow_output={}
     
     mass_snap1=pdata_snapi['Mass'].values
@@ -62,11 +62,8 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,afac=1,Tcut=None,vcuts=[0,
     inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Z_snap2<1e-4,Z_snap1<1e-4))
 
     #vcuts
-    vcut_keys=[f'{str(int(vcut)).zfill(3)}kmps' for vcut in vcuts]
-    vcutsprop=np.array(vcuts[1:])/np.sqrt(afac)
-    vcutsprop_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts[1:]]
-    vcuts=np.concatenate([vcuts,vcutsprop])
-    vcut_keys=np.concatenate([vcut_keys,vcutsprop_keys])
+    vcut_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts]
+    vcuts=np.array(vcuts)/np.sqrt(afac)
     outflow_masks={vcut_key:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut_key,vcut_val in zip(vcut_keys,vcuts)}
 
     #### inflow
@@ -123,7 +120,7 @@ def analyse_gasflow(pdata_snapi,pdata_snapf,radius,dt,afac=1,Tcut=None,vcuts=[0,
 
     return gasflow_output
 
-def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,150,250,350]):
+def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,100,150,250]):
     gasflow_output={}
 
     dr=radius*0.2
@@ -141,6 +138,8 @@ def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,15
     if Tcut:
         boundary=np.logical_and(boundary,pdata['Temperature'].values<=Tcut)
 
+    gasflow_output['boundary-n']=np.nansum(boundary)
+
     pdata=pdata.loc[np.logical_and(boundary,gas),:].copy()
 
     mass=pdata['Mass'].values
@@ -157,12 +156,9 @@ def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,15
     ## pristine
     inflow_pristine_mask=np.logical_and(inflow_mask,Zmet<1e-4)
 
-    #outflow
-    vcut_keys=[f'{str(int(vcut)).zfill(3)}kmps' for vcut in vcuts]
-    vcutsprop=np.array(vcuts[1:])/np.sqrt(afac)
-    vcutsprop_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts[1:]]
-    vcuts=np.concatenate([vcuts,vcutsprop])
-    vcut_keys=np.concatenate([vcut_keys,vcutsprop_keys])
+    # outflow
+    vcut_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts]
+    vcuts=np.array(vcuts)/np.sqrt(afac)
     outflow_masks={vcut_key:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut_key,vcut_val in zip(vcut_keys,vcuts)}
 
     #### inflow
@@ -181,7 +177,6 @@ def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,15
             vabs_infall=vabs[mask]
             vtan_infall=vtan[mask]
             vave_infall=vave[mask]
-            vel_mask=np.where(inflow_mass>=0)
 
             if np.nansum(vel_mask):
                 gasflow_output[f'{name}-vrad_mean']=np.average(vrad_infall[vel_mask],weights=inflow_mass[vel_mask])
@@ -284,7 +279,7 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     if maxrad:
         rcut=maxrad#choose particles within rcut
     else:
-        rcut=3*r200_eff
+        rcut=1*r200_eff
 
     pidx_candidates_snapi=kdtree_snapi.query_ball_point(galaxy_com_snapi,rcut)
     pidx_candidates_snapf=kdtree_snapf.query_ball_point(galaxy_com_snapf,rcut)
