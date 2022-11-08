@@ -177,6 +177,7 @@ def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,10
             vabs_infall=vabs[mask]
             vtan_infall=vtan[mask]
             vave_infall=vave[mask]
+            vel_mask=np.where(inflow_mass>=0)
 
             if np.nansum(vel_mask):
                 gasflow_output[f'{name}-vrad_mean']=np.average(vrad_infall[vel_mask],weights=inflow_mass[vel_mask])
