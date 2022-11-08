@@ -123,7 +123,7 @@ def analyse_gasflow_lagrangian(pdata_snapi,pdata_snapf,radius,dt,afac=1,Tcut=Non
 def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,100,150,250]):
     gasflow_output={}
 
-    dr=radius*0.2
+    dr=radius*0.3
 
     boundary_lo=radius-dr/2
     boundary_hi=radius+dr/2
