@@ -274,12 +274,12 @@ if numgal:
                     for key in list(gasflow_irad_euler.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad_euler[key]
 
-                logging.info(f'r200 outflow outputs:')
-                logging.info(f"Lagrangian: {galaxy_output['1p00r200_gas-000kmps_outflow-m'].values[0]:.2e} Msun/Gyr")
-                logging.info(f"Eulerian: {galaxy_output['1p00r200_gas-000kmps_outflowflux-m'].values[0]:.2e} Msun/Gyr")
-                logging.info(f'r200 inflow outputs:')
-                logging.info(f"Lagrangian: {galaxy_output['1p00r200_gas-inflow-m'].values[0]:.2e} Msun/Gyr")
-                logging.info(f"Eulerian: {galaxy_output['1p00r200_gas-inflowflux-m'].values[0]:.2e} Msun/Gyr")
+                # logging.info(f'r200 outflow outputs:')
+                # logging.info(f"Lagrangian: {galaxy_output['1p00r200_gas-000pkmps_outflow-m'].values[0]:.2e} Msun/Gyr")
+                # logging.info(f"Eulerian: {galaxy_output['1p00r200_gas-000pkmps_outflowflux-m'].values[0]:.2e} Msun/Gyr")
+                # logging.info(f'r200 inflow outputs:')
+                # logging.info(f"Lagrangian: {galaxy_output['1p00r200_gas-inflow-m'].values[0]:.2e} Msun/Gyr")
+                # logging.info(f"Eulerian: {galaxy_output['1p00r200_gas-inflowflux-m'].values[0]:.2e} Msun/Gyr")
                             
                 # ### user def
                 # for user_radius in user_radii:
