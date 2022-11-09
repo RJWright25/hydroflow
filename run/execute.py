@@ -40,7 +40,6 @@ snapf=int(args.snap)
 depth=int(args.depth)
 snapi=int(snapf-depth)
 mcut=10**(args.mcut)
-print(args.Tcut)
 Tcut=10**(args.Tcut)
 
 #shells for accretion calculations
