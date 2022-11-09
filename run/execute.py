@@ -245,7 +245,7 @@ if numgal:
                     galaxy_output.loc[0,f'0p20r200_coolgas-'+key]=gasflow_ism_euler[key]
 
                 ### r200 facs
-                r200_facs=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,3]
+                r200_facs=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,2.5,3]
 
                 for fac in r200_facs:
                     #lagrange
@@ -270,13 +270,6 @@ if numgal:
                     for key in list(gasflow_irad_euler.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad_euler[key]
 
-                # logging.info(f'r200 outflow outputs:')
-                # logging.info(f"Lagrangian: {galaxy_output['1p00r200_gas-000pkmps_outflow-m'].values[0]:.2e} Msun/Gyr")
-                # logging.info(f"Eulerian: {galaxy_output['1p00r200_gas-000pkmps_outflowflux-m'].values[0]:.2e} Msun/Gyr")
-                # logging.info(f'r200 inflow outputs:')
-                # logging.info(f"Lagrangian: {galaxy_output['1p00r200_gas-inflow-m'].values[0]:.2e} Msun/Gyr")
-                # logging.info(f"Eulerian: {galaxy_output['1p00r200_gas-inflowflux-m'].values[0]:.2e} Msun/Gyr")
-                            
                 # ### user def
                 # for user_radius in user_radii:
                 #     iuser_radius=galaxy_snapf[user_radius]
