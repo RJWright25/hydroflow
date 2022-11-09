@@ -40,6 +40,10 @@ depth=int(args.depth)
 snapi=int(snapf-depth)
 mcut=10**(args.mcut)
 
+#shells for accretion calculations
+r200_shells=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,2.5,3]
+ckpc_shells=[10,20,30,40,50,60,70,80,90,100]
+
 sys.path.append(f"{repo.split('hydroflow')[0]}")
 
 from hydroflow.run.tools_hpc import create_dir
@@ -72,7 +76,6 @@ logging.info(f'Loading subhalo catalogue: {pathcat} ... [runtime {time.time()-t1
 subcat=pd.read_hdf(pathcat,key='Subhalo')
 logging.info(f'Subhalo catalogue loaded [runtime {time.time()-t1:.3f} sec]')
 logging.info(f'Masking catalogue and processing metadata [runtime {time.time()-t1:.3f} sec]')
-
 
 snap_key='SnapNum'
 galid_key='GalaxyID'
@@ -234,7 +237,6 @@ if numgal:
                     pdata_euler_snapi=pdata_candidates_snapi
                     pdata_euler_snapf=pdata_candidates_snapf
                     
-
                 ### Lagrangian ISM calculation
                 gasflow_ism=analyse_gasflow_lagrangian(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.2,dt=dt,Tcut=5*10**4,afac=afac)
                 for key in list(gasflow_ism.keys()):
@@ -244,10 +246,7 @@ if numgal:
                 for key in list(gasflow_ism_euler.keys()):
                     galaxy_output.loc[0,f'0p20r200_coolgas-'+key]=gasflow_ism_euler[key]
 
-                ### r200 facs
-                r200_facs=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,2.5,3]
-
-                for fac in r200_facs:
+                for fac in r200_shells:
                     #lagrange
                     gasflow_ir200_lagrange=analyse_gasflow_lagrangian(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,afac=afac)
                     for key in list(gasflow_ir200_lagrange.keys()):
@@ -259,7 +258,7 @@ if numgal:
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200_euler[key]
 
                 ### comoving units
-                for rad in [10,20,30,40,50,60,70,80,90,100]:
+                for rad in ckpc_shells:
                     #lagrange
                     gasflow_irad_lagrange=analyse_gasflow_lagrangian(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,afac=afac)
                     for key in list(gasflow_irad_lagrange.keys()):
