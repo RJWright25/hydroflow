@@ -7,8 +7,10 @@ import numpy as np
 
 from hydroflow.src_physics.utils import  MpcpGyr_to_kmps
 
-def analyse_gasflow_lagrangian(pdata_snapi,pdata_snapf,radius,dt,afac=1,Tcut=None,vcuts=[0,50,100,150,250]):
+def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,vcuts=[0,50,100,150,250]):
     gasflow_output={}
+
+    afac=galaxy['afac']
     
     mass_snap1=pdata_snapi['Mass'].values
     mass_snap2=pdata_snapf['Mass'].values
@@ -126,10 +128,13 @@ def analyse_gasflow_lagrangian(pdata_snapi,pdata_snapf,radius,dt,afac=1,Tcut=Non
 
     return gasflow_output
 
-def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,100,150,250]):
+def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,100,150,250]):
     gasflow_output={}
 
-    dr=radius*0.3
+    afac=galaxy['afac']
+    hval=galaxy['hval']
+
+    dr=radius*drfac
 
     boundary_lo=radius-dr/2
     boundary_hi=radius+dr/2
@@ -278,10 +283,11 @@ def analyse_gasflow_eulerian(pdata,radius,Tcut=0,afac=1,hval=0.67,vcuts=[0,50,10
 
     return gasflow_output
     
-def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,hval=0.67,maxrad=None,dt=None):
+def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,maxrad=None,dt=None):
     
     afac_snap1=1/(1+galaxy_snapi['Redshift'])
     afac_snap2=1/(1+galaxy_snapf['Redshift'])
+    hval=galaxy_snapf['hval']
 
     r200_eff=(galaxy_snapf['Group_R_Crit200']+galaxy_snapi['Group_R_Crit200'])/2
 

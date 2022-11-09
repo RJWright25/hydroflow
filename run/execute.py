@@ -16,8 +16,8 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from datetime import datetime
-#arguments
 
+#arguments
 parser=argparse.ArgumentParser()
 parser.add_argument('--repo',metavar='-R',type=str,help='where is repo')
 parser.add_argument('--code',metavar='-C',type=str,help='which simulation (from hydroflow.src_sims)')
@@ -25,8 +25,9 @@ parser.add_argument('--path',metavar='-P',type=str,help='path to subhalo catalog
 parser.add_argument('--nslice',metavar='-N',type=int,help='number of slices for simulation sub-boxes')
 parser.add_argument('--ivol',metavar='-I',type=int,help='which sub-volume to consider')
 parser.add_argument('--snap',metavar='-S',type=int,help='which snapshot to consider')
-parser.add_argument('--depth',metavar='-D',type=int,help='time interval')
+parser.add_argument('--depth',metavar='-D',type=int,help='snapshot interval for lagrangian calculation')
 parser.add_argument('--mcut',metavar='-M',type=float,help='mass limit (log mass)')
+parser.add_argument('--Tcut',metavar='-T',type=float,help='temperature cut for cool gas')
 
 args=parser.parse_args()
 repo=args.repo
@@ -39,10 +40,13 @@ snapf=int(args.snap)
 depth=int(args.depth)
 snapi=int(snapf-depth)
 mcut=10**(args.mcut)
+Tcut=10**(args.Tcut)
 
 #shells for accretion calculations
+drfac=0.25
 r200_shells=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,2.5,3]
 ckpc_shells=[10,20,30,40,50,60,70,80,90,100]
+vcuts=[0,50,100,150,250]
 
 sys.path.append(f"{repo.split('hydroflow')[0]}")
 
@@ -159,6 +163,9 @@ if numgal:
     afac=1/(1+file['Header'].attrs['Redshift'])
     file.close()
 
+    subcat_selection_final.loc[:,'hval']=hval
+    subcat_selection_final.loc[:,'afac']=afac
+
     #Main halo loop
     for igal,galaxy_snapf in subcat_selection_final.iterrows():
         logging.info(f'')
@@ -174,6 +181,7 @@ if numgal:
         galaxy_output.loc[0,'nmerger_major']=nmaj
         galaxy_output.loc[0,'ivol']=ivol
         galaxy_output.loc[0,'afac']=afac
+        galaxy_output.loc[0,'hval']=hval
         
         progmatch=progid==subcat_selection[galid_key].values
         central=galaxy_snapf['SubGroupNumber']==0
@@ -201,11 +209,11 @@ if numgal:
             t1_c=time.time()
 
             #RETRIEVE RELEVANT PARTICLES
-            success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad,hval=hval)
+            success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad)
             
             #RETRIEVE RELEVANT CELLS
             if tracers:
-                success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad,hval=hval);success=(success and success_cells)
+                success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad);success=(success and success_cells)
             t2_c=time.time()
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
 
@@ -215,9 +223,9 @@ if numgal:
                 #### CHARACTERISE GALAXY
                 t1_f=time.time()
                 if tracers:#if have tracers, use cells for galaxy analysis
-                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_cells_snapf,hval=hval)
+                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_cells_snapf,Tcut)
                 else:
-                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf,hval=hval)
+                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf,Tcut)
                 
                 if fitf:
                     #add galaxy outputs
@@ -229,43 +237,43 @@ if numgal:
 
                 #### CHARACTERISE GAS FLOW
                 t1_g=time.time()
-
+                
+                #select particle data for eulerian calculation (i.e. switch to cells if appropriate)
+                pdata_euler_snapi=pdata_candidates_snapi
+                pdata_euler_snapf=pdata_candidates_snapf
                 if tracers:
                     pdata_euler_snapi=pdata_candidates_cells_snapi
                     pdata_euler_snapf=pdata_candidates_cells_snapf
-                else:
-                    pdata_euler_snapi=pdata_candidates_snapi
-                    pdata_euler_snapf=pdata_candidates_snapf
                     
                 ### Lagrangian ISM calculation
-                gasflow_ism=analyse_gasflow_lagrangian(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.2,dt=dt,Tcut=5*10**4,afac=afac)
+                gasflow_ism=analyse_gasflow_lagrangian(galaxy_snapf,pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.2,dt=dt,vcuts=vcuts,Tcut=Tcut)
                 for key in list(gasflow_ism.keys()):
                     galaxy_output.loc[0,f'0p20r200_coolgas-'+key]=gasflow_ism[key]
                 
-                gasflow_ism_euler=analyse_gasflow_eulerian(pdata_candidates_snapf,radius=r200_eff*0.2,Tcut=5*10**4,afac=afac,hval=hval)
+                gasflow_ism_euler=analyse_gasflow_eulerian(galaxy_snapf,pdata_candidates_snapf,radius=r200_eff*0.2,vcuts=vcuts,drfac=drfac,Tcut=Tcut)
                 for key in list(gasflow_ism_euler.keys()):
                     galaxy_output.loc[0,f'0p20r200_coolgas-'+key]=gasflow_ism_euler[key]
 
                 for fac in r200_shells:
                     #lagrange
-                    gasflow_ir200_lagrange=analyse_gasflow_lagrangian(pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*fac,dt=dt,Tcut=None,afac=afac)
+                    gasflow_ir200_lagrange=analyse_gasflow_lagrangian(galaxy_snapf,pdata_candidates_snapi,pdata_candidates_snapf,dt=dt,radius=r200_eff*fac,vcuts=vcuts)
                     for key in list(gasflow_ir200_lagrange.keys()):
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200_lagrange[key]
                     
                     #euler
-                    gasflow_ir200_euler=analyse_gasflow_eulerian(pdata_euler_snapf,radius=r200_eff*fac,afac=afac,hval=hval)
+                    gasflow_ir200_euler=analyse_gasflow_eulerian(galaxy_snapf,pdata_euler_snapf,radius=r200_eff*fac,vcuts=vcuts,drfac=drfac)
                     for key in list(gasflow_ir200_euler.keys()):
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200_euler[key]
 
                 ### comoving units
                 for rad in ckpc_shells:
                     #lagrange
-                    gasflow_irad_lagrange=analyse_gasflow_lagrangian(pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,Tcut=None,afac=afac)
+                    gasflow_irad_lagrange=analyse_gasflow_lagrangian(galaxy_snapf,pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,vcuts=vcuts)
                     for key in list(gasflow_irad_lagrange.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad_lagrange[key]
 
                     #euler
-                    gasflow_irad_euler=analyse_gasflow_eulerian(pdata_euler_snapf,radius=(rad*1e-3)*hval,afac=afac,hval=hval)
+                    gasflow_irad_euler=analyse_gasflow_eulerian(galaxy_snapf,pdata_euler_snapf,radius=(rad*1e-3)*hval,vcuts=vcuts,drfac=drfac)
                     for key in list(gasflow_irad_euler.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad_euler[key]
 
