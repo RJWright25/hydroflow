@@ -81,7 +81,7 @@ def analyse_galaxy(galaxy,pdata,hval=0.67):
 
 
 	#gas mass profile (ckpc)
-	reservoir_edges=np.concatenate([np.linspace(0,20,5),np.linspace(30,100,8)])
+	reservoir_edges=np.concatenate([np.linspace(0,25,6),np.linspace(30,100,8)])
 	reservoir_names_gas=[f'{str(fachi).zfill(3)}'.replace('.','p')+'ckpc_gasprof' for fachi in reservoir_edges[1:]]
 	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>(faclo*hval*1e-3),rrel<=(fachi*hval*1e-3)]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
 	reservoir_volume={name:4/3*np.pi*((fachi*1e-3)**3-(faclo*1e-3)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}

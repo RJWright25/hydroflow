@@ -187,14 +187,10 @@ if numgal:
 
             m200_eff=(galaxy_snapi['Group_M_Crit200']+galaxy_snapf['Group_M_Crit200'])/2
             v200_eff=np.sqrt(constant_G*m200_eff/(r200_eff*afac))
-            inst_sfr=(galaxy_snapi['StarFormationRate']+galaxy_snapf['StarFormationRate'])/2
-            ave_sfr=(galaxy_snapf['StellarMass']-galaxy_snapi['StellarMass'])/dt
             
             galaxy_output.loc[0,'r200_eff']=r200_eff
             galaxy_output.loc[0,'m200_eff']=m200_eff
             galaxy_output.loc[0,'v200_eff']=v200_eff
-            galaxy_output.loc[0,'inst_SFR']=inst_sfr
-            galaxy_output.loc[0,'ave_SFR']=ave_sfr
 
             maxrad=3.5*r200_eff
 
