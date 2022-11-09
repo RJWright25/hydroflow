@@ -196,7 +196,7 @@ if numgal:
             galaxy_output.loc[0,'inst_SFR']=inst_sfr
             galaxy_output.loc[0,'ave_SFR']=ave_sfr
 
-            maxrad=3*r200_eff
+            maxrad=3.5*r200_eff
 
             #PROCESS FOR CANDIDATES
             t1_c=time.time()
