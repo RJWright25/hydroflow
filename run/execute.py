@@ -223,9 +223,9 @@ if numgal:
                 #### CHARACTERISE GALAXY
                 t1_f=time.time()
                 if tracers:#if have tracers, use cells for galaxy analysis
-                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_cells_snapf,Tcut)
+                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_cells_snapf,Tcut,r200_shells=r200_shells,ckpc_shells=ckpc_shells)
                 else:
-                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf,Tcut)
+                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf,Tcut,r200_shells=r200_shells,ckpc_shells=ckpc_shells)
                 
                 if fitf:
                     #add galaxy outputs

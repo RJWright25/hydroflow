@@ -5,10 +5,9 @@
 
 import numpy as np
 
-def analyse_galaxy(galaxy,pdata,Tcut):
+def analyse_galaxy(galaxy,pdata,Tcut,r200_shells=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,2.5,3],ckpc_shells=[10,20,30,40,50,60,70,80,90,100]):
 	galaxy_output={}
 	galaxy_reservoirs={}
-	galaxy_reservoirs_vol={}
 	
 	#which properties to analyse
 	properties_ptype={0:['Metallicity',
@@ -71,25 +70,20 @@ def analyse_galaxy(galaxy,pdata,Tcut):
 
 	######### PROFILES
 	#gas mass profile (r200)
-	reservoir_edges=np.concatenate([[0,0.02,0.04,0.06,0.08],np.linspace(0.1,1,10),np.linspace(1.2,2,5),np.linspace(2.2,2,5)])
+	reservoir_edges=np.concatenate([[0],r200_shells])
 	reservoir_names_gas=[f'{fachi:.2f}'.replace('.','p')+'r200_gasprof' for fachi in reservoir_edges[1:]]
 	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>faclo*r200,rrel<=fachi*r200]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
-	reservoir_volume={name:4/3*np.pi*((fachi*r200/hval)**3-(faclo*r200/hval)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
 
 	for name, mask in zip(reservoir_names_gas,reservoir_masks_gas):
 		galaxy_reservoirs[name]=mask
-		galaxy_reservoirs_vol[name]=reservoir_volume[name]
-
 
 	#gas mass profile (ckpc)
-	reservoir_edges=np.concatenate([np.linspace(0,25,6),np.linspace(30,100,8)])
+	reservoir_edges=np.concatenate([[0],ckpc_shells])
 	reservoir_names_gas=[f'{str(fachi).zfill(3)}'.replace('.','p')+'ckpc_gasprof' for fachi in reservoir_edges[1:]]
 	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>(faclo*hval*1e-3),rrel<=(fachi*hval*1e-3)]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
-	reservoir_volume={name:4/3*np.pi*((fachi*1e-3)**3-(faclo*1e-3)**3) for name,faclo,fachi in zip(reservoir_names_gas,reservoir_edges[:-1],reservoir_edges[1:])}
 
 	for name, mask in zip(reservoir_names_gas,reservoir_masks_gas):
 		galaxy_reservoirs[name]=mask
-		galaxy_reservoirs_vol[name]=reservoir_volume[name]
 
     #Calculate average properties of each reservoir
 	for reservoir in galaxy_reservoirs:
@@ -98,8 +92,6 @@ def analyse_galaxy(galaxy,pdata,Tcut):
 		galaxy_output[f'{reservoir}-n']=np.nansum(mask)
 		galaxy_output[f'{reservoir}-m']=np.nansum(partmass)
 
-		if 'prof' in reservoir:
-			galaxy_output[f'{reservoir}-vol']=galaxy_reservoirs_vol[reservoir]
 		if 'star' in reservoir:
 			reservoir_props=properties_ptype[4]
 		elif 'gas' in reservoir:
@@ -112,13 +104,13 @@ def analyse_galaxy(galaxy,pdata,Tcut):
 				partprop=pdata.loc[mask,prop].values
 				galaxy_output[f'{reservoir}-{properties_abbrev[prop]}_median']=np.nanmedian(partprop)
 				galaxy_output[f'{reservoir}-{properties_abbrev[prop]}_mean']=np.average(partprop,weights=partmass)
-			if ('kpc' in reservoir or 'coolgas' in reservoir) and 'gas' in reservoir:
+			if 'coolgas' in reservoir or 'prof' in reservoir:
 				galaxy_output[f'{reservoir}-SFR']=np.nansum(pdata.loc[mask,'StarFormationRate'].values)
 		else:
 			for prop in reservoir_props:
 				galaxy_output[f'{reservoir}-{properties_abbrev[prop]}_median']=np.nan
 				galaxy_output[f'{reservoir}-{properties_abbrev[prop]}_mean']=np.nan
-			if ('kpc' in reservoir or 'coolgas' in reservoir) and 'gas' in reservoir:
+			if 'coolgas' in reservoir or 'prof' in reservoir:
 				galaxy_output[f'{reservoir}-SFR']=0
 
 	return True, galaxy_output
