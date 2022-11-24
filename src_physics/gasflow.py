@@ -351,6 +351,8 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     numcdt_snapi=pdata_candidates_snapi.shape[0]
     numcdt_snapf=pdata_candidates_snapf.shape[0]
 
+    print(numcdt_snapi,numcdt_snapf)
+
     if not failed and (numcdt_snapi>0 and numcdt_snapf>0):
 
         pdata_candidates_snapi.loc[pdata_candidates_idx_snapi_incorrectlyextracted,:]=np.nan
