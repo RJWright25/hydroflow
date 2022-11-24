@@ -42,8 +42,16 @@ def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,v
     T_snap1=pdata_snapi['Temperature'].values
     T_snap2=pdata_snapf['Temperature'].values
 
+    if 'StellarFormationTime' in pdata_snapi:
+        gas_wind=np.logical_or(pdata_snapf['StellarFormationTime'].values<0,pdata_snapi['StellarFormationTime'].values<0)
+    elif 'MaximumTemperature' in pdata_snapi:
+        gas_wind=np.maximum(pdata_snapf['MaximumTemperature'].values,pdata_snapi['MaximumTemperature'].values)>=1e7
+    else:
+        gas_wind=np.zeros(pdata_snapf.shape[0])+np.nan
+
     #radial velocity
     vrad=np.maximum(pdata_snapi['Relative_v_rad'].values,pdata_snapf['Relative_v_rad'].values)
+
 
     if Tcut: 
         cool_snap1=T_snap1<=Tcut
@@ -73,13 +81,14 @@ def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,v
         inflow_mass=mass_snap2[mask]
         gasflow_output[f'{name}-n']=np.nansum(mask)
         gasflow_output[f'{name}-m']=np.nansum(inflow_mass)/dt
-        gasflow_output[f'{name}-fapp']=np.nanmean(nopdata_snap1[mask])
+        gasflow_output[f'{name}-f_app']=np.nanmean(nopdata_snap1[mask])
         if gasflow_output[f'{name}-n']>0.:
             gasflow_output[f'{name}-Z_mean']=np.average(Z_snap2[mask],weights=inflow_mass)
             gasflow_output[f'{name}-Z_median']=np.nanmedian(Z_snap2[mask])
             gasflow_output[f'{name}-T_mean']=np.average(T_snap2[mask],weights=inflow_mass)
             gasflow_output[f'{name}-T_median']=np.nanmedian(T_snap2[mask])
-
+            gasflow_output[f'{name}-f_wind']=np.average(gas_wind[mask],weights=inflow_mass)
+            
             #infall vel
             vave_inflow=vrad[mask]
             vave_mask=np.where(np.logical_and(np.isfinite(vave_inflow),inflow_mass>=0))
@@ -105,13 +114,14 @@ def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,v
 
         gasflow_output[f'{output_outflow_str}-n']=np.nansum(ejected_mask)
         gasflow_output[f'{output_outflow_str}-m']=np.nansum(outflow_mass)/dt
-        gasflow_output[f'{output_outflow_str}-flost']=np.nanmean(nopdata_snap2[ejected_mask])
+        gasflow_output[f'{output_outflow_str}-f_lost']=np.nanmean(nopdata_snap2[ejected_mask])
         if gasflow_output[f'{output_outflow_str}-n']>0.:
             gasflow_output[f'{output_outflow_str}-Z_mean']=np.average(Z_snap1[ejected_mask],weights=outflow_mass)
             gasflow_output[f'{output_outflow_str}-Z_median']=np.nanmedian(Z_snap1[ejected_mask])
             gasflow_output[f'{output_outflow_str}-T_mean']=np.average(T_snap1[ejected_mask],weights=outflow_mass)
             gasflow_output[f'{output_outflow_str}-T_median']=np.nanmedian(T_snap1[ejected_mask])
-            
+            gasflow_output[f'{output_outflow_str}-f_wind']=np.average(gas_wind[ejected_mask],weights=outflow_mass)
+
             #ejection vel
             vrad_outflow=vrad[ejected_mask]
             vel_mask=np.where(np.logical_and(np.isfinite(vrad_outflow),outflow_mass>=0))
@@ -161,6 +171,13 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,1
     vtan=pdata['Relative_v_tan'].values
     vave=pdata['Average_v_rad'].values
 
+    if 'StellarFormationTime' in pdata:
+        wind=pdata['StellarFormationTime'].values<0
+    elif 'MaximumTemperature' in pdata:
+        wind=pdata['MaximumTemperature'].values>=1e7
+    else:
+        wind=np.zeros(pdata.shape[0])+np.nan
+
     inflow_mask=vrad<0
     outflow_mask=vrad>0
 
@@ -177,12 +194,13 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,1
         inflow_mass=mass[mask]
         gasflow_output[f'{name}-n']=np.nansum(mask)
         gasflow_output[f'{name}-m']=-np.nansum(inflow_mass*(vrad[mask]/MpcpGyr_to_kmps))/dr
-        gasflow_output[f'{name}-fcov']=np.nanmean(mask)
+        gasflow_output[f'{name}-f_cov']=np.nanmean(mask)
         if gasflow_output[f'{name}-n']>0.:
             gasflow_output[f'{name}-Z_mean']=np.average(Zmet[mask],weights=inflow_mass)
             gasflow_output[f'{name}-Z_median']=np.nanmedian(Zmet[mask])
             gasflow_output[f'{name}-T_mean']=np.average(temp[mask],weights=inflow_mass)
             gasflow_output[f'{name}-T_median']=np.nanmedian(temp[mask])
+            gasflow_output[f'{name}-f_wind']=np.average(wind[mask],weights=inflow_mass)
 
             vrad_infall=vrad[mask]
             vabs_infall=vabs[mask]
@@ -234,14 +252,15 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,1
 
         gasflow_output[f'{output_outflow_str}-n']=np.nansum(ejected_mask)
         gasflow_output[f'{output_outflow_str}-m']=np.nansum(outflow_mass*(vrad[ejected_mask]/MpcpGyr_to_kmps))/(dr)
-        gasflow_output[f'{output_outflow_str}-fcov']=np.nanmean(ejected_mask)
+        gasflow_output[f'{output_outflow_str}-f_cov']=np.nanmean(ejected_mask)
         
         if gasflow_output[f'{output_outflow_str}-n']>0.:
             gasflow_output[f'{output_outflow_str}-Z_mean']=np.average(Zmet[ejected_mask],weights=outflow_mass)
             gasflow_output[f'{output_outflow_str}-Z_median']=np.nanmedian(Zmet[ejected_mask])
             gasflow_output[f'{output_outflow_str}-T_mean']=np.average(temp[ejected_mask],weights=outflow_mass)
             gasflow_output[f'{output_outflow_str}-T_median']=np.nanmedian(temp[ejected_mask])
-            
+            gasflow_output[f'{output_outflow_str}-f_wind']=np.average(wind[ejected_mask],weights=outflow_mass)
+
             #ejection vel
             vrad_ejected=vrad[ejected_mask]
             vabs_ejected=vabs[ejected_mask]
@@ -271,7 +290,7 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,1
                 gasflow_output[f'{output_outflow_str}-vtan_95P']=np.nanpercentile(vtan_ejected[vel_mask],95)
 
         else:
-            remove=[f'{output_outflow_str}-Z_mean',f'{output_outflow_str}-Z_median',f'{output_outflow_str}-T_mean',f'{output_outflow_str}-T_median']
+            remove=[f'{output_outflow_str}-Z_mean',f'{output_outflow_str}-Z_median',f'{output_outflow_str}-T_mean',f'{output_outflow_str}-T_median',f'{output_outflow_str}-f_wind']
             if vcut_key=='000kmps':
                 for veltype in ['vrad','vabs','vtan','vave']:
                     remove.append(f'{output_outflow_str}-{veltype}_mean')

@@ -21,7 +21,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     if not ptypes:
-        ptypes={0:['Temperature','Metallicity','StarFormationRate'],
+        ptypes={0:['Temperature','Metallicity','StarFormationRate','MaximumTemperature'],
                 4:['Metallicity']}
     
     snapshot=EagleSnapshot(path)
@@ -52,7 +52,7 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
     for field in ptypes[0]:
         if not field in ptypes[4]:
-            pdata[4][field]=np.ones(npart_star)*10**10
+            pdata[4][field]=np.ones(npart_star)+np.nan
 
     #concat all pdata into one df
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
