@@ -74,6 +74,7 @@ def hdf_to_pddf(filename, columns=None, **kwargs):
     store = pd.HDFStore(filename)
     data = []
     colsTabNum = store.select('colsTabNum')
+    print(colsTabNum)
     if colsTabNum is not None:
         if columns is not None:
             tabNums = pd.Series(
