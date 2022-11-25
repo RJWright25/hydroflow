@@ -53,8 +53,7 @@ def pddf_to_hdf(filename, data, columns=None, maxColSize=200, **kwargs):
 
 
 
-
-def hdf_to_pddf(filename, columns=None, **kwargs):
+def hdf_to_pddf(filename, columns=[], **kwargs):
     """Read a `pandas.DataFrame` from a HDFStore.
 
     Parameter
@@ -73,24 +72,12 @@ def hdf_to_pddf(filename, columns=None, **kwargs):
     """
     store = pd.HDFStore(filename)
     data = []
-    colsTabNum = store.select('colsTabNum')
-    if colsTabNum is not None:
-        if columns is not None:
-            tabNums = pd.Series(
-                index=colsTabNum[columns].values,
-                data=colsTabNum[columns].values).sort_index()
-            print(tabNums)
-            for table in tabNums.unique():
-                print(table)
-                data.append(
-                    store.select(table, columns=tabNums[table], **kwargs))
-        else:
-            for table in colsTabNum.unique():
-                data.append(store.select(table, **kwargs))
-        data = pd.concat(data, axis=1).sort_index(axis=1)
-    else:
-        data = store.select('data', columns=columns)
+    for column in columns:
+        data.append(store.get(column))
     store.close()
+
+    data = pd.concat(data, axis=1).sort_index(axis=1)
+
     return data
 
 
