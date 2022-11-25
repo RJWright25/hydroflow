@@ -80,7 +80,7 @@ def read_hdf_wideDf(filename, columns=None, **kwargs):
         if columns is not None:
             tabNums = pd.Series(
                 index=colsTabNum[columns].values,
-                data=colsTabNum[columns].data).sort_index()
+                data=colsTabNum[columns]._data.as_array()).sort_index()
             for table in tabNums.unique():
                 data.append(
                     store.select(table, columns=tabsNum[table], **kwargs))
