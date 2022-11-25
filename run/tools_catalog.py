@@ -83,7 +83,7 @@ def read_hdf_wideDf(filename, columns=None, **kwargs):
                 data=colsTabNum[columns]._data.as_array()).sort_index()
             for table in tabNums.unique():
                 data.append(
-                    store.select(table, columns=tabsNum[table], **kwargs))
+                    store.select(table, columns=tabNums[table], **kwargs))
         else:
             for table in colsTabNum.unique():
                 data.append(store.select(table, **kwargs))
