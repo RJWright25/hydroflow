@@ -73,9 +73,10 @@ def hdf_to_pddf(filename, columns=[], **kwargs):
     store = pd.HDFStore(filename)
     data = []
     for column in columns:
+        print(store.get(column))
         data.append(store.get(column))
     store.close()
-
+    print(data)
     data = pd.concat(data, axis=1).sort_index(axis=1)
 
     return data
