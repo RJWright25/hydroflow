@@ -129,9 +129,11 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
     outputs=list(subcat_masked)
     outputs_subset=[]
     for output in outputs:
-        if ('mean' in output) or ('median' in output):
+        if ('T_mean' in output) or ('T_median' in output):
             continue
-        elif ('prof' in output) or ('v' in output):
+        elif ('prof' in output):
+            continue
+        elif ('vtan' in output) or ('vabs' in output):
             continue
         else:
             outputs_subset.append(output)
