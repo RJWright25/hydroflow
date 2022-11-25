@@ -76,6 +76,7 @@ def read_hdf_wideDf(filename, columns=None, **kwargs):
     if colsTabNum is not None:
         print(dir(colsTabNum[columns]))
         print(dir(colsTabNum[columns]._data))
+        print(colsTabNum[columns]._data.as_array())
         if columns is not None:
             tabNums = pd.Series(
                 index=colsTabNum[columns].values,
