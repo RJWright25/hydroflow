@@ -79,7 +79,7 @@ def hdf_to_pddf(filename, columns=None, **kwargs):
             tabNums = pd.Series(
                 index=colsTabNum[columns].values,
                 data=colsTabNum[columns].values).sort_index()
-                print(tabNums)
+            print(tabNums)
             for table in tabNums.unique():
                 data.append(
                     store.select(table, columns=tabNums[table], **kwargs))
