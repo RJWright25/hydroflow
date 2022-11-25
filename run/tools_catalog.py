@@ -123,22 +123,6 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
     subcat_masked=subcat_masked.loc[mask_output,:].copy()
     subcat_masked=subcat_masked.sort_values(by=['SnapNum','Mass'],ascending=[False,False],ignore_index=True)
     subcat_masked.reset_index(inplace=True)
-    subcat_masked.to_hdf(outpath,key='Gasflow')
-
-    print(f'Compressing output for desired fields')
-    outputs=list(subcat_masked)
-    outputs_subset=[]
-    for output in outputs:
-        if ('T_mean' in output) or ('T_median' in output):
-            continue
-        elif ('prof' in output):
-            continue
-        elif ('vtan' in output) or ('vabs' in output):
-            continue
-        else:
-            outputs_subset.append(output)
-    
-    subcat_masked_subset=subcat_masked.loc[:,outputs_subset].copy()
-    subcat_masked_subset.to_hdf(outpath_compressed,key='Gasflow')
+    subcat_masked.to_hdf(outpath,key='Gasflow',format='table')
 
     return subcat_masked
