@@ -80,8 +80,7 @@ def hdf_to_pddf(filename, columns=None, **kwargs):
                 index=colsTabNum[columns].values,
                 data=colsTabNum[columns].values).sort_index()
             for table in tabNums.unique():
-                datas=store.select(table, columns=tabNums[table], **kwargs)
-                print(datas)
+                print(table)
                 data.append(
                     store.select(table, columns=tabNums[table], **kwargs))
         else:
