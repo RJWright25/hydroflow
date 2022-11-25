@@ -76,6 +76,7 @@ def hdf_to_pddf(filename, columns=None, **kwargs):
     colsTabNum = store.select('colsTabNum')
     if colsTabNum is not None:
         if columns is not None:
+            print(dir(colsTabNum[columns]))
             tabNums = pd.Series(
                 index=colsTabNum[columns].values,
                 data=colsTabNum[columns].values).sort_index()
