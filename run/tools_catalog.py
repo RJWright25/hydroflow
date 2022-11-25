@@ -74,12 +74,12 @@ def hdf_to_pddf(filename, columns=None, **kwargs):
     store = pd.HDFStore(filename)
     data = []
     colsTabNum = store.select('colsTabNum')
-    print(colsTabNum)
     if colsTabNum is not None:
         if columns is not None:
             tabNums = pd.Series(
                 index=colsTabNum[columns].values,
                 data=colsTabNum[columns].values).sort_index()
+                print(tabNums)
             for table in tabNums.unique():
                 data.append(
                     store.select(table, columns=tabNums[table], **kwargs))
