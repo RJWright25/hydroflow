@@ -78,7 +78,7 @@ def hdf_to_pddf(filename, columns=None, **kwargs):
         if columns is not None:
             tabNums = pd.Series(
                 index=colsTabNum[columns].values,
-                data=colsTabNum[columns].data).sort_index()
+                data=colsTabNum[columns].values).sort_index()
             for table in tabNums.unique():
                 data.append(
                     store.select(table, columns=tabNums[table], **kwargs))
@@ -90,8 +90,6 @@ def hdf_to_pddf(filename, columns=None, **kwargs):
         data = store.select('data', columns=columns)
     store.close()
     return data
-
-
 
 
 def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,mcut=10,verbose=False):
