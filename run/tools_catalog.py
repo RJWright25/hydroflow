@@ -18,7 +18,7 @@ def dump_hdf(fname,data,verbose=False):
     
     columns=list(data.columns)
 
-    outfile=h5py.File(fname,mode='r+')
+    outfile=h5py.File(fname,mode='w')
 
     for icol,column in enumerate(columns):
         if verbose:
