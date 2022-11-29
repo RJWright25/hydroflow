@@ -6,90 +6,44 @@
 import os
 import numpy as np
 import pandas as pd
+import h5py
 
 from hydroflow.run.tools_hpc import create_dir
 
-def pddf_to_hdf(filename, data, columns=None, maxColSize=200, **kwargs):
-    """Write a `pandas.DataFrame` with a large number of columns
-    to one HDFStore.
+def dump_hdf(fname,data,verbose=False):
 
-    Parameters
-    -----------
-    filename : str
-        name of the HDFStore
-    data : pandas.DataFrame
-        data to save in the HDFStore
-    columns: list
-        a list of columns for storing. If set to `None`, all 
-        columns are saved.
-    maxColSize : int (default=2000)
-        this number defines the maximum possible column size of 
-        a table in the HDFStore.
+    if os.path.exists(fname):
+        print('Removing existing output file ...')
+        os.remove(fname)
+    
+    columns=list(data.columns)
 
-    """
-    import numpy as np
-    from collections import ChainMap
-    store = pd.HDFStore(filename, **kwargs)
-    if columns is None:
-        columns = data.columns
-    colSize = columns.shape[0]
-    if colSize > maxColSize:
-        numOfSplits = np.ceil(colSize / maxColSize).astype(int)
-        colsSplit = [
-            columns[i * maxColSize:(i + 1) * maxColSize]
-            for i in range(numOfSplits)
-        ]
-        _colsTabNum = ChainMap(*[
-            dict(zip(columns, ['data{}'.format(num)] * colSize))
-            for num, columns in enumerate(colsSplit)
-        ])
-        colsTabNum = pd.Series(dict(_colsTabNum)).sort_index()
-        for num, cols in enumerate(colsSplit):
-            store.put('data{}'.format(num), data[cols], format='table')
-        store.put('colsTabNum', colsTabNum, format='fixed')
-    else:
-        store.put('data', data[columns], format='table')
-    store.close()
+    outfile=h5py.File(fname,mode='r+')
 
+    for icol,column in enumerate(columns):
+        if verbose:
+            print(f'Dumping {column} ... {icol+1}/{len(columns)}')
+        outfile.create_dataset(name=column,data=data[column].values)
 
+    outfile.close()
 
-def read_hdf_wideDf(filename, columns=None, **kwargs):
-    """Read a `pandas.DataFrame` from a HDFStore.
+def read_hdf(fname,columns=None,verbose=False):
 
-    Parameter
-    ---------
-    filename : str
-        name of the HDFStore
-    columns : list
-        the columns in this list are loaded. Load all columns, 
-        if set to `None`.
+    infile=h5py.File(fname,mode='r')
 
-    Returns
-    -------
-    data : pandas.DataFrame
-        loaded data.
+    if not columns:
+        columns=list(infile.keys())
 
-    """
-    store = pd.HDFStore(filename)
-    data = []
-    colsTabNum = store.select('colsTabNum')
-    if colsTabNum is not None:
-        if columns is not None:
-            tabNums = pd.Series(
-                index=colsTabNum[columns].values,
-                data=colsTabNum[columns]._data.as_array()).sort_index()
-            for table in tabNums.unique():
-                data.append(
-                    store.select(table, columns=tabNums[table], **kwargs))
-            print(data)
-        else:
-            for table in colsTabNum.unique():
-                data.append(store.select(table, **kwargs))
-        data = pd.concat(data, axis=1).sort_index(axis=1)
-    else:
-        data = store.select('data', columns=columns)
-    store.close()
-    return data
+    outdf=pd.DataFrame(data={'GalaxyID':infile['GalaxyID'][:]})
+
+    for icol, column in enumerate(columns):
+        if verbose:
+            print(f'Reading {column} ... {icol+1}/{len(columns)}')
+        outdf[column]=infile[column][:]
+    
+    infile.close()
+
+    return outdf
 
 
 def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,mcut=10,verbose=False):
