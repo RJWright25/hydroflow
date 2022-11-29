@@ -160,6 +160,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
     subcat_masked=subcat_masked.loc[mask_output,:].copy()
     subcat_masked=subcat_masked.sort_values(by=['SnapNum','Mass'],ascending=[False,False],ignore_index=True)
     subcat_masked.reset_index(inplace=True)
-    pddf_to_hdf(outpath,data=subcat_masked)
+
+    dump_hdf(outpath,data=subcat_masked,verbose=True)
 
     return subcat_masked
