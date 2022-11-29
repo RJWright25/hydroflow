@@ -48,6 +48,11 @@ r200_shells=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,2.5,3]
 ckpc_shells=[10,20,30,40,50,60,70,80,90,100]
 vcuts=[0,50,100,150,250]
 
+if 'eaglesnip' in code:
+    for r200_shell in r200_shells:
+        if r200_shell>1:
+            r200_shells.remove(r200_shell)
+
 sys.path.append(f"{repo.split('hydroflow')[0]}")
 
 from hydroflow.run.tools_hpc import create_dir
