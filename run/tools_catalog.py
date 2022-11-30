@@ -46,7 +46,7 @@ def read_hdf(fname,columns=None,verbose=False):
     return outdf
 
 
-def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,mcut=10,verbose=False):
+def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,snaps=None,mcut=10,verbose=False):
     subcat=pd.read_hdf(path_subcat)
 
     snap_key='SnapNum'
@@ -54,6 +54,8 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
     mass_key='Mass'
 
     snaplims=np.logical_and(snapmin,snapmax)
+    if not snaps:
+        snaps=list(range(snapmin,snapmax))
 
     if not snaplims:
         snap_mask=subcat[snap_key].values>=0
@@ -93,7 +95,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
             snap=snapdir.split('snap')[-1]
             snap=int(snap[:3])
             snapdir_path=path_gasflow+snapdir
-            if snap>=snapmin and snap<=snapmax:
+            if snap>=snapmin and snap<=snapmax and snap in snaps:
                 isnap_files=sorted(os.listdir(snapdir_path))
                 isnap_files=[snapdir_path+'/'+isnap_file for isnap_file in isnap_files]
             else:
