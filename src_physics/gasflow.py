@@ -7,7 +7,7 @@ import numpy as np
 
 from hydroflow.src_physics.utils import  MpcpGyr_to_kmps
 
-def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,vcuts=[0,50,100,150,250]):
+def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,vcuts=[0,50,100,150,250],vcuts_extra=None):
     gasflow_output={}
 
     afac=galaxy['afac']
@@ -73,7 +73,18 @@ def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,v
 
     #vcuts
     vcut_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts]
-    vcuts=np.array(vcuts)/np.sqrt(afac)
+    vcuts=list(np.array(vcuts)/np.sqrt(afac))
+
+    if vcuts_extra:
+        for vcut_extra in vcuts_extra:
+            fac=np.float32(vcut_extra[:4].replace('p','.'))
+            if 'vc' in vcut_extra:
+                val=fac*galaxy['v200_eff']
+            else:
+                val=np.nan
+            vcut_keys.append(vcut_extra)
+            vcuts.append(val)
+
     outflow_masks={vcut_key:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut_key,vcut_val in zip(vcut_keys,vcuts)}
 
     #### inflow
@@ -138,7 +149,7 @@ def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,v
 
     return gasflow_output
 
-def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,100,150,250]):
+def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,100,150,250],vcuts_extra=None):
     gasflow_output={}
 
     afac=galaxy['afac']
@@ -160,7 +171,8 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,1
         boundary=np.logical_and(boundary,pdata['Temperature'].values<=Tcut)
 
     gasflow_output['boundary-n']=np.nansum(boundary)
-
+    gasflow_output['boundary-vrot']=np.nanmedian(pdata.loc[boundary,'Relative_v_tan'].values)
+    
     pdata=pdata.loc[np.logical_and(boundary,gas),:].copy()
 
     mass=pdata['Mass'].values
@@ -186,7 +198,21 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,1
 
     # outflow
     vcut_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts]
-    vcuts=np.array(vcuts)/np.sqrt(afac)
+    vcuts=list(np.array(vcuts)/np.sqrt(afac))
+
+    if vcuts_extra:
+        for vcut_extra in vcuts_extra:
+            fac=np.float32(vcut_extra[:4].replace('p','.'))
+            if 'vc' in vcut_extra:
+                val=fac*galaxy['v200_eff']
+            elif 'vr' in vcut_extra:
+                val=fac*gasflow_output['boundary-vrot']
+            else:
+                val=np.nan
+
+            vcut_keys.append(vcut_extra)
+            vcuts.append(val)
+
     outflow_masks={vcut_key:np.logical_and.reduce([outflow_mask,vrad>=vcut_val]) for vcut_key,vcut_val in zip(vcut_keys,vcuts)}
 
     #### inflow

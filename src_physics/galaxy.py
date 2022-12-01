@@ -5,7 +5,7 @@
 
 import numpy as np
 
-def analyse_galaxy(galaxy,pdata,Tcut,r200_shells=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,2.5,3],ckpc_shells=[10,20,30,40,50,60,70,80,90,100]):
+def analyse_galaxy(galaxy,pdata,Tcut,r200_shells=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3],ckpc_shells=[10,20,30,40,50,60,70,80,90,100]):
 	galaxy_output={}
 	galaxy_reservoirs={}
 	

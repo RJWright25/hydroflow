@@ -34,14 +34,28 @@ def read_hdf(fname,columns=None,verbose=False):
     if not columns:
         columns=list(infile.keys())
 
-    outdf=pd.DataFrame(data={'GalaxyID':infile['GalaxyID'][:]})
-
+    outdf={}
+    failed=[]
     for icol, column in enumerate(columns):
         if verbose:
             print(f'Reading {column} ... {icol+1}/{len(columns)}')
-        outdf[column]=infile[column][:]
+        try:
+            data=infile[column][:]
+        except:
+            if verbose:
+                print(f'Failed to read {column}')
+            failed.append(column)
+
+        outdf[column]=data
     
     infile.close()
+
+    outdf=pd.DataFrame(outdf)
+
+    if failed:
+        print('Note, failed to load the following fields:')
+        for column in failed:
+            print(column)
 
     return outdf
 
@@ -79,10 +93,8 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
 
     if snapmax-snapmin==0:
         outpath=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmax)}.hdf5'
-        outpath_compressed=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmax)}_subset.hdf5'
     else:
         outpath=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmin)}to{int(snapmax)}.hdf5'
-        outpath_compressed=path_gasflow+f'/gasflow_d{depth_out}_snap{int(snapmin)}to{int(snapmax)}_subset.hdf5'
 
     for depth in depths:
 

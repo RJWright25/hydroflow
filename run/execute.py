@@ -44,9 +44,10 @@ Tcut=10**(args.Tcut)
 
 #shells for accretion calculations
 drfac=0.25
-r200_shells=[0.1,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.75,0.8,0.9,1,1.5,2,2.5,3]
+r200_shells=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3,0.25,0.75]
 ckpc_shells=[10,20,30,40,50,60,70,80,90,100]
-vcuts=[0,50,100,150,250]
+vcuts=[0,50,100,150]
+vcuts_extra=['0p125vc','0p250vc','0p500vr','1p000vr']
 
 if 'eaglesnip' in code:
     for r200_shell in r200_shells:
@@ -203,10 +204,11 @@ if numgal:
 
             m200_eff=(galaxy_snapi['Group_M_Crit200']+galaxy_snapf['Group_M_Crit200'])/2
             v200_eff=np.sqrt(constant_G*m200_eff/(r200_eff*afac))
-            
+
             galaxy_output.loc[0,'r200_eff']=r200_eff
             galaxy_output.loc[0,'m200_eff']=m200_eff
             galaxy_output.loc[0,'v200_eff']=v200_eff
+            galaxy_snapf['v200_eff']=v200_eff
 
             maxrad=3.5*r200_eff
 
@@ -228,9 +230,9 @@ if numgal:
                 #### CHARACTERISE GALAXY
                 t1_f=time.time()
                 if tracers:#if have tracers, use cells for galaxy analysis
-                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_cells_snapf,Tcut,r200_shells=r200_shells,ckpc_shells=ckpc_shells)
+                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_cells_snapf,Tcut,r200_shells=r200_shells[:-2],ckpc_shells=ckpc_shells)
                 else:
-                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf,Tcut,r200_shells=r200_shells,ckpc_shells=ckpc_shells)
+                    fitf,galaxy_properties_snapf=analyse_galaxy(galaxy_snapf,pdata_candidates_snapf,Tcut,r200_shells=r200_shells[:-2],ckpc_shells=ckpc_shells)
                 
                 if fitf:
                     #add galaxy outputs
@@ -261,24 +263,24 @@ if numgal:
 
                 for fac in r200_shells:
                     #lagrange
-                    gasflow_ir200_lagrange=analyse_gasflow_lagrangian(galaxy_snapf,pdata_candidates_snapi,pdata_candidates_snapf,dt=dt,radius=r200_eff*fac,vcuts=vcuts)
+                    gasflow_ir200_lagrange=analyse_gasflow_lagrangian(galaxy_snapf,pdata_candidates_snapi,pdata_candidates_snapf,dt=dt,radius=r200_eff*fac,vcuts=vcuts,vcuts_extra=vcuts_extra[:2])
                     for key in list(gasflow_ir200_lagrange.keys()):
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200_lagrange[key]
                     
                     #euler
-                    gasflow_ir200_euler=analyse_gasflow_eulerian(galaxy_snapf,pdata_euler_snapf,radius=r200_eff*fac,vcuts=vcuts,drfac=drfac)
+                    gasflow_ir200_euler=analyse_gasflow_eulerian(galaxy_snapf,pdata_euler_snapf,radius=r200_eff*fac,vcuts=vcuts,vcuts_extra=vcuts_extra,drfac=drfac)
                     for key in list(gasflow_ir200_euler.keys()):
                         galaxy_output.loc[0,f'{fac:.2f}r200_gas-'.replace('.','p')+key]=gasflow_ir200_euler[key]
 
                 ### comoving units
                 for rad in ckpc_shells:
                     #lagrange
-                    gasflow_irad_lagrange=analyse_gasflow_lagrangian(galaxy_snapf,pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,vcuts=vcuts)
+                    gasflow_irad_lagrange=analyse_gasflow_lagrangian(galaxy_snapf,pdata_candidates_snapi,pdata_candidates_snapf,radius=(rad*1e-3)*hval,dt=dt,vcuts=vcuts,vcuts_extra=vcuts_extra[:2])
                     for key in list(gasflow_irad_lagrange.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad_lagrange[key]
 
                     #euler
-                    gasflow_irad_euler=analyse_gasflow_eulerian(galaxy_snapf,pdata_euler_snapf,radius=(rad*1e-3)*hval,vcuts=vcuts,drfac=drfac)
+                    gasflow_irad_euler=analyse_gasflow_eulerian(galaxy_snapf,pdata_euler_snapf,radius=(rad*1e-3)*hval,vcuts=vcuts,vcuts_extra=vcuts_extra,drfac=drfac)
                     for key in list(gasflow_irad_euler.keys()):
                         galaxy_output.loc[0,f'{str(int(rad)).zfill(3)}ckpc_gas-'+key]=gasflow_irad_euler[key]
 
