@@ -69,7 +69,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snapmin=None,snapmax=None,
 
     snaplims=np.logical_and(snapmin,snapmax)
     if not snaps:
-        snaps=list(range(snapmin,snapmax))
+        snaps=list(range(snapmin,(snapmax+1)))
 
     if not snaplims:
         snap_mask=subcat[snap_key].values>=0
