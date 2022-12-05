@@ -253,11 +253,11 @@ if numgal:
                     pdata_euler_snapf=pdata_candidates_cells_snapf
                     
                 ### Lagrangian ISM calculation
-                gasflow_ism=analyse_gasflow_lagrangian(galaxy_snapf,pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.2,dt=dt,vcuts=vcuts,Tcut=Tcut)
+                gasflow_ism=analyse_gasflow_lagrangian(galaxy_snapf,pdata_candidates_snapi,pdata_candidates_snapf,radius=r200_eff*0.2,dt=dt,vcuts=vcuts,vcuts_extra=vcuts_extra,Tcut=Tcut)
                 for key in list(gasflow_ism.keys()):
                     galaxy_output.loc[0,f'0p20r200_coolgas-'+key]=gasflow_ism[key]
                 
-                gasflow_ism_euler=analyse_gasflow_eulerian(galaxy_snapf,pdata_candidates_snapf,radius=r200_eff*0.2,vcuts=vcuts,drfac=drfac,Tcut=Tcut)
+                gasflow_ism_euler=analyse_gasflow_eulerian(galaxy_snapf,pdata_candidates_snapf,radius=r200_eff*0.2,vcuts=vcuts,vcuts_extra=vcuts_extra,drfac=drfac,Tcut=Tcut)
                 for key in list(gasflow_ism_euler.keys()):
                     galaxy_output.loc[0,f'0p20r200_coolgas-'+key]=gasflow_ism_euler[key]
 
