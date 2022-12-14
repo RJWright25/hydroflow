@@ -7,7 +7,7 @@ import numpy as np
 
 from hydroflow.src_physics.utils import  MpcpGyr_to_kmps
 
-def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,vcuts=[0,50,100,150,250],vcuts_extra=None):
+def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,vcuts=None,vcuts_extra=None):
     gasflow_output={}
 
     afac=galaxy['afac']
@@ -45,13 +45,12 @@ def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,v
     if 'StellarFormationTime' in pdata_snapi:
         gas_wind=np.logical_or(pdata_snapf['StellarFormationTime'].values<0,pdata_snapi['StellarFormationTime'].values<0)
     elif 'MaximumTemperature' in pdata_snapi:
-        gas_wind=np.maximum(pdata_snapf['MaximumTemperature'].values,pdata_snapi['MaximumTemperature'].values)>=1e7
+        gas_wind=pdata_snapf['MaximumTemperature'].values>=1e7
     else:
         gas_wind=np.zeros(pdata_snapf.shape[0])+np.nan
 
     #radial velocity
-    vrad=np.maximum(pdata_snapi['Relative_v_rad'].values,pdata_snapf['Relative_v_rad'].values)
-
+    vrad=pdata_snapi['Relative_v_rad'].values
 
     if Tcut: 
         cool_snap1=T_snap1<=Tcut
@@ -69,12 +68,15 @@ def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,v
     outflow_mask=np.logical_and.reduce([selection_snap1,np.logical_or(np.logical_not(selection_snap2),nopdata_snap2),np.logical_or(gas_snap2,gas_snap1)])
 
     ## pristine
-    inflow_pristine_mask=np.logical_and(inflow_mask,np.logical_or(Z_snap2<1e-4,Z_snap1<1e-4))
+    inflow_pristine_mask=np.logical_and(inflow_mask,Z_snap1<1e-4)
 
     #vcuts
+    if vcuts:
+        vcuts=list(np.array(vcuts)/np.sqrt(afac))
+    else:
+        vcuts=[0]
+    
     vcut_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts]
-    vcuts=list(np.array(vcuts)/np.sqrt(afac))
-
     if vcuts_extra:
         for vcut_extra in vcuts_extra:
             fac=np.float32(vcut_extra[:4].replace('p','.'))
@@ -112,7 +114,6 @@ def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,v
             for field in remove:
                 gasflow_output[field]=np.nan
 
-
     #### outflows
     for vcut_key in vcut_keys:
         ejected_mask=outflow_masks[vcut_key]
@@ -143,13 +144,13 @@ def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,v
                 gasflow_output[f'{output_outflow_str}-vrad_95P']=np.nanpercentile(vrad_outflow[vel_mask],95)
 
         else:
-            remove=[f'{output_outflow_str}-Z_mean',f'{output_outflow_str}-Z_median',f'{output_outflow_str}-T_mean',f'{output_outflow_str}-T_median',f'{output_outflow_str}-vrad_mean',f'{output_outflow_str}-vrad_median',f'{output_outflow_str}-vrad_05P',f'{output_outflow_str}-vrad_95P']
+            remove=[f'{output_outflow_str}-Z_mean',f'{output_outflow_str}-Z_median',f'{output_outflow_str}-T_mean',f'{output_outflow_str}-T_median']
             for field in remove:
                 gasflow_output[field]=np.nan
 
     return gasflow_output
 
-def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,100,150,250],vcuts_extra=None):
+def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=None,vcuts_extra=None):
     gasflow_output={}
 
     afac=galaxy['afac']
@@ -197,9 +198,13 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,1
     inflow_pristine_mask=np.logical_and(inflow_mask,Zmet<1e-4)
 
     # outflow
+    #vcuts
+    if vcuts:
+        vcuts=list(np.array(vcuts)/np.sqrt(afac))
+    else:
+        vcuts=[0]
+    
     vcut_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts]
-    vcuts=list(np.array(vcuts)/np.sqrt(afac))
-
     if vcuts_extra:
         for vcut_extra in vcuts_extra:
             fac=np.float32(vcut_extra[:4].replace('p','.'))
@@ -257,12 +262,6 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,1
 
         else:
             remove=[f'{name}-Z_mean',f'{name}-Z_median',f'{name}-T_mean',f'{name}-T_median']
-            for veltype in ['vrad','vabs','vtan','vave']:
-                remove.append(f'{name}-{veltype}_mean')
-                remove.append(f'{name}-{veltype}_median')
-                remove.append(f'{name}-{veltype}_05P')
-                remove.append(f'{name}-{veltype}_95P')
-
             for field in remove:
                 gasflow_output[field]=np.nan
 
@@ -288,13 +287,13 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,1
             gasflow_output[f'{output_outflow_str}-f_wind']=np.average(wind[ejected_mask],weights=outflow_mass)
 
             #ejection vel
-            vrad_ejected=vrad[ejected_mask]
-            vabs_ejected=vabs[ejected_mask]
-            vtan_ejected=vtan[ejected_mask]
-            vave_ejected=vave[ejected_mask]
-
             vel_mask=np.where(outflow_mass>=0)
             if np.nansum(vel_mask) and vcut_key=='000pkmps':
+                vrad_ejected=vrad[ejected_mask]
+                vabs_ejected=vabs[ejected_mask]
+                vtan_ejected=vtan[ejected_mask]
+                vave_ejected=vave[ejected_mask]
+
                 gasflow_output[f'{output_outflow_str}-vave_mean']=np.average(vave_ejected[vel_mask],weights=outflow_mass[vel_mask])
                 gasflow_output[f'{output_outflow_str}-vave_median']=np.nanmedian(vave_ejected[vel_mask])
                 gasflow_output[f'{output_outflow_str}-vave_05P']=np.nanpercentile(vave_ejected[vel_mask],5)
@@ -317,12 +316,6 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=[0,50,1
 
         else:
             remove=[f'{output_outflow_str}-Z_mean',f'{output_outflow_str}-Z_median',f'{output_outflow_str}-T_mean',f'{output_outflow_str}-T_median',f'{output_outflow_str}-f_wind']
-            if vcut_key=='000kmps':
-                for veltype in ['vrad','vabs','vtan','vave']:
-                    remove.append(f'{output_outflow_str}-{veltype}_mean')
-                    remove.append(f'{output_outflow_str}-{veltype}_median')
-                    remove.append(f'{output_outflow_str}-{veltype}_05P')
-                    remove.append(f'{output_outflow_str}-{veltype}_95P')
             for field in remove:
                 gasflow_output[field]=np.nan
 
