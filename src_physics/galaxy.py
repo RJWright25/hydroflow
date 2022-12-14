@@ -5,7 +5,7 @@
 
 import numpy as np
 
-def analyse_galaxy(galaxy,pdata,Tcut,r200_shells=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3],ckpc_shells=[10,20,30,40,50,60,70,80,90,100]):
+def analyse_galaxy(galaxy,pdata,Tcut,r200_shells=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3],kpc_shells=[10,20,30,40,50,60,70,80,90,100]):
 	galaxy_output={}
 	galaxy_reservoirs={}
 	
@@ -24,6 +24,7 @@ def analyse_galaxy(galaxy,pdata,Tcut,r200_shells=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.
 					   'Relative_v_tan':'vtan'}
 
 	hval=galaxy['hval']
+	afac=galaxy['afac']
 
 	#remove tracers if present
 	if 'Flag_Tracer' in list(pdata.keys()):
@@ -56,6 +57,13 @@ def analyse_galaxy(galaxy,pdata,Tcut,r200_shells=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.
 	galaxy_reservoirs['030ckpc_coolgas']=np.logical_and(galaxy_reservoirs['030ckpc_gas'],np.logical_or(cool,sfr))
 	galaxy_reservoirs['030ckpc_sfrgas']=np.logical_and(galaxy_reservoirs['030ckpc_gas'],sfr)
 
+	#30pkpc ISM
+	p30kpc_mask=rrel<=((30*1e-3)*hval/afac)
+	galaxy_reservoirs['030pkpc_star']=np.logical_and(star,p30kpc_mask)
+	galaxy_reservoirs['030pkpc_gas']=np.logical_and(gas,p30kpc_mask)
+	galaxy_reservoirs['030pkpc_coolgas']=np.logical_and(galaxy_reservoirs['030pkpc_gas'],np.logical_or(cool,sfr))
+	galaxy_reservoirs['030pkpc_sfrgas']=np.logical_and(galaxy_reservoirs['030pkpc_gas'],sfr)
+
 	#0p20r200 ISM
 	disk=rrel<=(0.20*r200)
 	galaxy_reservoirs['0p20r200_star']=np.logical_and(star,disk)
@@ -78,9 +86,14 @@ def analyse_galaxy(galaxy,pdata,Tcut,r200_shells=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.
 		galaxy_reservoirs[name]=mask
 
 	#gas mass profile (ckpc)
-	reservoir_edges=np.concatenate([[0],ckpc_shells])
+	reservoir_edges=np.concatenate([[0],kpc_shells])
 	reservoir_names_gas=[f'{str(fachi).zfill(3)}'.replace('.','p')+'ckpc_gasprof' for fachi in reservoir_edges[1:]]
 	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>(faclo*hval*1e-3),rrel<=(fachi*hval*1e-3)]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
+	#gas mass profile (ckpc)
+	reservoir_edges=np.concatenate([[0],kpc_shells])
+	reservoir_names_gas=[f'{str(fachi).zfill(3)}'.replace('.','p')+'pkpc_gasprof' for fachi in reservoir_edges[1:]]
+	reservoir_masks_gas=[np.logical_and.reduce([gas,rrel>(faclo*hval*1e-3/afac),rrel<=(fachi*hval*1e-3/afac)]) for faclo,fachi in zip(reservoir_edges[:-1],reservoir_edges[1:])]
+
 
 	for name, mask in zip(reservoir_names_gas,reservoir_masks_gas):
 		galaxy_reservoirs[name]=mask
