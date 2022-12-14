@@ -420,3 +420,46 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
 
     else:
         return False,None,None
+
+def candidates_gasflow_euleronly(galaxy_snapf,pdata_snapf,kdtree_snapf,maxrad=None):
+    afac_snap2=1/(1+galaxy_snapf['Redshift'])
+    hval=galaxy_snapf['hval']
+
+    r200_eff=galaxy_snapf['Group_R_Crit200']
+    galaxy_com_snapf=np.array([galaxy_snapf[f'CentreOfPotential_{x}'] for x in 'xyz'])
+    
+    #get gasflow candidates
+    if maxrad:
+        rcut=maxrad#choose particles within rcut
+    else:
+        rcut=1*r200_eff
+
+    pidx_candidates_snapf=kdtree_snapf.query_ball_point(galaxy_com_snapf,rcut)
+    pdata_candidates_snapf=pdata_snapf.loc[pidx_candidates_snapf,:]
+    pdata_candidates_snapf.reset_index(drop=True,inplace=True)
+
+    numcdt_snapf=pdata_candidates_snapf.shape[0]
+
+    if numcdt_snapf>0:
+        pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']]=(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-galaxy_com_snapf)
+        pdata_candidates_snapf.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']].values/hval
+        pdata_candidates_snapf.loc[:,[f'Relative_{x}_physical' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']]*afac_snap2
+
+        pdata_candidates_snapf['Relative_r']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']].values),axis=1)) #h-1cMpc
+        pdata_candidates_snapf['Relative_r_comoving']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values),axis=1)) #cMpc
+        pdata_candidates_snapf['Relative_r_physical']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_{x}_physical' for x in 'xyz']].values),axis=1)) #pMpc
+
+        vhalo_mean_snapf=[np.nanmean(pdata_candidates_snapf[f'Velocity_{x}']) for x in 'xyz']
+
+        for idim,dim in enumerate('xyz'):
+            pdata_candidates_snapf[f'Relative_v_{dim}']=pdata_candidates_snapf[f'Velocity_{dim}'].values-vhalo_mean_snapf[idim]
+
+        pdata_candidates_snapf[f'Relative_v_rad']=np.nansum(pdata_candidates_snapf.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values*pdata_candidates_snapf.loc[:,[f'Relative_v_{dim}' for dim in 'xyz']].values,axis=1)/pdata_candidates_snapf['Relative_r_comoving'].values
+        pdata_candidates_snapf[f'Relative_v_abs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_v_{dim}' for dim in 'xyz']].values),axis=1))
+        pdata_candidates_snapf[f'Relative_v_tan']=np.sqrt(pdata_candidates_snapf[f'Relative_v_abs'].values**2-pdata_candidates_snapf[f'Relative_v_rad'].values**2)
+
+
+        return True,None,pdata_candidates_snapf
+
+    else:
+        return False,None,None
