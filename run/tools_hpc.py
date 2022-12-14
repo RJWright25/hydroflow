@@ -95,18 +95,18 @@ def submit_gasflow_disBatch(repo,arguments,memory,time,memtot=False,partition=No
         ntaskspernode=64
 
     jobfolder=f'{cwd}/jobs/gasflow/{namecat}/nvol_{str(nvol).zfill(3)}/snap{str(snapf).zfill(3)}_d{str(depth).zfill(2)}/'
-    jobname=f"s{str(snapf).zfill(3)}_d{str(depth).zfill(2)}_n{str(int(nslice**3)).zfill(3)}"
+    jobname=f"s{str(snapf).zfill(3)}_d{str(depth).zfill(2)}_n{str(int(nslice**3)).zfill(3)}_i{volumes[0]}"
     create_dir(jobfolder)
 
     runscriptfilepath=repo+'/run/execute.py'
     num=len(volumes)
 
-    disbatch_dir=f'{jobfolder}/{jobname}_{str(num).zfill(3)}/'
+    disbatch_dir=f'{jobfolder}/{jobname}_n{str(num).zfill(3)}_i{volumes[0]}/'
     if not os.path.exists(disbatch_dir):
         os.mkdir(disbatch_dir)
 
-    jobscriptfilepath=f'{disbatch_dir}{jobname}_{str(num).zfill(3)}.tasks'
-    submitscriptfilepath=f'{disbatch_dir}{jobname}_{str(num).zfill(3)}.sh'
+    jobscriptfilepath=f'{disbatch_dir}{jobname}_n{str(num).zfill(3)}_i{volumes[0]}.tasks'
+    submitscriptfilepath=f'{disbatch_dir}{jobname}_n{str(num).zfill(3)}_i{volumes[0]}.sh'
 
     if os.path.exists(jobscriptfilepath):
         os.remove(jobscriptfilepath)
