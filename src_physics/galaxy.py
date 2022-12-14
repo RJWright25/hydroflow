@@ -76,6 +76,18 @@ def analyse_galaxy(galaxy,pdata,Tcut,r200_shells=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.
 	galaxy_reservoirs['0p20r200_halostar']=np.logical_and(star,halo)
 	galaxy_reservoirs['0p20r200_halogas']=np.logical_and(gas,halo)
 
+	#0p10r200 ISM
+	disk=rrel<=(0.10*r200)
+	galaxy_reservoirs['0p10r200_star']=np.logical_and(star,disk)
+	galaxy_reservoirs['0p10r200_gas']=np.logical_and(gas,disk)
+	galaxy_reservoirs['0p10r200_coolgas']=np.logical_and(galaxy_reservoirs['0p10r200_gas'],np.logical_or(cool,sfr))
+	galaxy_reservoirs['0p10r200_sfrgas']=np.logical_and(galaxy_reservoirs['0p10r200_gas'],sfr)
+
+	#not in 0p10r200, within r200
+	halo=np.logical_and.reduce([np.logical_not(np.logical_or(galaxy_reservoirs['0p10r200_gas'],galaxy_reservoirs['0p10r200_star'])),r200_mask])
+	galaxy_reservoirs['0p10r200_halostar']=np.logical_and(star,halo)
+	galaxy_reservoirs['0p10r200_halogas']=np.logical_and(gas,halo)	
+
 	######### PROFILES
 	#gas mass profile (r200)
 	reservoir_edges=np.concatenate([[0],r200_shells])

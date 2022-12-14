@@ -46,8 +46,8 @@ Tcut=10**(args.Tcut)
 drfac=0.25
 r200_shells=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3,0.25,0.75]
 kpc_shells=[10,20,30,40,50,60,70,80,90,100]
-vcuts=[0,50,100,150]
-vcuts_extra=['0p125vc','0p250vc','0p500vc','1p000vc','0p125vr','0p250vr','0p500vr','1p000vr']
+vcuts=[0,50,150,250]
+vcuts_extra=['0p250vc','0p500vc','1p000vc','0p250vr','0p500vr','1p000vr']
 
 if 'eaglesnip' in code:
     for r200_shell in r200_shells:
