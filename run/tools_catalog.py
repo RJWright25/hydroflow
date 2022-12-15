@@ -53,9 +53,10 @@ def read_hdf(fname,columns=None,verbose=False):
     outdf=pd.DataFrame(outdf)
 
     if failed:
-        print('Note, failed to load the following fields:')
-        for column in failed:
-            print(column)
+        if verbose:
+            print('Note, failed to load the following fields:')
+            for column in failed:
+                print(column)
 
     return outdf
 
