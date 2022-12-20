@@ -70,13 +70,16 @@ def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,v
     ## pristine
     inflow_pristine_mask=np.logical_and(inflow_mask,Z_snap1<1e-4)
 
+    # outflow
     #vcuts
     if vcuts:
-        vcuts=list(np.array(vcuts)/np.sqrt(afac))
+        vcuts=list(np.array(vcuts))
     else:
         vcuts=[0]
     
     vcut_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts]
+    vcuts=list(np.array(vcuts)/np.sqrt(afac))
+    
     if vcuts_extra:
         for vcut_extra in vcuts_extra:
             fac=np.float32(vcut_extra[:4].replace('p','.'))
@@ -200,11 +203,12 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=None,vc
     # outflow
     #vcuts
     if vcuts:
-        vcuts=list(np.array(vcuts)/np.sqrt(afac))
+        vcuts=list(np.array(vcuts))
     else:
         vcuts=[0]
     
     vcut_keys=[f'{str(int(vcut)).zfill(3)}pkmps' for vcut in vcuts]
+    vcuts=list(np.array(vcuts)/np.sqrt(afac))
     if vcuts_extra:
         for vcut_extra in vcuts_extra:
             fac=np.float32(vcut_extra[:4].replace('p','.'))
