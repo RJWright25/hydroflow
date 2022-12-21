@@ -168,8 +168,10 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snaps=None,mcut=10,verbose
             subcat_idxs=valid_idx_hydroflow_in_subcat[np.where(valid_idx_hydroflow_in_subcat>=0)]
 
             print(f'Adding data to subcat')
-            output_columns=[column+f'-d{str(depth).zfill(2)}' for column in list(snap_outputs.columns)]
-            subcat_masked.loc[subcat_idxs,output_columns]=snap_outputs.loc[hydroflow_idxs,:].values
+            allcols=list(snap_outputs.columns)
+            colsout=[col for col in allcols if not 'pkmps' in col]
+            output_columns=[column+f'-d{str(depth).zfill(2)}' for column in colsout]
+            subcat_masked.loc[subcat_idxs,output_columns]=snap_outputs.loc[hydroflow_idxs,colsout].values
 
     create_dir(outpath)
     
