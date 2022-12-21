@@ -75,11 +75,14 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snaps=None,mcut=10,verbose
     snap_key='SnapNum'
     idx_key='GalaxyID'
     mass_key='Mass'
-    snap_min=int(np.nanmin(subcat[snap_key].values))
-    snap_max=int(np.nanmax(subcat[snap_key].values))
 
     if not snaps:
+        snap_min=int(np.nanmin(subcat[snap_key].values))
+        snap_max=int(np.nanmax(subcat[snap_key].values))
         snaps=list(range(snap_min,(snap_max+1)))
+    else:
+        snap_min=int(np.nanmin(snaps))
+        snap_max=int(np.nanmax(snaps))
 
     snap_mask=np.logical_or.reduce([subcat[snap_key].values==snap for snap in snaps])
     subcat_mask=np.logical_and.reduce([snap_mask,subcat[mass_key].values>=10**mcut])
