@@ -103,6 +103,8 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snaps=None,mcut=10,verbose
         logging.info(f'Reading hydroflow outputs for depth {depth} ... (t={time.time()-t1}) \n')
 
         snapdirs=sorted(os.listdir(path_gasflow))
+        logging.info(f'Snapdirs: {snapdirs} ... \n')
+
         snapdirs=[snapdir for snapdir in snapdirs if (f'd{str(depth).zfill(2)}' in snapdir) and ('gas' not in snapdir)]
 
         snap_outputs=[]
