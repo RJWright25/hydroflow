@@ -64,6 +64,10 @@ def read_hdf(fname,columns=None,verbose=False):
 
 def combine_catalogs(path_subcat,path_gasflow,depth=1,snaps=None,mcut=10,verbose=False):
     t1=time.time()
+
+    if os.path.exists('jobs/combine_catalogs.log'):
+        os.remove('jobs/combine_catalogs.log')
+
     logging.basicConfig(filename='jobs/combine_catalogs.log', level=logging.INFO)
     logging.info(f'Reading subhalo catalog and masking... time = {time.time()-t1:.2f}) \n')
    
