@@ -120,7 +120,7 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snaps=None,mcut=10,verbose
                 continue
 
             if len(isnap_files)>0:
-                logging.info(f'Loading gasflow files for snap {snap} delta {depth} ({len(isnap_files)}): t = {time.time-t1:.2f}\n')
+                logging.info(f'Loading gasflow files for snap {snap} delta {depth} ({len(isnap_files)}): t = {time.time()-t1:.2f}\n')
                 if verbose: 
                     print(snapdir)
                     print(isnap_files)
@@ -138,14 +138,14 @@ def combine_catalogs(path_subcat,path_gasflow,depth=1,snaps=None,mcut=10,verbose
             snap_outputs.sort_values(by='HydroflowID',inplace=True)
             snap_outputs.reset_index(drop=True,inplace=True)
             print(snap_outputs.shape[0], f' hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs')
-            logging.info(f'Columns: {list(snap_outputs.columns)}: t = {time.time-t1:.2f}\n')
+            logging.info(f'Columns: {list(snap_outputs.columns)}: t = {time.time()-t1:.2f}\n')
 
             snap_outputs['HydroflowID']=snap_outputs['HydroflowID'].values.astype(np.int64)
             hydroflow=snap_outputs['HydroflowID'].values
             nodeidx=subcat_masked[idx_key].values
 
             print('Matching hydroflow and subcat outputs ...')
-            logging.info(f'Matching hydroflow and subcat outputs: t = {time.time-t1:.2f}\n')
+            logging.info(f'Matching hydroflow and subcat outputs: t = {time.time()-t1:.2f}\n')
 
             valid_idx_hydroflow_in_subcat=np.searchsorted(a=nodeidx,v=hydroflow)
             valid_idx_hydroflow_in_hydroflow=np.array(list(range(len(hydroflow))))
