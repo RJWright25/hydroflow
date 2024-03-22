@@ -11,7 +11,8 @@ This code includes routines to calculate Lagrangian flow rates over a given boun
 
 The average mass inflow or outflow rate of a given structure $G$ can be calculated by summing all particle masses, $m_{p}$, constituting the inflow or outflow sets, and normalising by the relevant time interval:
 
-$$\dot{M}_{G}= \sum  $$
+$$\dot{M}_{G}=\sum\limits_{i=1}^{\infty}$$
+$$\dot{M}_{G}=\sum\limits{p\in\DeltaG}m{p}\Delta t$$
 
 $$\dot{M}_{G}=\sum_{p\in\Delta G}m_{p}/\Delta t_{ij}$$
 
