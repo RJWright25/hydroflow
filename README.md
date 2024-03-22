@@ -11,7 +11,7 @@ This code includes routines to calculate Lagrangian flow rates over a given boun
 
 The average mass inflow or outflow rate of a given structure $G$ can be calculated by summing all particle masses, $m_{p}$, constituting the inflow or outflow sets, and normalising by the relevant time interval:
 
-$$\dot{M}_{G}=\sum_{p\in\Delta G}m_{p}/\Delta\,t_{ij}$$
+$$\dot{M}_{G}=\Sigma_{p\in\Delta G}m_{p}/\Delta\,t_{ij}$$
 
 Where $m_{p}$ is the mass of a particle $p$, and $\Delta G$ can refer to the inflow or outflow set. Such a calculation corresponds to a *gross* inflow or outflow rate, with the difference between these two reflecting the *net* change. In the case of gas particle flow rates, it is important to also include any stellar particles that were formed between $t_{\rm i}$ and $t_{\rm j}$ in the $\Delta G$ sets. This can be achieved by simply ensuring that a particle is gaseous at the initial snapshot, $t_{i}$; but not necessarily enforcing this requirement at  $t_{j}$. With a method for identifying the set of particles constituting the inflow and outflow sets, $\Delta G$, it is then also possible to characterise the properties of the $\Delta G$ sets (e.g. for their metallicity, temperature, density etc.).
 
@@ -21,7 +21,7 @@ Images generated with Py-SPHViewer (Benitez-Llambay, 2015) and the EAGLE simulat
 ## Eulerian calculations
 This code also includes routines to calculate (instantaneous) Eulerian gas flow rates at a given boundary. This does not require that any particle or element represents the same ``parcel'' of matter from snapshot to snapshot. Eulerian-based mass flow rates can be calculated at a given boundary by categorising relevant boundary particles/elements as being either outflow or inflow depending on the sign of their radial velocity -- where the radial velocity of a particle/element $i$ relative to a halo center $j$ can be calculated as $v_{{\rm\,r},\,ij}=\vec{{v}_{ij}}\vec{{r}_{ij}}/\lvert\vec{{r}_{ij}}\rvert$. Then, inflow or outflow rate at shell $r=R$ around halo $j$ for each of these subsets of boundary gas elements, $i\in k$, can be calculated follows:
 
-$$\dot{M}_{k}(r=R)=\frac{1}{\Delta\,r}\times\sum_{i\in k}\left(m_{i}\frac{{\vec{v}_{ij}}\vec{{r}_{ij}}}{\lvert\vec{{r}_{ij}}\rvert}\right)$$
+$$\dot{M}_{k}(r=R)=\frac{1}{\Delta\,r}\times\Sigma_{i\in k}\left(m_{i}\frac{{\vec{v}_{ij}}\vec{{r}_{ij}}}{\lvert\vec{{r}_{ij}}\rvert}\right)$$
 
 ## Code outline
 
