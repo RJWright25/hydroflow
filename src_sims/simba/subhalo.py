@@ -23,6 +23,9 @@ def read_subcat(basepath,prefix='m50n512_',snapnums=None):
     if not os.path.exists('jobs/logs'):
         os.mkdir('jobs/logs')
 
+    if not os.path.exists('catalogues'):
+        os.mkdir('catalogues')
+
     snapm1=snapnums[-1]
     if os.path.exists(f'jobs/logs/read_subcat_{snapm1}.log'):
         os.remove(f'jobs/logs/read_subcat_{snapm1}.log')
