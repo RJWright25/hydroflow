@@ -29,7 +29,6 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,array=None
     if not ntaskspernode:
         ntaskspernode=64
 
-
     jobfolder=f'{cwd}/jobs/gasflow/{namecat}/nvol_{str(nvol).zfill(3)}/snap{str(snapf).zfill(3)}_d{str(depth).zfill(2)}/'
     jobname=f"s{str(snapf).zfill(3)}_d{str(depth).zfill(2)}_n{str(int(nslice**3)).zfill(3)}"
     create_dir(jobfolder)

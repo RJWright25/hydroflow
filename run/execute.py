@@ -25,10 +25,9 @@ parser.add_argument('--path',metavar='-P',type=str,help='path to subhalo catalog
 parser.add_argument('--nslice',metavar='-N',type=int,help='number of slices for simulation sub-boxes')
 parser.add_argument('--ivol',metavar='-I',type=int,help='which sub-volume to consider')
 parser.add_argument('--snap',metavar='-S',type=int,help='which snapshot to consider')
-parser.add_argument('--depth',metavar='-D',type=int,help='snapshot interval for lagrangian calculation')
+parser.add_argument('--depth',metavar='-D',type=int,help='snapshot interval for lagrangian calculation (if 0, only eulerian)')
 parser.add_argument('--mcut',metavar='-M',type=float,help='mass limit (log mass)')
 parser.add_argument('--Tcut',metavar='-T',type=float,help='temperature cut for cool gas')
-parser.add_argument('--euleronly',metavar='-E',type=bool,help='whether to only do eulerian calculations')
 
 args=parser.parse_args()
 repo=args.repo
@@ -42,7 +41,7 @@ depth=int(args.depth)
 snapi=int(snapf-depth)
 mcut=10**(args.mcut)
 Tcut=10**(args.Tcut)
-euleronly=bool(args.euleronly)
+euleronly=bool(depth==0)
 
 #shells for accretion calculations
 drfac=0.25
