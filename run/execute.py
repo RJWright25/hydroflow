@@ -208,7 +208,7 @@ if numgal:
             processgal=np.nansum(progmatch)
 
         #CONTINUE IF PROGENITOR FOUND
-        if progid and np.nansum(progmatch) and central:
+        if processgal:
             
             if not euleronly:
                 galaxy_snapi=subcat_selection.loc[progmatch,:].iloc[0]
