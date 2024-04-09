@@ -431,7 +431,6 @@ def candidates_gasflow_euleronly(galaxy_snapf,pdata_snapf,kdtree_snapf,maxrad=No
     pdata_candidates_snapf.reset_index(drop=True,inplace=True)
 
     numcdt_snapf=pdata_candidates_snapf.shape[0]
-    print(numcdt_snapf)
 
     if numcdt_snapf>0:
 
