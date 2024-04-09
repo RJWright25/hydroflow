@@ -6,11 +6,13 @@ import pandas as pd
 import logging
 import time
 
-def read_subcat(basepath,snapnums=None):
+def read_subcat(basepath,prefix='m50n512_',snapnums=None):
     files=os.listdir(basepath)
     numfiles=len(files)
     if snapnums is None:
         snapnums=list(range(numfiles))
+
+    snapnums=sorted(snapnums)
 
     if len(snapnums)==0:
         logging.info(f'No snapshots found in {basepath}')
@@ -32,13 +34,14 @@ def read_subcat(basepath,snapnums=None):
 
     subhalo_dfs=[]
 
+
     for snapnum in snapnums:
         logging.info(f'')
         logging.info(f'***********************************************************************')
         logging.info(f'Processing snapnum {snapnum} [runtime {time.time()-t0:.2f} sec]')
         logging.info(f'***********************************************************************')
 
-        rockstarfile=h5py.File(basepath+f'_{str(snapnum).zfill(3)}.hdf5')
+        rockstarfile=h5py.File(basepath+'/'+f'{prefix}{str(snapnum).zfill(3)}.hdf5')
 
         hfac=rockstarfile['simulation_attributes'].attrs['hubble_constant']
         zval=rockstarfile['simulation_attributes'].attrs['redshift']
