@@ -83,7 +83,7 @@ def read_subcat(basepath,prefix='m50n512_',snapnums=None):
     else:
         subcat=subhalo_dfs[0]
 
-    subcat=subcat.loc[subcat.Mass>=mcut,:]
+    subcat=subcat.loc[subcat.Mass>=mcut,:].copy()
     subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False],inplace=True)
     subcat.reset_index(inplace=True,drop=True)
 
