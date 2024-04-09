@@ -7,9 +7,24 @@ import time
 import illustris_python as tng_tools
 
 def read_subcat(basepath,snapnums=None):
+    files=os.listdir(basepath)
+    numfiles=len(files)
+    if snapnums is None:
+        snapnums=list(range(numfiles))
+
+    if len(snapnums)==0:
+        logging.info(f'No snapshots found in {basepath}')
+        return
+    
+    if not os.path.exists('jobs'):
+        os.mkdir('jobs')
+    if not os.path.exists('jobs/logs'):
+        os.mkdir('jobs/logs')
+
     snapm1=snapnums[-1]
     if os.path.exists(f'jobs/logs/read_subcat_{snapm1}.log'):
         os.remove(f'jobs/logs/read_subcat_{snapm1}.log')
+
         
     t0=time.time()
     logging.basicConfig(filename=f'jobs/logs/read_subcat_{snapm1}.log', level=logging.INFO)
@@ -111,87 +126,3 @@ def read_subcat(basepath,snapnums=None):
 
     return subcat
 
-
-def gen_btree(path,snapidxmin=0):
-
-    t0=time.time()
-    if os.path.exists('jobs/logs/gen_btree.log'):
-        os.remove('jobs/logs/gen_btree.log')
-
-    logging.basicConfig(filename='jobs/logs/gen_btree.log', level=logging.INFO)
-    logging.info(f'Loading subhalo catalogue from {path} [runtime {time.time()-t0:.2f} sec]')
-
-    subcat=pd.read_hdf(path,key='Subhalo')
-    subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False],inplace=True)
-    subcat.reset_index(inplace=True,drop=True)
-
-    if not 'GalaxyID' in list(subcat.keys()):
-        subcat['GalaxyID']=subcat['SubhaloIDRaw'].values
-
-    subcat.loc[:,'DescendantID']=-1
-
-    path_out=path.split('.h')[0]+'_btree.hdf5'
-
-    ### basic matching
-    snapnums=sorted(np.unique(subcat['SnapNum'].values))
-
-    logging.info(f'')
-    logging.info(f'Running btree for subhaloes after (and including) snapidx {snapidxmin} ...')
-
-    for snap in snapnums:
-
-        nowmask=np.logical_and(subcat.SnapNum==snap,subcat.SubGroupNumber==0)
-        nextmask=np.logical_and(subcat.SnapNum==(snap+1),subcat.SubGroupNumber==0)
-
-        desc_ids=np.zeros(np.nansum(nowmask))-1
-
-        if snap>=snapidxmin:
-
-            logging.info(f'')
-            logging.info(f'***********************************************************************')
-            logging.info(f'Processing snapnum {snap} [runtime {time.time()-t0:.2f} sec]')
-            logging.info(f'***********************************************************************')
-
-            if np.nansum(nextmask):
-                subcat_now=subcat.loc[nowmask,:].copy();subcat_now.reset_index(drop=True,inplace=True)
-                subcat_next=subcat.loc[nextmask,:].copy();subcat_next.reset_index(drop=True,inplace=True)
-
-                mass_next=subcat_next['Group_M_Crit200'].values
-                positions_next=subcat_next.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']].values
-                positions_next_x=positions_next[:,0]
-                positions_next_y=positions_next[:,1]
-                positions_next_z=positions_next[:,2]
-
-                for isub,subhalo in subcat_now.iterrows():
-                    loc_x_match=np.abs(positions_next_x-subhalo[f'CentreOfPotential_x'])<=0.5
-                    mass_offset=np.abs(np.log10(mass_next/subhalo['Group_M_Crit200']))
-                    mass_match=mass_offset<=0.5
-                    match=np.logical_and(loc_x_match,mass_match)
-                    
-                    if not np.nansum(match):
-                        continue
-                    elif np.nansum(match)==1:
-                        desc_ids[isub]=subcat_next.loc[match,'GalaxyID'].values[0]
-                    else:
-                        match=np.logical_and.reduce([match,np.abs(positions_next_y-subhalo[f'CentreOfPotential_y'])<=0.5,np.abs(positions_next_z-subhalo[f'CentreOfPotential_z'])<=0.5])
-                        if np.nansum(match)==1:
-                            desc_ids[isub]=subcat_next.loc[match,'GalaxyID'].values[0]
-                        elif np.nansum(match)>1:
-                            mass_offset_min=np.where(np.nanmin(mass_offset[match])==mass_offset[match])[0][0]
-                            desc_ids[isub]=subcat_next.loc[match,'GalaxyID'].values[mass_offset_min]
-
-            logging.info(f'')
-            logging.info(f'Match rate = {np.nansum(desc_ids>0)/len(desc_ids)*100:.1f} %')
-
-        subcat.loc[nowmask,'DescendantID']=desc_ids
-    
-    subcat['DescendantID']=subcat['DescendantID'].values.astype(np.int64)
-    
-    logging.info(f'')
-    logging.info(f'*********************************************')
-    logging.info(f'Saving final subhalo data structure to {path_out}...')
-    logging.info(f'*********************************************')
-
-    if os.path.exists(f'{path_out}'):
-        os.remove(f'{path_out}')
-    subcat.to_hdf(f'{path_out}',key='Subhalo')

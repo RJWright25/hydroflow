@@ -24,6 +24,7 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
         flist=flist[:nchunks]
 
     numfiles=len(flist)
+    
     print(f'Loading from {numfiles} files')
 
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
