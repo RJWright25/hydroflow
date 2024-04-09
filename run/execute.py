@@ -237,7 +237,7 @@ if numgal:
             if not euleronly:
                 success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad)
             else:
-                success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow_euleronly(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad)
+                success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow_euleronly(galaxy_snapf,pdata_snapf,kdtree_snapf,maxrad=maxrad)
 
             
             #RETRIEVE RELEVANT CELLS
