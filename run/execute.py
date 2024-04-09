@@ -67,6 +67,10 @@ namecat=pathcat.split('/')[-1][:-5]
 run=path.split('/')[-1]
 sim=run.split('_')[0]
 
+current_dir=os.getcwd()
+create_dir(current_dir+'/jobs/gasflow')
+create_dir(current_dir+'/catalogues/gasflow')
+
 #logging file
 t1=time.time()
 logging_folder=f'{path}/jobs/gasflow/{namecat}/nvol_{str(int(nslice**3)).zfill(3)}/snap{str(snapf).zfill(3)}_d{str(depth).zfill(2)}/'
