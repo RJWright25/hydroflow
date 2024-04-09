@@ -185,7 +185,6 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=None,vc
     vrad=pdata['Relative_v_rad'].values
     vabs=pdata['Relative_v_abs'].values
     vtan=pdata['Relative_v_tan'].values
-    vave=pdata['Average_v_rad'].values
 
     if 'StellarFormationTime' in pdata:
         wind=pdata['StellarFormationTime'].values<0
@@ -240,7 +239,6 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=None,vc
             vrad_infall=vrad[mask]
             vabs_infall=vabs[mask]
             vtan_infall=vtan[mask]
-            vave_infall=vave[mask]
             vel_mask=np.where(inflow_mass>=0)
 
             if np.nansum(vel_mask):
@@ -259,10 +257,6 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=None,vc
                 gasflow_output[f'{name}-vtan_05P']=np.nanpercentile(vtan_infall[vel_mask],5)
                 gasflow_output[f'{name}-vtan_95P']=np.nanpercentile(vtan_infall[vel_mask],95)
 
-                gasflow_output[f'{name}-vave_mean']=np.average(vave_infall[vel_mask],weights=inflow_mass[vel_mask])
-                gasflow_output[f'{name}-vave_median']=np.nanmedian(vave_infall[vel_mask])
-                gasflow_output[f'{name}-vave_05P']=np.nanpercentile(vave_infall[vel_mask],5)
-                gasflow_output[f'{name}-vave_95P']=np.nanpercentile(vave_infall[vel_mask],95)
 
         else:
             remove=[f'{name}-Z_mean',f'{name}-Z_median',f'{name}-T_mean',f'{name}-T_median']
@@ -296,12 +290,6 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=None,vc
                 vrad_ejected=vrad[ejected_mask]
                 vabs_ejected=vabs[ejected_mask]
                 vtan_ejected=vtan[ejected_mask]
-                vave_ejected=vave[ejected_mask]
-
-                gasflow_output[f'{output_outflow_str}-vave_mean']=np.average(vave_ejected[vel_mask],weights=outflow_mass[vel_mask])
-                gasflow_output[f'{output_outflow_str}-vave_median']=np.nanmedian(vave_ejected[vel_mask])
-                gasflow_output[f'{output_outflow_str}-vave_05P']=np.nanpercentile(vave_ejected[vel_mask],5)
-                gasflow_output[f'{output_outflow_str}-vave_95P']=np.nanpercentile(vave_ejected[vel_mask],95)
 
                 gasflow_output[f'{output_outflow_str}-vrad_mean']=np.average(vrad_ejected[vel_mask],weights=outflow_mass[vel_mask])
                 gasflow_output[f'{output_outflow_str}-vrad_median']=np.nanmedian(vrad_ejected[vel_mask])
@@ -425,7 +413,7 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     else:
         return False,None,None
 
-def candidates_gasflow_euleronly(galaxy_snapf,pdata_snapf,kdtree_snapf,maxrad=None):
+def candidates_gasflow_euleronly(galaxy_snapf,pdata_snapf,maxrad=None):
     afac_snap2=1/(1+galaxy_snapf['Redshift'])
     hval=galaxy_snapf['hval']
 
