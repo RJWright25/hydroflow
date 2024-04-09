@@ -27,7 +27,7 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,account=No
     cwd=pathcat.split('catalogues')[0]    
     
     if not ntaskspernode:
-        ntaskspernode=64
+        ntaskspernode=1
 
     jobfolder=f'{cwd}/jobs/gasflow/{namecat}/nvol_{str(nvol).zfill(3)}/snap{str(snapf).zfill(3)}_d{str(depth).zfill(2)}/'
     jobname=f"s{str(snapf).zfill(3)}_d{str(depth).zfill(2)}_n{str(int(nslice**3)).zfill(3)}"
@@ -44,10 +44,10 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,account=No
     with open(jobscriptfilepath,"w") as jobfile:
         jobfile.writelines(f"#!/bin/sh\n")
         jobfile.writelines(f"#SBATCH --job-name={jobname}\n")
-        jobfile.writelines(f"#SBATCH --ntasks={1}\n")
         jobfile.writelines(f"#SBATCH --mem={memory}GB\n")
         jobfile.writelines(f"#SBATCH --time={time}\n")
         jobfile.writelines(f"#SBATCH --ntasks={ntaskspernode}\n")
+        jobfile.writelines(f"#SBATCH --ntasks-per-node={ntaskspernode}\n")
         if dependency:
             jobfile.writelines(f"#SBATCH --dependency={dependency}\n")
         if partition:
