@@ -431,8 +431,10 @@ def candidates_gasflow_euleronly(galaxy_snapf,pdata_snapf,kdtree_snapf,maxrad=No
     pdata_candidates_snapf.reset_index(drop=True,inplace=True)
 
     numcdt_snapf=pdata_candidates_snapf.shape[0]
+    print(numcdt_snapf)
 
     if numcdt_snapf>0:
+
         pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']]=(pdata_candidates_snapf.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-galaxy_com_snapf)
         pdata_candidates_snapf.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Relative_{x}' for x in 'xyz']].values/hval
         pdata_candidates_snapf.loc[:,[f'Relative_{x}_physical' for x in 'xyz']]=pdata_candidates_snapf.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']]*afac_snap2
@@ -449,7 +451,6 @@ def candidates_gasflow_euleronly(galaxy_snapf,pdata_snapf,kdtree_snapf,maxrad=No
         pdata_candidates_snapf[f'Relative_v_rad']=np.nansum(pdata_candidates_snapf.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values*pdata_candidates_snapf.loc[:,[f'Relative_v_{dim}' for dim in 'xyz']].values,axis=1)/pdata_candidates_snapf['Relative_r_comoving'].values
         pdata_candidates_snapf[f'Relative_v_abs']=np.sqrt(np.nansum(np.square(pdata_candidates_snapf.loc[:,[f'Relative_v_{dim}' for dim in 'xyz']].values),axis=1))
         pdata_candidates_snapf[f'Relative_v_tan']=np.sqrt(pdata_candidates_snapf[f'Relative_v_abs'].values**2-pdata_candidates_snapf[f'Relative_v_rad'].values**2)
-
 
         return True,None,pdata_candidates_snapf
 

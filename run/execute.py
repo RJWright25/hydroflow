@@ -330,6 +330,7 @@ if numgal:
                 t2_g=time.time()
                 logging.info(f"Gasflow: {t2_g-t1_g:.3f} sec")
                 logging.info(f'Galaxy successfully processed')
+                
             else:
                 logging.info(f'Could not process galaxy, could not retrieve candidates')
 
