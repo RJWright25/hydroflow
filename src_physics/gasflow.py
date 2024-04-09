@@ -413,7 +413,7 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
     else:
         return False,None,None
 
-def candidates_gasflow_euleronly(galaxy_snapf,pdata_snapf,maxrad=None):
+def candidates_gasflow_euleronly(galaxy_snapf,pdata_snapf,kdtree_snapf,maxrad=None):
     afac_snap2=1/(1+galaxy_snapf['Redshift'])
     hval=galaxy_snapf['hval']
 
