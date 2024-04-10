@@ -7,6 +7,24 @@ import time
 import illustris_python as tng_tools
 
 def read_subcat(basepath,snapnums=None):
+
+    """
+    read_subcat: Read the subhalo catalogue from an Illustris simulation snapshot. Uses the illustris_python package.
+    
+    Input:
+    -----------
+    basepath: str   
+        Path to the simulation snapshot.
+    snapnums: list
+        List of snapshot indices to read.
+
+    Output:
+    -----------
+    subcat: pd.DataFrame
+        DataFrame containing the subhalo catalogue.
+
+    """
+
     files=os.listdir(basepath)
     numfiles=len(files)
     if snapnums is None:

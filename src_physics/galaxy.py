@@ -6,6 +6,30 @@
 import numpy as np
 
 def analyse_galaxy(galaxy,pdata,Tcut,r200_shells=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3]):
+	"""
+	analyse_galaxy: Analyse the static properties of a galaxy, including the mass and properties of its baryonic reservoirs.
+
+	Input:
+	-----------
+	galaxy: dict or pd.Series
+		Dictionary containing the properties of the galaxy, including the virial radius and scale factor.
+	pdata: pd.DataFrame
+		DataFrame containing the particle data for the relevant galaxy. Should include the particle properties out to the largest radius of interest.
+	Tcut: float
+		Temperature cut for defining the ISM.
+	r200_shells: list
+		List of radii at which to calculate the gas mass profile (multiples of R200).
+
+	Output:
+	-----------
+	success: bool
+		True if the function completes successfully.
+	
+	galaxy_output: dict
+		Dictionary containing the properties of the galaxy's baryonic reservoirs. Each key is a string describing the reservoir, and the value is a float or array of floats containing the properties of the reservoir.
+
+	"""
+
 	galaxy_output={}
 	galaxy_reservoirs={}
 	

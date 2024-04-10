@@ -6,6 +6,26 @@ from hydroflow.src_physics.utils import get_limits
 
 ##### READ PARTICLE DATA
 def read_subvol(path,ivol,nslice):
+    """
+    read_subvol: Read particle data for a subvolume from a CAMELS simulation snapshot.
+
+    Input:
+    -----------
+    path: str
+        Path to the simulation snapshot.
+    ivol: int
+        Subvolume index.
+    nslice: int
+        Number of subvolumes in each dimension.
+
+    Output:
+    -----------
+    pdata: pd.DataFrame
+        DataFrame containing the particle data for the subvolume.
+    pdata_kdtree: scipy.spatial.cKDTree
+        KDTree containing the particle data for the subvolume.
+
+    """
 
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']*1e-3

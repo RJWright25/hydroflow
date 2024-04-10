@@ -16,6 +16,30 @@ from astropy.cosmology import Planck13 as cosmology
 # Retrieve haloes from tree files
 def extract_tree(path,mcut=10,snipidxmin=0):
 
+    """
+    extract_tree: Extract halo tree data from EAGLE simulation tree files.
+
+    Input:
+    -----------
+    path: str
+        Path to the simulation tree files.
+    mcut: float
+        Minimum halo mass to extract [log10(M/Msun)].
+    snipidxmin: int
+        Minimum snapshot index to extract from.
+
+    Output:
+    -----------
+    output catalogue : catalogues/catalogue_tree.hdf5
+        Output catalogue containing the extracted tree data.
+
+
+    Returns
+    -----------
+    None
+
+    """
+
     #outputs
     outname='catalogues/catalogue_tree.hdf5'
     fields=['snapshotNumber',
@@ -81,6 +105,30 @@ def extract_tree(path,mcut=10,snipidxmin=0):
 
 # Retrieve groups from subfind files
 def extract_fof(path,mcut=10,snipidxmin=0):
+    """
+    extract_fof: Extract FOF data from EAGLE simulation subfind files.
+
+    Input:
+    -----------
+    path: str
+        Path to the simulation subfind files.
+    mcut: float
+        Minimum FOF mass to extract [log10(M/Msun)].
+    snipidxmin: int
+        Minimum snapshot index to extract from.
+    
+        
+    Output:
+    -----------
+    output catalogue : catalogues/catalogue_fof.hdf5
+        Output catalogue containing the extracted FOF data.
+
+    Returns
+    -----------
+    None
+
+
+    """
     
     #basic data
     redshifts=pd.read_pickle('redshifts.dat')
@@ -181,6 +229,29 @@ def extract_fof(path,mcut=10,snipidxmin=0):
 
 # Retrieve subhaloes from subfind files
 def extract_subhalo(path,mcut,snipidxmin=0):
+    """
+    extract_subhalo: Extract subhalo data from EAGLE simulation subfind files.
+
+    Input:
+    -----------
+    path: str
+        Path to the simulation subfind files.
+    mcut: float
+        Minimum subhalo mass to extract [log10(M/Msun)].
+    snipidxmin: int
+        Minimum snapshot index to extract from.
+
+    Output:
+    -----------
+    output catalogue : catalogues/catalogue_subhalo.hdf5
+        Output catalogue containing the extracted subhalo data.
+
+    Returns
+    -----------
+    None
+
+    """
+
     #basic data
     redshifts=pd.read_pickle('redshifts.dat')
 
@@ -292,6 +363,25 @@ def extract_subhalo(path,mcut,snipidxmin=0):
 
 # Match subhaloes to groups & tree
 def match_subhalo(fof_mcut=5e10):
+    """
+    match_subhalo: Match subhaloes to groups and trees.
+    
+    Input:
+    -----------
+    fof_mcut: float
+        Minimum FOF mass to match subhaloes to [log10(M/Msun)].
+    
+    Output:
+    -----------
+    output catalogue : catalogues/catalogue_subhalo_matched.hdf5
+        Output catalogue containing the matched subhalo data.
+
+    Returns
+    -----------
+    None
+
+    """
+
     outname='catalogues/catalogue_subhalo_matched.hdf5'
     redshifts=pd.read_pickle('redshifts.dat')
 
@@ -396,7 +486,9 @@ def match_subhalo(fof_mcut=5e10):
 def read_orbdata(filenamelist,iFileno=False,apsispoints=True,crossingpoints=True,endpoints=True,desiredfields=[]):
 
 	"""
-	Function to read in the data from the .orbweaver.orbitdata.hdf files
+	Function to read in the data from .orbweaver.orbitdata.hdf files
+     
+
 	Parameters
 	----------
 	filenamelist : str

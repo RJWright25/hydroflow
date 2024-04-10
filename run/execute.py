@@ -60,7 +60,7 @@ sys.path.append(f"{repo.split('hydroflow')[0]}")
 from hydroflow.run.tools_hpc import create_dir
 from hydroflow.src_physics.utils import get_limits,get_progidx,constant_G
 from hydroflow.src_physics.galaxy import analyse_galaxy
-from hydroflow.src_physics.gasflow import analyse_gasflow_lagrangian, analyse_gasflow_eulerian, candidates_gasflow, candidates_gasflow_euleronly
+from hydroflow.src_physics.gasflow import analyse_gasflow_lagrangian, analyse_gasflow_eulerian, candidates_gasflow_lagrangian, candidates_gasflow_euleronly
 
 #subhalo catalogue
 namecat=pathcat.split('/')[-1][:-5]
@@ -235,14 +235,14 @@ if numgal:
 
             #RETRIEVE RELEVANT PARTICLES
             if not euleronly:
-                success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad)
+                success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow_lagrangian(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,dt=dt,maxrad=maxrad)
             else:
                 success,pdata_candidates_snapi,pdata_candidates_snapf=candidates_gasflow_euleronly(galaxy_snapf,pdata_snapf,kdtree_snapf,maxrad=maxrad)
 
             
             #RETRIEVE RELEVANT CELLS
             if tracers and not euleronly:
-                success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad);success=(success and success_cells)
+                success_cells,pdata_candidates_cells_snapi,pdata_candidates_cells_snapf=candidates_gasflow_lagrangian(galaxy_snapi,galaxy_snapf,pdata_cells_snapi,kdtree_cells_snapi,pdata_cells_snapf,kdtree_cells_snapf,dt=dt,maxrad=maxrad);success=(success and success_cells)
             t2_c=time.time()
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
 

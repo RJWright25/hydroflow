@@ -4,9 +4,22 @@
 # run/tools_hpc.py: handy functions to submit gas flow execute script via batch system.
 
 import os
-from tkinter import NONE
 
 def create_dir(path):
+    """
+    create_dir: Create a directory if it does not exist.
+    
+    Input:
+    -----------
+    path: str
+        Path to the directory.
+
+    Output:
+    -----------
+    None
+    (Creates a directory at the specified path.)
+
+    """
     running_dir=''
     for idir in path.split('/')[:-1]:
         running_dir=running_dir+'/'+idir
@@ -14,6 +27,40 @@ def create_dir(path):
             os.mkdir(running_dir)
 
 def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,account=None,array=None,dependency=None,ntaskspernode=None):
+
+    """
+    submit_gasflow_jobarray: Submit a job array to the batch system for gas flow calculations. 
+    
+        NOTE: This function is should only be used if the HPC system does not reserve full nodes for e.g. single core tasks. If full nodes are reserved, use a node-level submission script (e.g. submit_gasflow_disBatch for CCA system).
+
+    Input:
+    -----------
+    repo: str
+        Path to the repository.
+    arguments: dict
+        Dictionary containing the arguments for the gas flow calculation.
+    memory: int
+        Memory per node in GB.
+    time: str
+        Time limit for the job.
+    partition: str
+        Partition to submit the job to.
+    account: str
+        Account to charge the job to.
+    array: str
+        Array of subvolume indices to process.
+    dependency: str
+        Job dependencies.
+    ntaskspernode: int
+        Number of tasks per node.
+    
+    Output:
+    -----------
+    None
+    (Submits a job array to the batch system.)
+
+    
+    """
     
     code=arguments['code']
     pathcat=arguments['path']
@@ -76,6 +123,31 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,account=No
         print(f"sbatch --array=0-{nvol-1} {jobscriptfilepath}")
 
 def submit_gasflow_disBatch(repo,arguments,memory,time,memtot=False,partition=None,ntaskspernode=None,volumes=None):
+
+    """    
+    submit_gasflow_disBatch: Submit a job to the batch system for gas flow calculations using disBatch (for CCA system).
+
+    Input:
+    -----------
+
+    repo: str
+        Path to the repository.
+    arguments: dict
+        Dictionary containing the arguments for the gas flow calculation.
+    memory: int
+        Memory per node in GB.
+    time: str
+        Time limit for the job.
+    memtot: bool
+        Use total memory instead of memory per CPU.
+    partition: str
+        Partition to submit the job to.
+    ntaskspernode: int
+        Number of tasks per node.
+    volumes: list
+        List of subvolume indices to process.
+
+    """
     
     code=arguments['code']
     pathcat=arguments['path']

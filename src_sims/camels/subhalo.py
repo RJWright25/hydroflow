@@ -8,6 +8,22 @@ import time
 
 #read gadget output
 def read_subcat(path,snapidxmin=0):
+    """
+    read_subcat: Read the subhalo catalogue from a CAMELS simulation snapshot.
+    
+    Input:
+    -----------
+    path: str
+        Path to the subhalo catalogue.
+    snapidxmin: int
+        Minimum snapshot index to read.
+    
+    Output:
+    -----------
+    subcat: pd.DataFrame
+        DataFrame containing the subhalo catalogue.
+
+    """
     group_fields=['GroupMass',
                   'Group_M_Crit200',
                   'Group_R_Crit200',

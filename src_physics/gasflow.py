@@ -4,10 +4,39 @@
 # src_physics/gasflow.py: routines to analyse reservoir between snapshots, find inflow/outflow particles, and characterise them.
 
 import numpy as np
-
 from hydroflow.src_physics.utils import  MpcpGyr_to_kmps
 
 def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,vcuts=None,vcuts_extra=None):
+    """
+    analyse_gasflow_lagrangian: Analyse gas flows between two snapshots, using Lagrangian approach.
+
+    Inputs:
+    -----------
+    galaxy: dict or pandas.Series
+        Dictionary containing galaxy properties.
+    pdata_snapi: pandas.DataFrame
+        DataFrame containing particle data at snapshot i.
+    pdata_snapf: pandas.DataFrame
+        DataFrame containing particle data at snapshot f.
+    radius: float
+        Radius to consider for gas flow analysis.
+    dt: float
+        Time difference between snapshots.
+    Tcut: float, optional
+        Temperature cut for gas particles to define a "cool" phase.
+    vcuts: list, optional
+        List of velocity cuts for outflow particles.
+    vcuts_extra: list, optional
+        List of extra velocity cuts for outflow particles which are multiples of v200_eff.
+
+    Returns:
+    -----------
+    gasflow_output: dict
+        Dictionary containing gas flow properties. 
+        Each key is a string describing the scale of the gas flow, and the value is a float or array of floats containing the properties of the gas flow.
+
+    
+    """
     gasflow_output={}
 
     afac=galaxy['afac']
@@ -154,6 +183,33 @@ def analyse_gasflow_lagrangian(galaxy,pdata_snapi,pdata_snapf,radius,dt,Tcut=0,v
     return gasflow_output
 
 def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=None,vcuts_extra=None):
+    """
+    analyse_gasflow_eulerian: Analyse gas flows in a spherical region around a galaxy, using Eulerian approach.
+    
+    Inputs:
+    -----------
+    galaxy: dict or pandas.Series
+        Dictionary containing galaxy properties.
+    pdata: pandas.DataFrame
+        DataFrame containing particle data.
+    radius: float
+        Radius to consider for gas flow analysis.
+    Tcut: float, optional
+        Temperature cut for gas particles to define a "cool" phase.
+    drfac: float, optional
+        Factor to multiply radius by to define the width of the shell region.
+    vcuts: list, optional
+        List of velocity cuts for outflow particles.
+    vcuts_extra: list, optional
+        List of extra velocity cuts for outflow particles which are multiples of v200_eff.
+    
+    Returns:
+    -----------
+    gasflow_output: dict
+        Dictionary containing gas flow properties.
+        Each key is a string describing the scale of the gas flow, and the value is a float or array of floats containing the properties of the gas flow.
+
+    """
     gasflow_output={}
 
     afac=galaxy['afac']
@@ -313,7 +369,39 @@ def analyse_gasflow_eulerian(galaxy,pdata,radius,Tcut=0,drfac=0.25,vcuts=None,vc
 
     return gasflow_output
     
-def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,maxrad=None,dt=None):
+def candidates_gasflow_lagrangian(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_snapf,kdtree_snapf,maxrad=None,dt=None):
+    """
+    candidates_gasflow: Find gas flow candidate particles/elements between two snapshots -- finds any particles that are within a given radius of the galaxy at either snapshot, and returns them (and their properties) sorted by their ID.
+
+    Inputs:
+    -----------
+    galaxy_snapi: dict or pandas.Series
+        Dictionary containing galaxy properties at snapshot i.
+    galaxy_snapf: dict or pandas.Series
+        Dictionary containing galaxy properties at snapshot f.
+    pdata_snapi: pandas.DataFrame
+        DataFrame containing particle data at snapshot i.
+    kdtree_snapi: scipy.spatial.cKDTree
+        KDTree containing particle data at snapshot i.
+    pdata_snapf: pandas.DataFrame
+        DataFrame containing particle data at snapshot f.
+    kdtree_snapf: scipy.spatial.cKDTree
+        KDTree containing particle data at snapshot f.
+    maxrad: float, optional
+        Maximum radius to consider for gas flow analysis.
+    dt: float, optional
+        Time difference between snapshots.
+
+    Returns:
+    -----------
+    success: bool
+        Whether the function successfully found gas flow candidates.
+    pdata_candidates_snapi: pandas.DataFrame
+        DataFrame containing gas flow candidate particles at snapshot i sorted by their ID. Matches the IDs of pdata_candidates_snapf.
+    pdata_candidates_snapf: pandas.DataFrame
+        DataFrame containing gas flow candidate particles at snapshot f sorted by their ID. Matches the IDs of pdata_candidates_snapi.
+    
+    """
     
     afac_snap1=1/(1+galaxy_snapi['Redshift'])
     afac_snap2=1/(1+galaxy_snapf['Redshift'])
@@ -414,6 +502,30 @@ def candidates_gasflow(galaxy_snapi,galaxy_snapf,pdata_snapi,kdtree_snapi,pdata_
         return False,None,None
 
 def candidates_gasflow_euleronly(galaxy_snapf,pdata_snapf,kdtree_snapf,maxrad=None):
+    """
+    candidates_gasflow_euleronly: Find gas flow candidate particles/elements at a single snapshot -- finds any particles that are within a given radius of the galaxy at the snapshot, and returns them (and their properties) sorted by their ID.
+    
+    Inputs:
+    -----------
+    galaxy_snapf: dict or pandas.Series
+        Dictionary containing galaxy properties at snapshot f.
+    pdata_snapf: pandas.DataFrame
+        DataFrame containing particle data at snapshot f.
+    kdtree_snapf: scipy.spatial.cKDTree
+        KDTree containing particle data at snapshot f.
+    maxrad: float, optional
+        Maximum radius to consider for gas flow analysis.
+    
+    Returns:
+    -----------
+    success: bool
+        Whether the function successfully found gas flow candidates.
+    pdata_candidates_snapi: None
+        None (not applicable for single snapshot analysis).
+    pdata_candidates_snapf: pandas.DataFrame
+        DataFrame containing gas flow candidate particles at snapshot f sorted by their ID.
+    
+    """
     afac_snap2=1/(1+galaxy_snapf['Redshift'])
     hval=galaxy_snapf['hval']
 

@@ -14,6 +14,31 @@ from hydroflow.src_physics.utils import get_limits
 
 ##### READ PARTICLE DATA
 def read_subvol(path,ivol,nslice,ptypes=None):
+    """
+    read_subvol: Read particle data for a subvolume from an EAGLE simulation snapshot. Uses the EagleSnapshot class from read_eagle.
+
+    Input:
+    -----------
+    path: str
+        Path to the simulation snapshot.
+    ivol: int
+        Subvolume index.
+    nslice: int
+        Number of subvolumes in each dimension.
+    ptypes: dict
+        Dictionary containing the particle types to load. The keys are the particle types, and the values are lists of the fields to load.
+
+    Output:
+    -----------
+    pdata: pd.DataFrame
+        DataFrame containing the particle data for the subvolume.
+    pdata_kdtree: scipy.spatial.cKDTree
+        KDTree containing the particle data for the subvolume.
+    
+        
+    """
+
+
     file=h5py.File(path,'r')
     boxsize=file['Header'].attrs['BoxSize']
     hfac=file['Header'].attrs['HubbleParam']
@@ -69,6 +94,23 @@ def read_subvol(path,ivol,nslice,ptypes=None):
 
 ##### PARTICLE CONVERSIONS
 def convert_pdata(path,pdata):
+    """
+    convert_pdata: Convert particle data from EAGLE simulation snapshots to physical units.
+
+    Input:
+    -----------
+    path: str
+        Path to the simulation snapshot.
+    pdata: pd.DataFrame
+        DataFrame containing the particle data for the subvolume.
+    
+    Output:
+    -----------
+    pdata: pd.DataFrame
+        DataFrame containing the particle data for the subvolume, with the particle properties converted to physical units.
+
+    """
+    
     # density in nH/cm^3; mass in Msun; SFR in msun/yr (grams per second)
     snapshot=h5py.File(path,'r')
     msun=snapshot[f'Constants'].attrs['SOLAR_MASS']

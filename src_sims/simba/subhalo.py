@@ -7,6 +7,26 @@ import logging
 import time
 
 def read_subcat(basepath,prefix='m50n512_',snapnums=None):
+    """
+    read_subcat: Read the subhalo catalogue from a SIMBA simulation snapshot.
+
+    Input:
+    -----------
+    basepath: str   
+        Path to the simulation snapshot.
+    prefix: str
+        Prefix for the snapshot files.
+    snapnums: list
+        List of snapshot indices to read.
+
+    Output:
+    -----------
+    subcat: pd.DataFrame
+        DataFrame containing the subhalo catalogue.
+
+
+    """
+    
     files=os.listdir(basepath)
     numfiles=len(files)
     if snapnums is None:

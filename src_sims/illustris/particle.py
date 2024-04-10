@@ -10,8 +10,34 @@ from hydroflow.src_physics.utils import get_limits
 
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,nchunks=1e3):
+def read_subvol(path,ivol,nslice,nchunks=None):
+    """
+    read_subvol: Read particle data for a subvolume from an Illustris simulation snapshot.
 
+    Input:
+    -----------
+    path: str
+        Path to the simulation snapshot.
+    ivol: int
+        Subvolume index.
+    nslice: int
+        Number of subvolumes in each dimension.
+    nchunks: int
+        Optional cap on the number of files to load.
+
+    Output:
+    -----------
+    pdata_tracers: pd.DataFrame
+        DataFrame containing the tracer particle data for the subvolume.
+    pdata_tracers_kdtree: scipy.spatial.cKDTree
+        KDTree containing the tracer particle data for the subvolume.
+    pdata_cells: pd.DataFrame
+        DataFrame containing the cell & normal baryonic particle data for the subvolume.
+    pdata_cells_kdtree: scipy.spatial.cKDTree
+        KDTree containing the cell & normal baryonic particle data for the subvolume.
+
+    """
+    
     pdata_file=h5py.File(path,'r')
     boxsize=pdata_file['Header'].attrs['BoxSize']*1e-3
     hval=pdata_file['Header'].attrs['HubbleParam']
@@ -160,13 +186,13 @@ def read_subvol(path,ivol,nslice,nchunks=1e3):
     pdata.reset_index(inplace=True,drop=True)
 
     pdata_tracers=pdata.loc[pdata.Flag_Tracer==1,:].copy()
-    pdata_baryons=pdata.loc[pdata.Flag_Tracer==0,:].copy()
+    pdata_cells=pdata.loc[pdata.Flag_Tracer==0,:].copy()
 
     pdata_tracers.reset_index(inplace=True,drop=True)
-    pdata_baryons.reset_index(inplace=True,drop=True)
+    pdata_cells.reset_index(inplace=True,drop=True)
 
     #generate KDtree
-    pdata_kdtree=cKDTree(pdata_tracers.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
-    pdata_kdtree_cells=cKDTree(pdata_baryons.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
+    pdata_tracers_kdtree=cKDTree(pdata_tracers.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
+    pdata_cells_kdtree=cKDTree(pdata_cells.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
     
-    return pdata_tracers, pdata_kdtree, pdata_baryons, pdata_kdtree_cells
+    return pdata_tracers, pdata_tracers_kdtree, pdata_cells, pdata_cells_kdtree

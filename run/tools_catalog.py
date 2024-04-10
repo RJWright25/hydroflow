@@ -13,6 +13,24 @@ import logging
 from hydroflow.run.tools_hpc import create_dir
 
 def dump_hdf(fname,data,verbose=False):
+    """
+    Dump a pandas DataFrame to an hdf5 file. 
+
+    Input:
+    -----------
+    fname: str
+        Path to the output file.
+    data: pd.DataFrame
+        DataFrame to dump.
+    verbose: bool
+        Print progress.
+
+    Output:
+    -----------
+    None
+    (Creates an hdf5 file at the specified path.)
+
+    """
 
     if os.path.exists(fname):
         print('Removing existing output file ...')
@@ -30,6 +48,27 @@ def dump_hdf(fname,data,verbose=False):
     outfile.close()
 
 def read_hdf(fname,columns=None,verbose=False):
+    """
+    read_hdf: Read an hdf5 file (generated with dump_hdf) and return a pandas DataFrame.
+
+    Input:
+    -----------
+    fname: str
+        Path to the input file.
+
+    columns: list
+        List of columns to read. If None, all columns are read.
+
+    verbose: bool
+        Print progress.
+
+    Output:
+    -----------
+    outdf: pd.DataFrame
+        DataFrame containing the data from the hdf5 file.
+
+
+    """
 
     infile=h5py.File(fname,mode='r')
     if not columns:
@@ -63,6 +102,25 @@ def read_hdf(fname,columns=None,verbose=False):
 
 
 def combine_catalogs(path_subcat,path_gasflow,depth=1,snaps=None,mcut=10,verbose=False):
+    """
+    combine_catalogs: Combine subhalo and gas flow catalogues.
+    
+    Input:
+    -----------
+    path_subcat: str
+        Path to the subhalo catalogue.
+    path_gasflow: str
+        Path to the gas flow catalogues.
+    depth: int or list
+        Depth of the gas flow catalogues to combine (if a Lagrangian calc).
+    snaps: list
+        List of snapshot indices to include.
+    mcut: float
+        Minimum mass of subhaloes to include [log10(M/Msun)].
+    verbose: bool
+        Print progress.
+    """
+    
     t1=time.time()
 
     if os.path.exists('jobs/combine_catalogs.log'):
