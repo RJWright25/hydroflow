@@ -38,6 +38,7 @@ Currently supported:
 hydroflow/src_physics includes low-level functions for conversions and profile-fitting (utils.py), tools to analyse galaxies (galaxy.py), and routines to analyse gas flows between outputs (gasflow.py).
 
 ### run
-hydroflow/run contains the routines to separate cosmological boxes into sub-volumes, and to execute the gas flow algorithms as a job array over these sub-volumes. The key script is execute.py.
+hydroflow/run contains the routines to separate cosmological boxes into sub-volumes and run the analysis -- the key script is execute.py. There are also some routines to submit job arrays per different HPC system architectures. 
+NB: The execute.py script will run the analysis for galaxies in a given subvolume of a cosmological box (defined by nslice and ivol). Splitting the analysis this way makes the problem "embarrassingly parallel", though the best way to parellelise the operation for each subvolume (e.g. via job arrays or to run on a single node) will depend on the HPC scheduler and architecture. 
 
 
