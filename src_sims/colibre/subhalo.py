@@ -131,7 +131,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             halodata_out.loc[satellites,'GroupMass']=halodata_out['GroupMass'].values[hosthaloidxs]
             halodata_out.loc[satellites,'Group_M_Crit200']=halodata_out['Group_M_Crit200'].values[hosthaloidxs]
             halodata_out.loc[satellites,'Group_R_Crit200']=halodata_out['Group_R_Crit200'].values[hosthaloidxs]
-            halodata_out['Group_Rrel']=np.sqrt((halodata_out['CentreOfPotential_x'].values[satellites]-halodata_out['CentreOfPotential_x'].values[hosthaloidxs])**2+(halodata_out['CentreOfPotential_y'].values[satellites]-halodata_out['CentreOfPotential_y'].values[hosthaloidxs])**2+(halodata_out['CentreOfPotential_z'].values[satellites]-halodata_out['CentreOfPotential_z'].values[hosthaloidxs])**2)
+            halodata_out.loc[satellites,'Group_Rrel']=np.sqrt((halodata_out['CentreOfPotential_x'].values[satellites]-halodata_out['CentreOfPotential_x'].values[hosthaloidxs])**2+(halodata_out['CentreOfPotential_y'].values[satellites]-halodata_out['CentreOfPotential_y'].values[hosthaloidxs])**2+(halodata_out['CentreOfPotential_z'].values[satellites]-halodata_out['CentreOfPotential_z'].values[hosthaloidxs])**2)
 
             # Remove subhalos below mass cut
             halodata_out=halodata_out[halodata_out['Mass']>=mcut]
