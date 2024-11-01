@@ -76,7 +76,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             halodata_out['GroupNumber']=np.arange(len(halodata_out['HostHaloID']))
             halodata_out['SubGroupNumber']=np.zeros(len(halodata_out['HostHaloID']))
             halodata_out['SubGroupNumber'][halodata_out['HostHaloID']!=-1]=1
-            halodata_out['GalaxyID_raw']=halodata.soap.subhalo_index.value
+            halodata_out['GalaxyID_raw']=halodata.input_halos_hbtplus.track_id.value
             halodata_out['GalaxyID']=snapnum*1e12+halodata_out['GalaxyID_raw'].values # Unique galaxy ID
 
             # Host halo properties
