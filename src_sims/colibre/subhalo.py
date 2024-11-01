@@ -120,7 +120,9 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             mbh=halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass;mbh.convert_to_units(munit)
             halodata_out['030pkpc_sphere-BH-m_tot-soapexcl']=np.array(mbh.value)
             angmom=halodata.inclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical()
-            halodata_out['030pkpc_sphere-baryon-L_tot-soapincl']=np.array(angmom.value)
+            halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_x']=np.array(angmom.value[:,0])
+            halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_y']=np.array(angmom.value[:,1])
+            halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_z']=np.array(angmom.value[:,2])
 
             # Give each satellite the group mass, r200 and m200 of the central and distance to central
             for i in range(m200.shape[0]):
