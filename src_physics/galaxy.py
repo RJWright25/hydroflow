@@ -52,7 +52,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 		Lbarmask=np.logical_and(Lbarmask,pdata_candidates['Relative_r_comoving'].values<30*1e-3/afac) 
 		Lbarspec=np.cross(pdata_candidates.loc[Lbarmask,[f'Relative_{x}_comoving' for x in 'xyz']].values*afac,pdata_candidates.loc[Lbarmask,[f'Relative_v_{x}' for x in 'xyz']].values)
 		Lbartot=Lbarspec*pdata_candidates.loc[Lbarmask,'Masses'].values[:,np.newaxis]
-		Lbartot=np.nansum(Lbartot,axis=0)#this uses comoving coordinates but only the unit vector is needed not the magnitude
+		Lbartot=np.nansum(Lbartot,axis=0)
 
 		# Find the angle between the angular momentum of the galaxy and the position vector of each particle
 		position = pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values
@@ -131,6 +131,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	# Gas properties
 	temp=pdata_candidates['Temperature'].values
 	sfr=pdata_candidates['StarFormationRate'].values
+
+	# Species fractions (if available)
 	specfrac={}
 	if 'mfrac_HI' in pdata_candidates.columns:
 		specfrac['HI']=pdata_candidates['mfrac_HI'].values
@@ -172,23 +174,28 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 		#pseudo-evolution velocity cut (updated for each shell)
 		vcuts['pdoev']=vpseudo*(rshell/galaxy['Group_R_Crit200'])
 
-		# Skip the shell if it is a multiple of r200 and the galaxy is a satellie
+		# Skip the shell if it is a multiple of r200 and the galaxy is a satellite
 		if not ('r200' in rshell_str and galaxy['SubGroupNumber']>0):
 			
 			#### SPHERE CALCULATIONS (r<rshell) ####
+
 			# Mask for the sphere in comoving coordinates
 			mask_sphere=rrel<=rshell
+			
+			# Add the sphere volume in pkpc^3
+			galaxy_output[f'{rshell_str}_sphere-vol']=4/3*np.pi*(rshell*afac)**3
 
-			# DARK MATTER
+			### DARK MATTER
 			galaxy_output[f'{rshell_str}_sphere-dm-m_tot']=np.nansum(mass[np.logical_and(mask_sphere,dm)])
 			galaxy_output[f'{rshell_str}_sphere-dm-n_tot']=np.nansum(np.logical_and(mask_sphere,dm))
 
-			# STARS
+			### STARS
 			galaxy_output[f'{rshell_str}_sphere-star-m_tot']=np.nansum(mass[np.logical_and(mask_sphere,star)])
 			galaxy_output[f'{rshell_str}_sphere-star-n_tot']=np.nansum(np.logical_and(mask_sphere,star))
 			galaxy_output[f'{rshell_str}_sphere-star-Z']=np.nansum(specfrac['Z'][np.logical_and(mask_sphere,star)]*mass[np.logical_and(mask_sphere,star)])/np.nansum(mass[np.logical_and(mask_sphere,star)])
 
-			# GAS
+			### GAS
+			# Break down the gas mass by phase
 			for Tstr,Tmask in Tmasks.items():
 				Tmask_sphere=np.logical_and.reduce([mask_sphere,gas,Tmask])
 				galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-n_tot']=np.nansum(Tmask_sphere)
@@ -204,12 +211,12 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 							
 			#### SHELL CALCULATIONS (r between r-dr/2 and r+dr/2) ####
 
-			# Mask for the shell in comoving coordinates
+			# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
 			r_hi=(rshell*(1+drfac/2))
 			r_lo=(rshell*(1-drfac/2))
 			mask_shell=np.logical_and(rrel<r_hi,rrel>=r_lo)
 
-			# Convert to physical units for the calculations
+			# Convert the shell values to physical units for the calculations
 			r_hi=r_hi*afac
 			r_lo=r_lo*afac
 			dr=r_hi-r_lo
@@ -218,12 +225,12 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			galaxy_output[f'{rshell_str}_shell-vol']=4/3*np.pi*((r_hi*1e3)**3-(r_lo*1e3)**3)
 			galaxy_output[f'{rshell_str}_shell-area']=4*np.pi*((r_hi*1e3)**2-(r_lo*1e3)**2)
 
-			# DM shell properties
+			### DM shell properties
 			dm_shell_mask=np.logical_and(mask_shell,dm)
 			galaxy_output[f'{rshell_str}_shell-dm-m_tot']=np.nansum(mass[dm_shell_mask])
 			galaxy_output[f'{rshell_str}_shell-dm-n_tot']=np.nansum(dm_shell_mask)
 
-			# DM flow rates
+			# Flow rates
 			for flowsign,sign in zip(['inflow','outflow'],[-1,1]):
 				for flowtype in ['pec']:
 					for vcut_str,vcut in vcuts.items():
@@ -240,13 +247,13 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 
 						galaxy_output[f'{rshell_str}_shell-dm-mdot_tot_{flowstr}']=1/dr*np.nansum(mass[dm_shell_mask][vrad_mask]*vrad_vals/MpcpGyr_to_kmps)*sign
 
-			# STARS shell properties
+			### STARS shell properties
 			stars_shell_mask=np.logical_and(mask_shell,star)
 			galaxy_output[f'{rshell_str}_shell-star-m_tot']=np.nansum(mass[stars_shell_mask])
 			galaxy_output[f'{rshell_str}_shell-star-n_tot']=np.nansum(stars_shell_mask)
 			galaxy_output[f'{rshell_str}_shell-star-Z']=np.nansum(specfrac['Z'][stars_shell_mask]*mass[stars_shell_mask])/np.nansum(mass[stars_shell_mask])
 
-			# STARS flow rates
+			# Flow rates
 			for flowsign,sign in zip(['inflow','outflow'],[-1,1]):
 				for flowtype in ['pec']:
 					for vcut_str,vcut in vcuts.items():
@@ -263,7 +270,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 
 						galaxy_output[f'{rshell_str}_shell-star-mdot_tot_{flowstr}']=1/dr*np.nansum(mass[stars_shell_mask][vrad_mask]*vrad_vals/MpcpGyr_to_kmps)*sign
 
-			# GAS shell properties
+			### GAS shell properties
+			# Break down the gas mass by phase
 			for Tstr,Tmask in Tmasks.items():
 				Tmask_shell=np.logical_and.reduce([mask_shell,gas,Tmask])
 				galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-n_tot']=np.nansum(Tmask_shell)
@@ -277,8 +285,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_shell])
 					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-Z']=np.nansum(specfrac['Z'][Tmask_shell]*mass[Tmask_shell])/np.nansum(mass[Tmask_shell])
 
-
-				# GAS flow rates		
+				# Flow rates		
 				for flowsign,sign in zip(['inflow','outflow'],[-1,1]):
 					for flowtype in ['pec']:
 						for vcut_str,vcut in vcuts.items():
