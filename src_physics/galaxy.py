@@ -49,7 +49,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
  
 		# Define the angular momentum of the galaxy with baryonic elements within 30ckpc
 		Lbarmask=np.logical_or(pdata_candidates['ParticleType'].values==0,pdata_candidates['ParticleType'].values==4)
-		Lbarmask=np.logical_and(Lbarmask,pdata_candidates['Relative_r_comoving'].values<30*1e-3) 
+		Lbarmask=np.logical_and(Lbarmask,pdata_candidates['Relative_r_comoving'].values<30*1e-3/afac) 
 		Lbarspec=np.cross(pdata_candidates.loc[Lbarmask,[f'Relative_{x}_comoving' for x in 'xyz']].values*afac,pdata_candidates.loc[Lbarmask,[f'Relative_v_{x}' for x in 'xyz']].values)
 		Lbartot=Lbarspec*pdata_candidates.loc[Lbarmask,'Masses'].values[:,np.newaxis]
 		Lbartot=np.nansum(Lbartot,axis=0)
@@ -221,7 +221,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			r_lo=r_lo*afac
 			dr=r_hi-r_lo
 
-			# Shell volume and area in kpc^3 and kpc^2
+			# Shell volume and area in pkpc^3 and pkpc^2
 			galaxy_output[f'{rshell_str}_shell-vol']=4/3*np.pi*((r_hi*1e3)**3-(r_lo*1e3)**3)
 			galaxy_output[f'{rshell_str}_shell-area']=4*np.pi*((r_hi*1e3)**2-(r_lo*1e3)**2)
 

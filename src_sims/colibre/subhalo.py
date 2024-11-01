@@ -88,6 +88,13 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
 
             r200=halodata.spherical_overdensity_200_crit.soradius;r200.convert_to_units(dunit)
             halodata_out['Group_R_Crit200']=np.array(r200.value) #comoving
+
+            # Centre of mass -- use the central galaxy SUBHALO
+            cop_halo=halodata.bound_subhalo.centre_of_mass
+            cop_halo.convert_to_units('Mpc')
+            halodata_out['CentreOfPotential_x']=np.array(cop_halo[:,0].value)
+            halodata_out['CentreOfPotential_y']=np.array(cop_halo[:,1].value)
+            halodata_out['CentreOfPotential_z']=np.array(cop_halo[:,2].value)
             
             # Subhalo mass
             subhalomass=halodata.bound_subhalo.total_mass;subhalomass.convert_to_units(munit)
@@ -95,7 +102,11 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
 
             # Miscellaneous baryonic properties
             mstar_30kpc=halodata.exclusive_sphere_30kpc.stellar_mass;mstar_30kpc_exclusive.convert_to_units(munit)
-            halodata_out['Mass']
+            halodata_out['030pkpc_sphere-star-m_tot-soapexcl']=np.array(mstar_30kpc.value)
+            mgas_30kpc=halodata.exclusive_sphere_30kpc.gas_mass;mgas_30kpc.convert_to_units(munit)
+            halodata_out['030pkpc_sphere-gas_all-m_tot-soapexcl']=np.array(mgas_30kpc.value)
+
+
 
 
 
@@ -110,13 +121,6 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             mbh=halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass;mbh.convert_to_units('Msun');mbh=np.array(mbh.value) #Msun
             angmom=halodata.inclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical();angmom=np.array(angmom.value)
 
-            #centre of potential
-            cop_halo=halodata.exclusive_sphere_30kpc.centre_of_mass
-            cop_halo.convert_to_units('Mpc')
-            cops=np.array(cop_halo.value)
-            cop_x=np.array(cops[:,0])
-            cop_y=np.array(cops[:,1])
-            cop_z=np.array(cops[:,2])
 
             cop_subhalo=halodata.bound_subhalo.centre_of_mass
             cop_subhalo.convert_to_units('Mpc')
