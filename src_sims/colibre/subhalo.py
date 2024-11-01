@@ -90,7 +90,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             halodata_out['Group_R_Crit200']=np.array(r200.value) #comoving
 
             # Centre of mass -- use the central galaxy SUBHALO
-            cop_halo=halodata.bound_subhalo.centre_of_mass
+            cop_halo=halodata.exclusive_sphere_30kpc.centre_of_mass
             cop_halo.convert_to_units('Mpc')
             halodata_out['CentreOfPotential_x']=np.array(cop_halo[:,0].value)
             halodata_out['CentreOfPotential_y']=np.array(cop_halo[:,1].value)
@@ -119,7 +119,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             halodata_out['030pkpc_sphere-gas_all-disk_to_total-soapexcl']=np.array(disk_to_total_gas)
             mbh=halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass;mbh.convert_to_units(munit)
             halodata_out['030pkpc_sphere-BH-m_tot-soapexcl']=np.array(mbh.value)
-            angmom=halodata.inclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical()
+            angmom=halodata.exclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical()
             halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_x']=np.array(angmom.value[:,0])
             halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_y']=np.array(angmom.value[:,1])
             halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_z']=np.array(angmom.value[:,2])
