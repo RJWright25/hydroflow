@@ -43,6 +43,8 @@ def dump_hdf_group(fname,group,data,metadata={},verbose=False):
             del outfile[group]
     else:
         print(f'Creating new file {fname} ...')
+        if not os.path.exists(os.path.dirname(fname)):
+            os.makedirs(os.path.dirname(fname))
         outfile=h5py.File(fname,"w")
     columns=list(data.columns)
 

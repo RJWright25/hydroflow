@@ -109,7 +109,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             halodata_out['030pkpc_sphere-gas_all-m_HI-soapexcl']=np.array(mHI_30kpc.value)
             mH2_30kpc=halodata.exclusive_sphere_30kpc.molecular_hydrogen_mass;mH2_30kpc.convert_to_units(munit)
             halodata_out['030pkpc_sphere-gas_all-m_H2-soapexcl']=np.array(mH2_30kpc.value)
-            sfr_30kpc=halodata.exclusive_sphere_30kpc.star_formation_rate;sfr_30kpc.convert_to_units('Msun/yr')
+            sfr_30kpc=halodata.exclusive_sphere_30kpc.star_formation_rate;sfr_30kpc.convert_to_units(f'{munit}/yr')
             halodata_out['030pkpc_sphere-gas_all-SFR-soapexcl']=np.array(sfr_30kpc.value)
             rstar=halodata.exclusive_sphere_30kpc.half_mass_radius_stars;rstar.convert_to_units(dunit)
             halodata_out['030pkpc_sphere-star-r_half-soapexcl']=np.array(rstar.value)
