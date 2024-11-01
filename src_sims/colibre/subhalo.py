@@ -42,6 +42,10 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
                 print(f"Metadata file found: {metadata_path}")
                 break
     
+    # Units for masses
+    munit='Msun'
+    dunit='Mpc'
+
     # Output path
     outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
 
@@ -59,12 +63,42 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             print(f"Reading subhalo catalogue from {ipath}...")
             halodata = swiftsimio_loader(ipath)# Load a dataset
 
-            #need: redshift, snapnum, galaxyID, CentreofPotential_x, CentreofPotential_y, CentreofPotential_z, Group_R_Crit200, Group_M_Crit200, GroupNumber, SubGroupNumber
+            # Create a pandas dataframe to store the subhalo data
+            halodata_out=pd.DataFrame()
+            # Collect redshift & snapshot number
             redshift=halodata.metadata.redshift
             snapnum=int(halodata.metadata.filename.split('/')[-1].split('_')[-1].split('.')[0])
-            hosthalo=halodata.soap.host_halo_index.value
-            galaxyID=halodata.input_halos_hbtplus.track_id.value
-            subhalomass=halodata.bound_subhalo.total_mass;subhalomass.convert_to_units('Msun');subhalomass=np.array(subhalomass.value) #Msun
+            halodata_out['Redshift']=np.ones(halodata.soap.host_halo_index.shape)*redshift
+            halodata_out['SnapNum']=np.ones(halodata.soap.host_halo_index.shape)*snapnum
+
+            # IDs
+            halodata_out['HostHaloID']=halodata.soap.host_halo_index.value
+            halodata_out['GroupNumber']=np.arange(len(halodata_out['HostHaloID']))
+            halodata_out['SubGroupNumber']=np.zeros(len(halodata_out['HostHaloID']))
+            halodata_out['SubGroupNumber'][halodata_out['HostHaloID']!=-1]=1
+            halodata_out['GalaxyID_raw']=halodata.soap.subhalo_index.value
+            halodata_out['GalaxyID']=snapnum*1e12+halodata_out['GalaxyID_raw'].values # Unique galaxy ID
+
+            # Host halo properties
+            mfof=halodata.input_halos_fof.masses;mfof.convert_to_units(munit)
+            halodata_out['GroupMass']=np.array(mfof.value)
+            
+            m200=halodata.spherical_overdensity_200_crit.total_mass;m200.convert_to_units(munit)
+            halodata_out['Group_M_Crit200']=np.array(m200.value)
+
+            r200=halodata.spherical_overdensity_200_crit.soradius;r200.convert_to_units(dunit)
+            halodata_out['Group_R_Crit200']=np.array(r200.value) #comoving
+            
+            # Subhalo mass
+            subhalomass=halodata.bound_subhalo.total_mass;subhalomass.convert_to_units(munit)
+            halodata_out['Mass']=np.array(subhalomass.value)
+
+            # Miscellaneous baryonic properties
+            mstar_30kpc=halodata.exclusive_sphere_30kpc.stellar_mass;mstar_30kpc_exclusive.convert_to_units(munit)
+            halodata_out['Mass']
+
+
+
             mstar_30kpc_exclusive=halodata.exclusive_sphere_30kpc.stellar_mass;mstar_30kpc_exclusive.convert_to_units('Msun');mstar_30kpc_exclusive=np.array(mstar_30kpc_exclusive.value) #Msun
             mgas_30kpc_exclusive=halodata.exclusive_sphere_30kpc.gas_mass;mgas_30kpc_exclusive.convert_to_units('Msun');mgas_30kpc_exclusive=np.array(mgas_30kpc_exclusive.value) #Msun
             mHI_30kpc_exclusive=halodata.exclusive_sphere_30kpc.atomic_hydrogen_mass;mHI_30kpc_exclusive.convert_to_units('Msun');mHI_30kpc_exclusive=np.array(mHI_30kpc_exclusive.value) #Msun
@@ -93,11 +127,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             groupnumber[hosthalo!=-1]=hosthalo[hosthalo!=-1]
 
             #halo/fof properties
-            mfof=halodata.input_halos_fof.masses;mfof.convert_to_units('Msun');mfof=np.array(mfof.value) #Msun
-            m200=halodata.spherical_overdensity_200_crit.total_mass;m200.convert_to_units('Msun');m200=np.array(m200.value) #Msun
-            r200=halodata.spherical_overdensity_200_crit.soradius;r200.convert_to_units('Mpc');r200=np.array(r200.value) #comoving
-            rrel=np.zeros(len(groupnumber))+np.nan
-            subgroupnumber=np.zeros(len(groupnumber))
+
 
             #give each satellite the group mass, r200 and m200 of the central and distance to central
             for i in range(len(groupnumber)):
@@ -113,7 +143,6 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
 
 
             #make pandas dataframe
-            halodata_out=pd.DataFrame()
             halodata_out['Redshift']=np.ones(len(groupnumber))*redshift
             halodata_out['SnapNum']=np.ones(len(groupnumber))*snapnum
             halodata_out['GalaxyID']=snapnum*1e12+galaxyID
