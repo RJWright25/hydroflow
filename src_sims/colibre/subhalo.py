@@ -125,6 +125,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_z']=np.array(angmom.value[:,2])
 
             # Give each satellite the group mass, r200 and m200 of the central and distance to central
+            print('Matching group data to satellite data...')
             for i in range(m200.shape[0]):
                 ihosthalo=halodata_out['HostHaloID'][i]
                 if ihosthalo!=-1:
