@@ -30,7 +30,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
     if type(path)==str:
         path=[path]
     
-    #Grab metadata from the metadata file
+    # Grab metadata from the metadata file
     if metadata is not None:
         metadata=load_metadata(metadata)
     else:
@@ -42,15 +42,18 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
                 print(f"Metadata file found: {metadata_path}")
                 break
     
+    # Output path
     outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
 
     # "subcat" will be a list of pandas dataframes which will be concatenated at the end
     subcat=[]
 
+    # Ensure that some catalogues exist
     if len(path)==0:
         print("No catalogue paths given. Exiting...")
         return None
     
+    # Loop over all paths for each snapshot
     for ipath in path:
         if os.path.exists(ipath):
             print(f"Reading subhalo catalogue from {ipath}...")
@@ -71,7 +74,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             disk_to_total_star=halodata.exclusive_sphere_30kpc.disc_to_total_stellar_mass_fraction
             disk_to_total_gas=halodata.exclusive_sphere_30kpc.disc_to_total_gas_mass_fraction
             mbh=halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass;mbh.convert_to_units('Msun');mbh=np.array(mbh.value) #Msun
-            angmom=halodata.exclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical();angmom=np.array(angmom.value)
+            angmom=halodata.inclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical();angmom=np.array(angmom.value)
 
             #centre of potential
             cop_halo=halodata.exclusive_sphere_30kpc.centre_of_mass
