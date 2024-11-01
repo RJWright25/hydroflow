@@ -22,7 +22,7 @@ myQuery =f"SELECT \
           FROM \
             {sim}_Subhalo as Subhalo\
           WHERE \
-            Subhalo.SnapNum>=12 and\
+            Subhalo.SnapNum=15 or Subhalo.SnapNum=28 and\
             Subhalo.Mass>=1e10 and \
             Subhalo.SubGroupNumber=0 \
           ORDER BY \
@@ -33,6 +33,6 @@ myQuery =f"SELECT \
 data=sql.execute_query(con, myQuery)
 columns=list(data.dtype.names)
 data_pd=pd.DataFrame(data,columns=columns)
-    
+  
 data_pd=data_pd.loc[np.logical_and(data_pd.Mass>1e10,data_pd.SubGroupNumber==0),:]
 data_pd.reset_index(inplace=True,drop=True)

@@ -89,7 +89,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             r200=halodata.spherical_overdensity_200_crit.soradius;r200.convert_to_units(dunit)
             halodata_out['Group_R_Crit200']=np.array(r200.value) #comoving
 
-            # Centre of mass -- use the central galaxy SUBHALO
+            # Centre of mass -- use the central galaxy 30kpc inclusive sphere
             cop_halo=halodata.inclusive_sphere_30kpc.centre_of_mass
             cop_halo.convert_to_units('Mpc')
             halodata_out['CentreOfPotential_x']=np.array(cop_halo[:,0].value)
@@ -126,12 +126,13 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
 
             # Give each satellite the group mass, r200 and m200 of the central and distance to central
             for i in range(m200.shape[0]):
-                if halodata_out['HostHaloID'][i]!=-1:
-                    hostmatch=np.where(halodata_out['GroupNumber']==halodata_out['HostHaloID'].values[i])[0]
+                ihosthalo=halodata_out['HostHaloID'][i]
+                if ihosthalo!=-1:
+                    hostmatch=np.where(halodata_out['GroupNumber'].values==ihosthalo)[0]
                     halodata_out.loc[i,'GroupMass']=halodata_out['GroupMass'].values[hostmatch]
                     halodata_out.loc[i,'Group_M_Crit200']=halodata_out['Group_M_Crit200'].values[hostmatch]
                     halodata_out.loc[i,'Group_R_Crit200']=halodata_out['Group_R_Crit200'].values[hostmatch]
-                    halodata_out.loc[i,'Group_Rrel']=np.sqrt((halodata_out['CentreOfPotential_x'].values[i]-halodata_out['CentreOfPotential_x'].values[hostmatch])**2+(halodata_out['CentreOfPotential_y'].values[i]-halodata_out['CentreOfPotential_y'].values[hostmatch])**2+(halodata_out['CentreOfPotential_z'].values[i]-halodata_out['CentreOfPotential_z'].values[hostmatch])**2)
+                    # halodata_out.loc[i,'Group_Rrel']=np.sqrt((halodata_out['CentreOfPotential_x'].values[i]-halodata_out['CentreOfPotential_x'].values[hostmatch])**2+(halodata_out['CentreOfPotential_y'].values[i]-halodata_out['CentreOfPotential_y'].values[hostmatch])**2+(halodata_out['CentreOfPotential_z'].values[i]-halodata_out['CentreOfPotential_z'].values[hostmatch])**2)
 
             # Remove subhalos below mass cut
             halodata_out=halodata_out[halodata_out['Mass']>=mcut]
