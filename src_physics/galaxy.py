@@ -214,7 +214,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			r_lo=r_lo*afac
 			dr=r_hi-r_lo
 
-			# Shell volume and area
+			# Shell volume and area in kpc^3 and kpc^2
 			galaxy_output[f'{rshell_str}_shell-vol']=4/3*np.pi*((r_hi*1e3)**3-(r_lo*1e3)**3)
 			galaxy_output[f'{rshell_str}_shell-area']=4*np.pi*((r_hi*1e3)**2-(r_lo*1e3)**2)
 
