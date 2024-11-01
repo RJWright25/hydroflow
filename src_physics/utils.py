@@ -106,15 +106,17 @@ def get_limits(ivol,nslice,boxsize,buffer=0.1):
 	
 	return xmin,xmax,ymin,ymax,zmin,zmax
 
-
 ##### CONSTANTS #####
 
+# Gravitational constant in (km/s)^2*Mpc/Ms
 constant_G=4.30073691e-09 #(km/s)^2*Mpc/Msun
 
+# Conversion factor from pMpc/Gyr to km/s -- used to align the units of particle velocities for the gas flow calculations
 vel_conversion=1*units.Mpc/units.Gyr #from pMpc/Gyr to km/s
 vel_conversion=vel_conversion.to(units.km/units.s)
 MpcpGyr_to_kmps=vel_conversion.value
 
+# Conversion factor from Mpc to km
 distance_conversion=1*units.Mpc
 distance_conversion=distance_conversion.to(units.km)
 Mpc_to_km=distance_conversion.value

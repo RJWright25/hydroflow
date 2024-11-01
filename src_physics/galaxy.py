@@ -1,12 +1,11 @@
 # HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
 # Ruby Wright (2021)
 
-# src_physics/galaxy.py: routines to analyse a galaxy (in shells and ) for output catalogues. 
+# src_physics/galaxy.py: routines to analyse a galaxy (in shells). Both 
 import numpy as np
 import pandas as pd
 
-from hydroflow.src_physics.utils import constant_G
-from hydroflow.src_physics.utils import MpcpGyr_to_kmps
+from hydroflow.src_physics.utils import constant_G,MpcpGyr_to_kmps
 
 def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None): 
 
