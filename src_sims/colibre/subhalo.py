@@ -131,7 +131,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
                     print(f"Satellite {i+1}/{m200.shape[0]}...")
                 ihosthalo=halodata_out['HostHaloID'][i]
                 if ihosthalo!=-1:
-                    hostmatch=np.where(halodata_out['GroupNumber'].values==ihosthalo)[0]
+                    hostmatch=np.searchsorted(halodata_out['HostHaloID'].values,ihosthalo)
                     halodata_out.loc[i,'GroupMass']=halodata_out['GroupMass'].values[hostmatch]
                     halodata_out.loc[i,'Group_M_Crit200']=halodata_out['Group_M_Crit200'].values[hostmatch]
                     halodata_out.loc[i,'Group_R_Crit200']=halodata_out['Group_R_Crit200'].values[hostmatch]
