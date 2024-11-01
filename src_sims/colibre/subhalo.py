@@ -127,11 +127,11 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             # Give each satellite the group mass, r200 and m200 of the central and distance to central
             for i in range(m200.shape[0]):
                 if halodata_out['HostHaloID'][i]!=-1:
-                    halodata_out['Group_M_Crit200'][i]=m200[halodata_out['HostHaloID'][i]]
-                    halodata_out['Group_R_Crit200'][i]=r200[halodata_out['HostHaloID'][i]]
-                    halodata_out['GroupMass'][i]=mfof[halodata_out['HostHaloID'][i]]
-                    halodata_out['GroupNumber'][i]=halodata_out['GroupNumber'][halodata_out['HostHaloID'][i]]
-                    halodata_out['Rrel'][i]=np.sqrt((halodata_out['CentreOfPotential_x'][i]-halodata_out['CentreOfPotential_x'][halodata_out['HostHaloID'][i]])**2+(halodata_out['CentreOfPotential_y'][i]-halodata_out['CentreOfPotential_y'][halodata_out['HostHaloID'][i]])**2+(halodata_out['CentreOfPotential_z'][i]-halodata_out['CentreOfPotential_z'][halodata_out['HostHaloID'][i]])**2)
+                    hostmatch=np.where(halodata_out['GroupNumber']==halodata_out['HostHaloID'].values[i])[0]
+                    halodata_out.loc[i,'Group_M_Crit200']=halodata_out['Group_M_Crit200'].values[hostmatch]
+                    halodata_out.loc[i,'Group_R_Crit200']=halodata_out['Group_R_Crit200'].values[hostmatch]
+                    halodata_out.loc[i,'GroupMass']=halodata_out['GroupMass'].values[hostmatch]
+                    halodata_out.loc[i,'Rrel']=np.sqrt((halodata_out['CentreOfPotential_x'].values[i]-halodata_out['CentreOfPotential_x'].values[hostmatch])**2+(halodata_out['CentreOfPotential_y'].values[i]-halodata_out['CentreOfPotential_y'].values[hostmatch])**2+(halodata_out['CentreOfPotential_z'].values[i]-halodata_out['CentreOfPotential_z'].values[hostmatch])**2)
 
             # Remove subhalos below mass cut
             halodata_out=halodata_out[halodata_out['Mass']>=mcut]
