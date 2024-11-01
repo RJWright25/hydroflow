@@ -101,7 +101,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             halodata_out['Mass']=np.array(subhalomass.value)
 
             # Miscellaneous baryonic properties
-            mstar_30kpc=halodata.exclusive_sphere_30kpc.stellar_mass;mstar_30kpc_exclusive.convert_to_units(munit)
+            mstar_30kpc=halodata.exclusive_sphere_30kpc.stellar_mass;mstar_30kpc.convert_to_units(munit)
             halodata_out['030pkpc_sphere-star-m_tot-soapexcl']=np.array(mstar_30kpc.value)
             mgas_30kpc=halodata.exclusive_sphere_30kpc.gas_mass;mgas_30kpc.convert_to_units(munit)
             halodata_out['030pkpc_sphere-gas_all-m_tot-soapexcl']=np.array(mgas_30kpc.value)
