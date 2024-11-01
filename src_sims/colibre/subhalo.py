@@ -126,7 +126,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
 
             # Give each satellite the group mass, r200 and m200 of the central and distance to central
             print('Matching group data to satellite data...')
-            satellites=np.where(halodata_out['HostHaloID'].values>=0)
+            satellites=halodata_out['HostHaloID'].values>=0
             hosthaloidxs=np.searchsorted(halodata_out['GroupNumber'].values,halodata_out['HostHaloID'].values[satellites])
             halodata_out.loc[satellites,'GroupMass']=halodata_out['GroupMass'].values[hosthaloidxs]
             halodata_out.loc[satellites,'Group_M_Crit200']=halodata_out['Group_M_Crit200'].values[hosthaloidxs]
