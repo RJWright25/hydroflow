@@ -62,8 +62,8 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 		pdata_candidates['Relative_phi']=deg_theta
 
 		# Save the angular momentum and velocity of the galaxy
-		pdata_candidates.attrs['Lbartot']=Lbartot
-		pdata_candidates.attrs['vcom']=vcom
+		pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow']=Lbartot
+		pdata_candidates.attrs['1p00r200_sphere-vcom']=vcom
 
 		return pdata_candidates
 	else:
@@ -106,12 +106,12 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	galaxy_output={}
 
 	# Retrieve computed quantities from candidates
-	galaxy_output['vcom_x']=pdata_candidates.attrs['vcom'][0]
-	galaxy_output['vcom_y']=pdata_candidates.attrs['vcom'][1]
-	galaxy_output['vcom_z']=pdata_candidates.attrs['vcom'][2]
-	galaxy_output['Lbartot_x']=pdata_candidates.attrs['Lbartot'][0]
-	galaxy_output['Lbartot_y']=pdata_candidates.attrs['Lbartot'][1]
-	galaxy_output['Lbartot_z']=pdata_candidates.attrs['Lbartot'][2]
+	galaxy_output['1p00r200_sphere-vcom_x']=pdata_candidates.attrs['1p00r200_sphere-vcom'][0]
+	galaxy_output['1p00r200_sphere-vcom_y']=pdata_candidates.attrs['1p00r200_sphere-vcom'][1]
+	galaxy_output['1p00r200_sphere-vcom_z']=pdata_candidates.attrs['1p00r200_sphere-vcom'][2]
+	galaxy_output['030pkpc_sphere-baryon-L_tot-hydroflow_x']=pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow'][0]
+	galaxy_output['030pkpc_sphere-baryon-L_tot-hydroflow_y']=pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow'][1]
+	galaxy_output['030pkpc_sphere-baryon-L_tot-hydroflow_z']=pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow'][2]
 
 	# Add existing galaxy properties
 	for key in galaxy.keys():
@@ -171,7 +171,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	# Loop over all the shells
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
 
-		#pseudo-evolution velocity cut (updated for each shell)
+		# Pseudo-evolution velocity cut (updated for each shell)
 		vcuts['pdoev']=vpseudo*(rshell/galaxy['Group_R_Crit200'])
 
 		# Skip the shell if it is a multiple of r200 and the galaxy is a satellite
