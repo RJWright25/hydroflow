@@ -105,74 +105,31 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             halodata_out['030pkpc_sphere-star-m_tot-soapexcl']=np.array(mstar_30kpc.value)
             mgas_30kpc=halodata.exclusive_sphere_30kpc.gas_mass;mgas_30kpc.convert_to_units(munit)
             halodata_out['030pkpc_sphere-gas_all-m_tot-soapexcl']=np.array(mgas_30kpc.value)
-
-
-
-
-
-            mstar_30kpc_exclusive=halodata.exclusive_sphere_30kpc.stellar_mass;mstar_30kpc_exclusive.convert_to_units('Msun');mstar_30kpc_exclusive=np.array(mstar_30kpc_exclusive.value) #Msun
-            mgas_30kpc_exclusive=halodata.exclusive_sphere_30kpc.gas_mass;mgas_30kpc_exclusive.convert_to_units('Msun');mgas_30kpc_exclusive=np.array(mgas_30kpc_exclusive.value) #Msun
-            mHI_30kpc_exclusive=halodata.exclusive_sphere_30kpc.atomic_hydrogen_mass;mHI_30kpc_exclusive.convert_to_units('Msun');mHI_30kpc_exclusive=np.array(mHI_30kpc_exclusive.value) #Msun
-            mH2_30kpc_exclusive=halodata.exclusive_sphere_30kpc.molecular_hydrogen_mass;mH2_30kpc_exclusive.convert_to_units('Msun');mH2_30kpc_exclusive=np.array(mH2_30kpc_exclusive.value) #Msun
-            sfr_30kpc_exclusive=halodata.exclusive_sphere_30kpc.star_formation_rate;sfr_30kpc_exclusive.convert_to_units('Msun/yr');sfr_30kpc_exclusive=np.array(sfr_30kpc_exclusive.value) #Msun/yr
-            rstar=halodata.exclusive_sphere_30kpc.half_mass_radius_stars;rstar.convert_to_units('Mpc');rstar=np.array(rstar.value) #kpc
+            mHI_30kpc=halodata.exclusive_sphere_30kpc.atomic_hydrogen_mass;mHI_30kpc.convert_to_units(munit)
+            halodata_out['030pkpc_sphere-gas_all-m_HI-soapexcl']=np.array(mHI_30kpc.value)
+            mH2_30kpc=halodata.exclusive_sphere_30kpc.molecular_hydrogen_mass;mH2_30kpc.convert_to_units(munit)
+            halodata_out['030pkpc_sphere-gas_all-m_H2-soapexcl']=np.array(mH2_30kpc.value)
+            sfr_30kpc=halodata.exclusive_sphere_30kpc.star_formation_rate;sfr_30kpc.convert_to_units('Msun/yr')
+            halodata_out['030pkpc_sphere-gas_all-SFR-soapexcl']=np.array(sfr_30kpc.value)
+            rstar=halodata.exclusive_sphere_30kpc.half_mass_radius_stars;rstar.convert_to_units(dunit)
+            halodata_out['030pkpc_sphere-star-r_half-soapexcl']=np.array(rstar.value)
             disk_to_total_star=halodata.exclusive_sphere_30kpc.disc_to_total_stellar_mass_fraction
+            halodata_out['030pkpc_sphere-star-disk_to_total-soapexcl']=np.array(disk_to_total_star)
             disk_to_total_gas=halodata.exclusive_sphere_30kpc.disc_to_total_gas_mass_fraction
-            mbh=halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass;mbh.convert_to_units('Msun');mbh=np.array(mbh.value) #Msun
-            angmom=halodata.inclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical();angmom=np.array(angmom.value)
+            halodata_out['030pkpc_sphere-gas_all-disk_to_total-soapexcl']=np.array(disk_to_total_gas)
+            mbh=halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass;mbh.convert_to_units(munit)
+            halodata_out['030pkpc_sphere-BH-m_tot-soapexcl']=np.array(mbh.value)
+            angmom=halodata.inclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical()
+            halodata_out['030pkpc_sphere-baryon-L_tot-soapincl']=np.array(angmom.value)
 
-
-            cop_subhalo=halodata.bound_subhalo.centre_of_mass
-            cop_subhalo.convert_to_units('Mpc')
-
-            #groupnumber = index for centrals (where hosthaloID==-1), and = hosthaloID for satellites
-            groupnumber=np.zeros(halodata.soap.host_halo_index.shape)
-            groupnumber[np.where(hosthalo==-1)]=np.arange(len(groupnumber))[hosthalo==-1]
-            groupnumber[hosthalo!=-1]=hosthalo[hosthalo!=-1]
-
-            #halo/fof properties
-
-
-            #give each satellite the group mass, r200 and m200 of the central and distance to central
-            for i in range(len(groupnumber)):
-                if hosthalo[i]!=-1:
-                    subgroupnumber[i]=1
-                    m200[i]=m200[hosthalo[i]]
-                    r200[i]=r200[hosthalo[i]]
-                    mfof[i]=mfof[hosthalo[i]]
-                    cop_x[i]=cop_subhalo[i,0]
-                    cop_y[i]=cop_subhalo[i,1]
-                    cop_z[i]=cop_subhalo[i,2]
-                    rrel[i]=np.sqrt((cop_x[i]-cop_x[hosthalo[i]])**2+(cop_y[i]-cop_y[hosthalo[i]])**2+(cop_z[i]-cop_z[hosthalo[i]])**2)
-
-
-            #make pandas dataframe
-            halodata_out['Redshift']=np.ones(len(groupnumber))*redshift
-            halodata_out['SnapNum']=np.ones(len(groupnumber))*snapnum
-            halodata_out['GalaxyID']=snapnum*1e12+galaxyID
-            halodata_out['GalaxyID_raw']=galaxyID
-            halodata_out['Mass']=subhalomass
-            halodata_out['CentreOfPotential_x']=cop_x
-            halodata_out['CentreOfPotential_y']=cop_y
-            halodata_out['CentreOfPotential_z']=cop_z
-            halodata_out['Group_R_Crit200']=r200
-            halodata_out['Group_M_Crit200']=m200
-            halodata_out['GroupMass']=mfof
-            halodata_out['GroupNumber']=groupnumber
-            halodata_out['SubGroupNumber']=subgroupnumber
-            halodata_out['Group_Rrel']=rrel
-            halodata_out['Stellar_Mass_30kpc']=mstar_30kpc_exclusive
-            halodata_out['Stellar_Rhalf_30kpc']=rstar
-            halodata_out['Gas_Mass_30kpc']=mgas_30kpc_exclusive
-            halodata_out['SFR_30kpc']=sfr_30kpc_exclusive
-            halodata_out['BH_Mass']=mbh
-            halodata_out['HI_Mass_30kpc']=mHI_30kpc_exclusive
-            halodata_out['H2_Mass_30kpc']=mH2_30kpc_exclusive
-            halodata_out['DiskToTotalStar_30kpc']=disk_to_total_star
-            halodata_out['DiskToTotalGas_30kpc']=disk_to_total_gas
-            halodata_out['Lbaryon_x']=angmom[:,0]
-            halodata_out['Lbaryon_y']=angmom[:,1]
-            halodata_out['Lbaryon_z']=angmom[:,2]
+            # Give each satellite the group mass, r200 and m200 of the central and distance to central
+            for i in range(m200.shape[0]):
+                if halodata_out['HostHaloID'][i]!=-1:
+                    halodata_out['Group_M_Crit200'][i]=m200[halodata_out['HostHaloID'][i]]
+                    halodata_out['Group_R_Crit200'][i]=r200[halodata_out['HostHaloID'][i]]
+                    halodata_out['GroupMass'][i]=mfof[halodata_out['HostHaloID'][i]]
+                    halodata_out['GroupNumber'][i]=halodata_out['GroupNumber'][halodata_out['HostHaloID'][i]]
+                    halodata_out['Rrel'][i]=np.sqrt((halodata_out['CentreOfPotential_x'][i]-halodata_out['CentreOfPotential_x'][halodata_out['HostHaloID'][i]])**2+(halodata_out['CentreOfPotential_y'][i]-halodata_out['CentreOfPotential_y'][halodata_out['HostHaloID'][i]])**2+(halodata_out['CentreOfPotential_z'][i]-halodata_out['CentreOfPotential_z'][halodata_out['HostHaloID'][i]])**2)
 
             # Remove subhalos below mass cut
             halodata_out=halodata_out[halodata_out['Mass']>=mcut]
