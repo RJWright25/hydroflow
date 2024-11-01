@@ -25,17 +25,17 @@ def dump_hdf_group(fname,group,data,metadata={},verbose=False):
     data: pd.DataFrame
         DataFrame to dump.
     metadata: dict
-        Dictionary containing metadata to add to the group.
+        Dictionary containing metadata to add to the group (optional).
     verbose: bool
         Print progress.
 
     Output:
     -----------
     None
-    (Creates an hdf5 file at the specified path if doesn't exist, or add a new group.)
+    (Creates a hdf5 file at the specified path if doesn't exist, or add a new group.)
 
     """
-    outfname=fname
+    # Check if the file exists
     if os.path.exists(fname):
         outfile=h5py.File(fname,"r+")
         if group in outfile:
@@ -44,23 +44,21 @@ def dump_hdf_group(fname,group,data,metadata={},verbose=False):
     else:
         print(f'Creating new file {fname} ...')
         outfile=h5py.File(fname,"w")
-
-
     columns=list(data.columns)
 
+    # Create the group and add the requested columns
     for icol,column in enumerate(columns):
         if verbose:
             print(f'Dumping {column} ... {icol+1}/{len(columns)}')
         outfile.create_dataset(name=f'{group}/{column}',data=data[column].values)
 
+    # Add optional metadata to the group
     for key in metadata.keys():
         outfile[group].attrs[key]=metadata[key]
-
-
     outfile.close()
 
 
-
+# Dump a pandas DataFrame to an hdf5 file
 def dump_hdf(fname,data,verbose=False):
     """
     Dump a pandas DataFrame to an hdf5 file. 
@@ -98,6 +96,7 @@ def dump_hdf(fname,data,verbose=False):
 
     outfile.close()
 
+# Read an hdf5 file and return a pandas DataFrame
 def read_hdf(fname,columns=None,verbose=False):
     """
     read_hdf: Read an hdf5 file (generated with dump_hdf) and return a pandas DataFrame.
@@ -121,16 +120,19 @@ def read_hdf(fname,columns=None,verbose=False):
 
     """
 
+    # Open the hdf5 file and get columns if not specified
     infile=h5py.File(fname,mode='r')
     if not columns:
         columns=list(infile.keys())
     outdf={}
     failed=[]
 
+    # Read the requested columns
     for icol, column in enumerate(columns):
         if verbose:
             print(f'Reading {column} ... {icol+1}/{len(columns)}')
-        
+
+        # Skip the header if it exists; read the data otherwise
         if not 'Header' in column:
             try:
                 data=infile[column][:]
@@ -143,7 +145,7 @@ def read_hdf(fname,columns=None,verbose=False):
     
     outdf=pd.DataFrame(outdf)
 
-    #try to find metadata
+    # Search for metadata in the header
     if 'Header' in infile.keys():
         if 'metadata' in infile['Header'].attrs.keys():
             metadata_path=infile['Header'].attrs['metadata']
@@ -151,6 +153,7 @@ def read_hdf(fname,columns=None,verbose=False):
 
     infile.close()
 
+    # Print any failed columns
     if failed:
         if verbose:
             print('Note, failed to load the following fields:')

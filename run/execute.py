@@ -146,12 +146,6 @@ if dump:
     dumpcat_fname=dumpcat_folder+f'ivol_{str(ivol).zfill(3)}_pdata.hdf5'
     if os.path.exists(dumpcat_fname):
         os.remove(dumpcat_fname)
-    if not os.path.exists(dumpcat_folder):
-        #this is a quick fix for the fact that the folder may be created by another job
-        try:
-            os.makedirs(dumpcat_folder)
-        except:
-            pass
         logging.info(f'Will dump subset of particle data to: {dumpcat_fname} [runtime {time.time()-t1:.3f} sec]')
 
 #subhalo catalogue masking
@@ -224,9 +218,8 @@ if numgal:
             if dump:
                 logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
                 group=str(int(galaxy[galid_key]))
-                fname=dumpcat_fname
                 data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
-                dump_hdf_group(fname,group,data,metadata=galaxy,verbose=False)
+                dump_hdf_group(dumpcat_fname,group,data,metadata=galaxy,verbose=False)
 
             # Process the galaxy if candidates were found
             if pdata_candidates.shape[0]>0:
