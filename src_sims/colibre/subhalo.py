@@ -128,10 +128,10 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             for i in range(m200.shape[0]):
                 if halodata_out['HostHaloID'][i]!=-1:
                     hostmatch=np.where(halodata_out['GroupNumber']==halodata_out['HostHaloID'].values[i])[0]
+                    halodata_out.loc[i,'GroupMass']=halodata_out['GroupMass'].values[hostmatch]
                     halodata_out.loc[i,'Group_M_Crit200']=halodata_out['Group_M_Crit200'].values[hostmatch]
                     halodata_out.loc[i,'Group_R_Crit200']=halodata_out['Group_R_Crit200'].values[hostmatch]
-                    halodata_out.loc[i,'GroupMass']=halodata_out['GroupMass'].values[hostmatch]
-                    halodata_out.loc[i,'Rrel']=np.sqrt((halodata_out['CentreOfPotential_x'].values[i]-halodata_out['CentreOfPotential_x'].values[hostmatch])**2+(halodata_out['CentreOfPotential_y'].values[i]-halodata_out['CentreOfPotential_y'].values[hostmatch])**2+(halodata_out['CentreOfPotential_z'].values[i]-halodata_out['CentreOfPotential_z'].values[hostmatch])**2)
+                    halodata_out.loc[i,'Group_Rrel']=np.sqrt((halodata_out['CentreOfPotential_x'].values[i]-halodata_out['CentreOfPotential_x'].values[hostmatch])**2+(halodata_out['CentreOfPotential_y'].values[i]-halodata_out['CentreOfPotential_y'].values[hostmatch])**2+(halodata_out['CentreOfPotential_z'].values[i]-halodata_out['CentreOfPotential_z'].values[hostmatch])**2)
 
             # Remove subhalos below mass cut
             halodata_out=halodata_out[halodata_out['Mass']>=mcut]
