@@ -220,7 +220,7 @@ if numgal:
             t1_c=time.time()
             pdata_candidates=retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=maxrad)
             t2_c=time.time()
-            logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
+            logging.info(f"Candidates: {t2_c-t1_c:.3f} sec (n={pdata_candidates.shape[0]})")
 
             # Dump a subset of the particle data if requested
             if dump:
