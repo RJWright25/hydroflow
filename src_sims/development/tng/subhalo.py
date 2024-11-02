@@ -116,7 +116,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=subcat['SubhaloVel'][:,:]*np.sqrt(afac) #peculiar velocity in km/s
 
         # Initialize group data in subhalo data
-        keys_groups=['GroupMass','Group_M_Crit200','Group_R_Crit200','Group_CentreOfPotential_x','Group_CentreOfPotential_y','Group_CentreOfPotential_z']
+        keys_groups=['SubGroupNumber','GroupMass','Group_M_Crit200','Group_R_Crit200','Group_CentreOfPotential_x','Group_CentreOfPotential_y','Group_CentreOfPotential_z']
         for key in keys_groups:
             subhalo_df[key]=np.zeros(subhalo_df.shape[0])+np.nan
         
@@ -151,7 +151,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
                 continue
             
             # Assign group data to subhalo data
-            print(subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'SubGroupNumber'].shape)
+            print(subhalo_df.loc[subhalo_idx_1:subhalo_idx_2].shape)
             print(np.array(range(subhalo_idx_2-subhalo_idx_1)).shape)
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'SubGroupNumber']=np.array(range(subhalo_idx_2-subhalo_idx_1))
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'GroupMass']=group_df.loc[group_idx,'GroupMass']
