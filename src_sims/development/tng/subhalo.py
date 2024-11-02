@@ -139,12 +139,13 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
                 print(f"Group {group} does not match {group_df['GroupNumber'].values[group_idx]}...")
                 continue
             
+            print(subhalo_df['GroupNumber'].values)
             # Find the subhalo indices range for the group
             subhalo_idx_1=np.searchsorted(subhalo_df['GroupNumber'].values,group)
             subhalo_idx_2=np.searchsorted(subhalo_df['GroupNumber'].values,subhalo_df['GroupNumber'].values[igroup+1])
 
             print(subhalo_idx_1,subhalo_idx_2)
-            
+
             # Check if there are subhalos in the group  
             if subhalo_idx_2-subhalo_idx_1==0:
                 print(f'No subhalos in group {group}...')
