@@ -51,7 +51,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     afac=metadata.snapshots_afac[snap_idx_in_metadata]
 
     # Get file list
-    isnap_flist=sorted([os.path.dirname(path)+fname for fname in os.listdir(os.path.dirname(path)) if '.hdf5' in fname])
+    isnap_flist=sorted([os.path.dirname(path)+'/'+fname for fname in os.listdir(os.path.dirname(path)) if '.hdf5' in fname])
     numfiles=len(isnap_flist)
     logging.info(f"Reading {numfiles} files from {os.path.dirname(path)}...")
 
