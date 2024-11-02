@@ -143,14 +143,13 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             subhalo_idx_1=np.searchsorted(subhalo_df['GroupNumber'].values,group)
             subhalo_idx_2=np.searchsorted(subhalo_df['GroupNumber'].values,unique_groups[igroup+1])
 
-            print(subhalo_idx_1,subhalo_idx_2)
-
             # Check if there are subhalos in the group  
             if subhalo_idx_2-subhalo_idx_1==0:
                 print(f'No subhalos in group {group}...')
                 continue
             
             # Assign group data to subhalo data
+            print(subhalo_df['GroupNumber'].values[:10])
             print(subhalo_df.loc[subhalo_idx_1:subhalo_idx_2].shape)
             print(np.array(range(subhalo_idx_2-subhalo_idx_1)).shape)
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'SubGroupNumber']=np.array(range(subhalo_idx_2-subhalo_idx_1))
