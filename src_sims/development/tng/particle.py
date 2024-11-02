@@ -36,9 +36,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
         KDTree containing the cell & normal baryonic particle data for the subvolume.
 
     """
-    
-    # Open the snapshot file
-    file=h5py.File(path,'r')
 
     # Set up logging
     if logfile is not None:
@@ -54,9 +51,10 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     afac=metadata.snapshots_afac[snap_idx_in_metadata]
 
     # Get file list
-    flist=sorted([path.split('snap_')[0]+fname for fname in os.listdir(path.split('snap_')[0]) if '.hdf5' in fname])
-    numfiles=len(flist)
-    logging.info(f"Reading {numfiles} files from {path}...")
+    isnap_folder=path.split('snap_')[0]
+    isnap_flist=sorted([isnap_folder+fname for fname in os.listdir(isnap_folder) if '.hdf5' in fname])
+    numfiles=len(isnap_flist)
+    logging.info(f"Reading {numfiles} files from {isnap_folder}...")
 
     # Get limits for the subvolume
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
@@ -74,7 +72,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
 
     # Loop over all the snapshot chunks
     t0=time.time()
-    for ifile,ifname in enumerate(flist):
+    for ifile,ifname in enumerate(isnap_flist):
         pdata_ifile=h5py.File(ifname,'r')
         npart_ifile=pdata_ifile['Header'].attrs['NumPart_ThisFile']
         mass_table=pdata_ifile['Header'].attrs['MassTable']
