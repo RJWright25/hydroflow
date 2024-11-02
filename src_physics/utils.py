@@ -111,6 +111,12 @@ def get_limits(ivol,nslice,boxsize,buffer=0.1):
 # Gravitational constant in (km/s)^2*Mpc/Ms
 constant_G=4.30073691e-09 #(km/s)^2*Mpc/Msun
 
+# Solar mass in g
+msun=1.989e33
+
+# Seconds in a Gigayear
+sec_in_Gyr=3.15576e16
+
 # Conversion factor from pMpc/Gyr to km/s -- used to align the units of particle velocities for the gas flow calculations
 vel_conversion=1*units.Mpc/units.Gyr #from pMpc/Gyr to km/s
 vel_conversion=vel_conversion.to(units.km/units.s)
