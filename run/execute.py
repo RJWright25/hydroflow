@@ -179,7 +179,10 @@ if numgal:
 
     logging.info(f'Coordinate minima: x - {pdata_subvol["Coordinates_x"].min():.2f}, y - {pdata_subvol["Coordinates_y"].min():.2f}, z - {pdata_subvol["Coordinates_z"].min():.2f} [runtime {time.time()-t1:.3f} sec]')
     logging.info(f'Coordinate maxima: x - {pdata_subvol["Coordinates_x"].max():.2f}, y - {pdata_subvol["Coordinates_y"].max():.2f}, z - {pdata_subvol["Coordinates_z"].max():.2f} [runtime {time.time()-t1:.3f} sec]')
-
+    logging.info(f'Temperature minima: {pdata_subvol["Temperature"].min():.2e}')
+    logging.info(f'Temperature maxima: {pdata_subvol["Temperature"].max():.2e}')
+    logging.info(f'Temperature mean: {pdata_subvol["Temperature"].mean():.2e}')
+    
     # If dumping pdata and mfracs are in pdata, add to pdata_fields
     if dump:
         if 'mfrac_HI' in pdata_subvol.columns:
