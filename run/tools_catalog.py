@@ -39,10 +39,12 @@ def dump_hdf_group(fname,group,data,metadata={},verbose=False):
     if os.path.exists(fname):
         outfile=h5py.File(fname,"r+")
         if group in outfile:
-            print(f'Removing existing group {group} in {fname} ...')
+            if verbose:
+                print(f'Removing existing group {group} in {fname} ...')
             del outfile[group]
     else:
-        print(f'Creating new file {fname} ...')
+        if verbose:
+            print(f'Creating new file {fname} ...')
         if not os.path.exists(os.path.dirname(fname)):
             try:
                 os.makedirs(os.path.dirname(fname))
