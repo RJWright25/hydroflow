@@ -15,7 +15,7 @@ from hydroflow.src_physics.utils import get_limits
 from hydroflow.src_physics.utils import msun,sec_in_yr
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
+def read_subvol(path,ivol,nslice,metadata,logfile=None):
     """
     read_subvol: Read particle data for a subvolume from an EAGLE simulation snapshot. Uses the EagleSnapshot class from read_eagle.
 
@@ -29,6 +29,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
         Number of subvolumes in each dimension.
     metadata: object
         Metadata object containing the simulation parameters.
+    logfile: str
+        Path to the logfile.
 
     Output:
     -----------
@@ -78,9 +80,9 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
         logging.info(f"Reading {ptype} particle IDs, coordinates & velocities...")
         
         pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
+        pdata[ptype]['ParticleType']=np.ones(pdata[ptype].shape[0])*ptype
         pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')/hval #comoving position in Mpc
         pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*np.sqrt(afac) #peculiar velocity in km/s
-        pdata[ptype].loc[:,'ParticleType']=ptype
 
         # Get masses (use the mass table value for DM particles)
         if ptype==1:

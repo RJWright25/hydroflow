@@ -211,24 +211,24 @@ if numgal:
                 maxrad=150e-3 #150 kpc
 
             # Calculate effective v200
-            v200_eff=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']*afac))
-
             galaxy_output.loc[0,'r200_eff']=galaxy['Group_R_Crit200']
             galaxy_output.loc[0,'m200_eff']=galaxy['Group_M_Crit200']
-            galaxy_output.loc[0,'v200_eff']=v200_eff
+            galaxy_output.loc[0,'v200_eff']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']*afac))
 
             # Get the particle data for this halo
             t1_c=time.time()
             pdata_candidates=retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=maxrad)
             t2_c=time.time()
-
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
 
             # Dump a subset of the particle data if requested
             if dump:
                 logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
                 group=str(int(galaxy[galid_key]))
-                data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
+                print(pdata_candidates.columns)
+                gasmask=pdata_candidates['ParticleType'].values==0
+
+                data=pdata_candidates.loc[gasmask,pdata_fields]
                 dump_hdf_group(dumpcat_fname,group,data,metadata=galaxy,verbose=False)
 
             # Process the galaxy if candidates were found
