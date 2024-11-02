@@ -1,7 +1,7 @@
 # HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
 # Ruby Wright (2021)
 
-# src_sims/eaglesnap/particle.py: routines to read and convert particle data from EAGLE (SUBFIND) snapshot outputs – uses read_eagle.
+# src_sims/eaglesnap/particle.py: routines to read and convert particle data from EAGLE snapshot outputs – uses read_eagle package.
 
 import numpy as np
 import pandas as pd
