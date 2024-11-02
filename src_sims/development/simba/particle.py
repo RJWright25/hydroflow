@@ -110,8 +110,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                         pdata[iptype][field]=pdata_ifile[f'PartType{ptype}'][field][:,0][subvol_mask]
 
                 # If gas, do temp calculation
-                logging.info(f"Calculating temperature for {ptype} particles...")
                 if ptype==0:
+                    logging.info(f"Calculating temperature for {ptype} particles...")
                     pdata[iptype]['Temperature']=calc_temperature(pdata[ptype],XH=0.76,gamma=5/3)
                     del pdata[iptype]['InternalEnergy']
                     del pdata[iptype]['ElectronAbundance']    
