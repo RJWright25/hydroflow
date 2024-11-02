@@ -76,18 +76,14 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
         npart_ifile=pdata_ifile['Header'].attrs['NumPart_ThisFile']
         mass_table=pdata_ifile['Header'].attrs['MassTable']
 
-        print(f'Loading data for ifile {ifile+1}/{numfiles}')
-        for iptype,ptype in enumerate(ptype_fields):
-            
+        logging.info(f"Reading file {ifile+1}/{numfiles}...")
+        for iptype,ptype in enumerate(ptype_fields):            
             # Check if the particle type exists in the file
             if npart_ifile[ptype]:
                 
                 # Generate a mask for the particles in the subvolume
                 subvol_mask=np.ones(npart_ifile[ptype])
                 coordinates=pdata_ifile[f'PartType{ptype}']['Coordinates'][:]*1e-3/hval #convert to cMpc
-                
-                # Print max/min coordinates
-                logging.info(f"Coordinates: {np.nanmin(coordinates,axis=0)} {np.nanmax(coordinates,axis=0)}")
                 
                 # Mask for each dimension and check for periodicity
                 for idim,dim in enumerate('xyz'):
@@ -106,7 +102,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
 
                 # Check if there are particles in the subvolume
                 if npart_ifile_invol:
-                    print(f'There are {npart_ifile_invol} ivol ptype {ptype} particles in this file')
                     subvol_mask=np.where(subvol_mask)
                     coordinates=coordinates[subvol_mask]
                     
@@ -124,6 +119,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                         pdata[ifile][ptype]['Mass']=np.float32(np.ones(npart_ifile_invol)*mass_table[ptype]*1e10/hval)      
 
                     # Mask and load rest of the properties
+                    logging.info(f"Reading extra baryonic properties...")
                     for field in ptype_fields[ptype]:
                         if not 'GFM' in field:
                             pdata[ifile][ptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
@@ -132,10 +128,14 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                             pdata[ifile][ptype][field_out]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
 
                     # If gas, do temp calculation
+                    logging.info(f"Calculating temperature for {ptype} particles...")
                     if ptype==0:
                         pdata[ifile][ptype]['Temperature']=calc_temperature(pdata[ifile][ptype],XH=0.76,gamma=5/3)
                         del pdata[ifile][ptype]['InternalEnergy']
                         del pdata[ifile][ptype]['ElectronAbundance']
+
+                        print(f"Temperature: {np.nanmin(pdata[ifile][ptype]['Temperature'])} {np.nanmax(pdata[ifile][ptype]['Temperature'])}")
+                        print(f"mean Temperature: {np.nanmean(pdata[ifile][ptype]['Temperature'])}")
     
                 else:
                     print(f'No ivol ptype {ptype} particles in this file!')
