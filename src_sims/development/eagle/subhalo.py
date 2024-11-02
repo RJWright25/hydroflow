@@ -54,15 +54,15 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 Subhalo.CentreOfPotential_y as CentreOfPotential_y, \
                 Subhalo.CentreOfPotential_z as CentreOfPotential_z, \
                 Subhalo.Mass as Mass, \
-                Aperture.Mass_Star as flag030pkpc_sphere-star-m_tot-subfexcl, \
-                Aperture.Mass_Gas as flag030pkpc_sphere-gas_all-m_tot-subfexcl, \
-                Aperture.Mass_BH as flag030pkpc_sphere-bh_m_tot-subfexcl, \
-                Aperture.Mass_DM as flag030pkpc_sphere-dm_m_tot-subfexcl, \
-                Aperture.SFR as flag030pkpc_sphere-gas_all-SFR-subfexcl, \
-                Sizes.R_halfmass30 as R_halfmass30 as flag030pkpc_sphere-star-r_half-subfexcl, \
-                Subhalo.GasSpin_x*Subhalo.MassType_Gas as subhalo-gas-L_tot-subfexcl_x, \
-                Subhalo.GasSpin_y*Subhalo.MassType_Gas as subhalo-gas-L_tot-subfexcl_y, \
-                Subhalo.GasSpin_z*Subhalo.MassType_Gas as subhalo-gas-L_tot-subfexcl_z, \
+                Aperture.Mass_Star as flag030pkpc_spheredashstardashm_totdashsubfexcl, \
+                Aperture.Mass_Gas as flag030pkpc_spheredashgas_alldashm_totdashsubfexcl, \
+                Aperture.Mass_BH as flag030pkpc_spheredashbh_m_totdashsubfexcl, \
+                Aperture.Mass_DM as flag030pkpc_spheredashdm_m_totdashsubfexcl, \
+                Aperture.SFR as flag030pkpc_spheredashgas_alldashSFRdashsubfexcl, \
+                Sizes.R_halfmass30 as R_halfmass30 as flag030pkpc_spheredashstardashr_halfdashsubfexcl, \
+                Subhalo.GasSpin_x*Subhalo.MassType_Gas as subhalodashgasdashL_totdashsubfexcl_x, \
+                Subhalo.GasSpin_y*Subhalo.MassType_Gas as subhalodashgasdashL_totdashsubfexcl_y, \
+                Subhalo.GasSpin_z*Subhalo.MassType_Gas as subhalodashgasdashL_totdashsubfexcl_z, \
                 FOF.GroupMass as GroupMass, \
                 FOF.Group_M_Crit200 as Group_M_Crit200, \
                 FOF.Group_R_Crit200 as Group_R_Crit200, \
@@ -80,7 +80,7 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 Subhalo.GalaxyID = Sizes.GalaxyID and \
                 Subhalo.GroupID = FOF.GroupID and\
                 Subhalo.SnapNum = FOF.SnapNum and\
-                Subhalo.Mass>=1e{mcut:.0f} \
+                Subhalo.Mass >= 1e{mcut:.0f} \
               ORDER BY \
                 Subhalo.SnapNum desc, \
                 Subhalo.Mass desc \
@@ -95,6 +95,9 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
 
     # Remove "flag" from column names
     data_pd.columns=data_pd.columns.str.replace('flag','')
+
+    # Use '-' instead of 'dash' in column names
+    data_pd.columns=data_pd.columns.str.replace('dash','-')
     
     # Convert Group_R_Crit200 to cMpc
     data_pd['Group_R_Crit200']=data_pd['Group_R_Crit200']/1e3*(1+data_pd['Redshift'])
