@@ -151,6 +151,8 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
                 continue
             
             # Assign group data to subhalo data
+            print(subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'SubGroupNumber'].shape)
+            print(np.array(range(subhalo_idx_2-subhalo_idx_1)).shape)
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'SubGroupNumber']=np.array(range(subhalo_idx_2-subhalo_idx_1))
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'GroupMass']=group_df.loc[group_idx,'GroupMass']
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'Group_M_Crit200']=group_df.loc[group_idx,'Group_M_Crit200']
