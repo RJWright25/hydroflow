@@ -51,10 +51,9 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     afac=metadata.snapshots_afac[snap_idx_in_metadata]
 
     # Get file list
-    isnap_folder=path.split('snap_')[0]
-    isnap_flist=sorted([isnap_folder+fname for fname in os.listdir(isnap_folder) if '.hdf5' in fname])
+    isnap_flist=sorted([os.path.dirname(path)+fname for fname in os.listdir(os.path.dirname(path)) if '.hdf5' in fname])
     numfiles=len(isnap_flist)
-    logging.info(f"Reading {numfiles} files from {isnap_folder}...")
+    logging.info(f"Reading {numfiles} files from {os.path.dirname(path)}...")
 
     # Get limits for the subvolume
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
