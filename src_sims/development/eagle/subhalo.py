@@ -86,6 +86,7 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 Subhalo.SnapNum desc, \
                 Subhalo.Mass desc \
               "
+    print(myQuery)
 
     # Execute the query and convert the data to a pandas DataFrame          
     data=sql.execute_query(con, myQuery)
