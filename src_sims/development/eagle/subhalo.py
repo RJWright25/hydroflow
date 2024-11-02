@@ -45,7 +45,7 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
     snapnum_str=["SnapNum="+str(snapnum) for snapnum in snapnums]
     snapnum_str=" OR ".join(snapnum_str)
     print(snapnum_str)
-    myQuery =f"SELECT \
+    myQuery =f"SELECT\
                 Subhalo.Redshift as Redshift, \
                 Subhalo.SnapNum as SnapNum, \
                 Subhalo.GalaxyID as GalaxyID, \
@@ -67,8 +67,8 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 FOF.Group_M_Crit200 as Group_M_Crit200, \
                 FOF.Group_R_Crit200 as Group_R_Crit200, \
                 FOF.GroupCentreOfPotential_x,
-                square(Subhalo.CentreOfPotential_x-FOF.GroupCentreOfPotential_x)
-                      + square(Subhalo.CentreOfPotential_y-FOF.GroupCentreOfPotential_y)
+                square(Subhalo.CentreOfPotential_x-FOF.GroupCentreOfPotential_x) \
+                      + square(Subhalo.CentreOfPotential_y-FOF.GroupCentreOfPotential_y) \
                       + square(Subhalo.CentreOfPotential_z-FOF.GroupCentreOfPotential_z) as Group_Rrel \
               FROM \
                 {simname}_Subhalo as Subhalo,\
