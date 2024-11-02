@@ -116,7 +116,7 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
     data_pd['Group_R_Crit200']=data_pd['Group_R_Crit200']/1e3*(1+data_pd['Redshift'])
 
     # Convert R_halfmass30 to pMpc
-    data_pd['030pkpc_sphere-star-r_half-subfexcl']=data_pd['R_halfmass30']/1e3
+    data_pd['030pkpc_sphere-star-r_half-subfexcl']=data_pd['030pkpc_sphere-star-r_half-subfexcl']/1e3
 
     # Add Rrel to the subhalo catalogue
     data_pd['Group_Rrel']=np.sqrt((data_pd['CentreOfPotential_x']-data_pd['GroupCentreOfPotential_x'])**2+(data_pd['CentreOfPotential_y']-data_pd['GroupCentreOfPotential_y'])**2+(data_pd['CentreOfPotential_z']-data_pd['GroupCentreOfPotential_z'])**2)
