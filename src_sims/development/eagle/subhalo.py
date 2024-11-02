@@ -49,20 +49,21 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 Subhalo.Redshift as Redshift, \
                 Subhalo.SnapNum as SnapNum, \
                 Subhalo.GalaxyID as GalaxyID, \
+                Subhalo.Mass as Mass,  \
                 Subhalo.SubGroupNumber as SubGroupNumber, \
                 Subhalo.CentreOfPotential_x as CentreOfPotential_x, \
                 Subhalo.CentreOfPotential_y as CentreOfPotential_y, \
                 Subhalo.CentreOfPotential_z as CentreOfPotential_z, \
-                Subhalo.Mass as Mass, \
+                Subhalo.GasSpin_x as subhalodashgasdashL_totdashsubfexcl_x, \
+                Subhalo.GasSpin_y as subhalodashgasdashL_totdashsubfexcl_y, \
+                Subhalo.GasSpin_z as subhalodashgasdashL_totdashsubfexcl_z, \
+                Subhalo.Mass_Gas as subhalodashgasdashm_totdashsubfexcl, \
                 Aperture.Mass_Star as flag030pkpc_spheredashstardashm_totdashsubfexcl, \
                 Aperture.Mass_Gas as flag030pkpc_spheredashgas_alldashm_totdashsubfexcl, \
                 Aperture.Mass_BH as flag030pkpc_spheredashbh_m_totdashsubfexcl, \
                 Aperture.Mass_DM as flag030pkpc_spheredashdm_m_totdashsubfexcl, \
                 Aperture.SFR as flag030pkpc_spheredashgas_alldashSFRdashsubfexcl, \
                 Sizes.R_halfmass30 as R_halfmass30 as flag030pkpc_spheredashstardashr_halfdashsubfexcl, \
-                Subhalo.GasSpin_x*Subhalo.MassType_Gas as subhalodashgasdashL_totdashsubfexcl_x, \
-                Subhalo.GasSpin_y*Subhalo.MassType_Gas as subhalodashgasdashL_totdashsubfexcl_y, \
-                Subhalo.GasSpin_z*Subhalo.MassType_Gas as subhalodashgasdashL_totdashsubfexcl_z, \
                 FOF.GroupMass as GroupMass, \
                 FOF.Group_M_Crit200 as Group_M_Crit200, \
                 FOF.Group_R_Crit200 as Group_R_Crit200, \
@@ -98,6 +99,11 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
 
     # Use '-' instead of 'dash' in column names
     data_pd.columns=data_pd.columns.str.replace('dash','-')
+
+    # Convert GasSpin to angular momentum
+    data_pd['subhalo-L_tot-subfexcl_x']=data_pd['subhalo-L_tot-subfexcl_x']*data_pd['subhalo-gas-m_tot-subfexcl']
+    data_pd['subhalo-L_tot-subfexcl_y']=data_pd['subhalo-L_tot-subfexcl_y']*data_pd['subhalo-gas-m_tot-subfexcl']
+    data_pd['subhalo-L_tot-subfexcl_z']=data_pd['subhalo-L_tot-subfexcl_z']*data_pd['subhalo-gas-m_tot-subfexcl']
     
     # Convert Group_R_Crit200 to cMpc
     data_pd['Group_R_Crit200']=data_pd['Group_R_Crit200']/1e3*(1+data_pd['Redshift'])
