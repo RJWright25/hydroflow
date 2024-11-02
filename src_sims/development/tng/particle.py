@@ -76,7 +76,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
         npart_ifile=pdata_ifile['Header'].attrs['NumPart_ThisFile']
         mass_table=pdata_ifile['Header'].attrs['MassTable']
 
-        logging.info(f"Reading file {ifile+1}/{numfiles}...")
+        logging.info(f"\nReading file {ifile+1}/{numfiles}...")
         for iptype,ptype in enumerate(ptype_fields):            
             # Check if the particle type exists in the file
             if npart_ifile[ptype]:
@@ -134,33 +134,29 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                         del pdata[ifile][ptype]['InternalEnergy']
                         del pdata[ifile][ptype]['ElectronAbundance']
 
-                        print(f"Temperature: {np.nanmin(pdata[ifile][ptype]['Temperature'])} {np.nanmax(pdata[ifile][ptype]['Temperature'])}")
-                        print(f"mean Temperature: {np.nanmean(pdata[ifile][ptype]['Temperature'])}")
-    
+                
+
                 else:
-                    print(f'No ivol ptype {ptype} particles in this file!')
+                    logging.info(f"No {ptype} particles in this file!")
                     pdata[ifile][ptype]=pd.DataFrame([])
             else:
-                print(f'No ptype {ptype} particles in this file!')
+                logging.info(f"No {ptype} particles in this file!")
                 pdata[ifile][ptype]=pd.DataFrame([])
 
-            print(f'Loaded itype {ptype} for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
+            logging.info(f'Loaded itype {ptype} for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
         
         # Concatenate the dataframes for this file
         pdata[ifile]=pd.concat([pdata[ifile][ptype] for ptype in ptype_fields])
         pdata[ifile].reset_index(inplace=True,drop=True)
 
     # Concatenate the particle dataframes
-    print('Concatenating all particle data...')
+    logging.info(f"Concatenating particle data...")
     pdata=pd.concat(pdata)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
 
-    #Print max/min coordinates
-    print(f"Coordinates: {np.nanmin(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)} {np.nanmax(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)}")
-
     # Create a spatial KDTree for the particle data
-    print('Creating KDTree for particle data...')
+    logging.info(f"Creating KDTree for particle data...")
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
     
     return pdata, pdata_kdtree
