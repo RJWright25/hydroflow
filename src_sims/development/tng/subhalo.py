@@ -55,13 +55,14 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
     dconv=1e-3/hval #convert to cMpc
 
     # Extract snapshot numbers from the paths and metadata
-    snapnums=[];afac=[]
+    snapnums=[]
+    afacs=[]
     hval=metadata.hval
     
     for ipath in path:
         mask=np.where(ipath==np.array(metadata.snapshots_flist))
         snapnum=metadata.snapshots_snapnums[mask];snapnums.append(snapnum)
-        afac=metadata.snapshots_afac[mask];afac.append(afac)
+        afac=metadata.snapshots_afac[mask];afacs.append(afac)
 
     # Base output path
     outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
@@ -80,7 +81,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         subcat=subfind_raw['subhalos']
 
         # Get the redshift
-        afac=afac[isnapnum]
+        afac=afacs[isnapnum]
         zval=1/afac-1
 
         # Initialize the group and subhalo dataframes
