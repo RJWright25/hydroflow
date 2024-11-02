@@ -159,6 +159,9 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
 
+    #Print max/min coordinates
+    print(f"Coordinates: {np.nanmin(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)} {np.nanmax(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)}")
+
     # Create a spatial KDTree for the particle data
     print('Creating KDTree for particle data...')
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
