@@ -8,7 +8,7 @@ import pandas as pd
 import h5py 
 
 from scipy.spatial import cKDTree
-from read_eagle import EagleSnapshot
+from pyread_eagle import EagleSnapshot
 
 from hydroflow.src_physics.utils import get_limits
 from hydroflow.src_physics.utils import msun,sec_in_Gyr
