@@ -6,111 +6,125 @@ import pandas as pd
 import logging
 import time
 
-def read_subcat(basepath,prefix='m50n512_',snapnums=None):
+from hydroflow.run.tools_catalog import dump_hdf
+from hydroflow.run.initialise import load_metadata
+
+def read_subcat(path,mcut=1e11,metadata=None):
+
     """
-    read_subcat: Read the subhalo catalogue from a SIMBA simulation snapshot.
+    read_subcat: Read the subhalo catalogue from a SIMBA caesar output file. 
+                 Currently only reads central galaxies.
 
     Input:
     -----------
-    basepath: str   
-        Path to the simulation snapshot.
-    prefix: str
-        Prefix for the snapshot files.
-    snapnums: list
-        List of snapshot indices to read.
+    path: str or list of str.
+        Path(s) to the simulation caesar catalogue(s).
+    mcut: float
+        Minimum mass of subhaloes to include [log10(M/Msun)].
+    metadata: str
+        Path to the metadata file.
 
     Output:
     -----------
     subcat: pd.DataFrame
         DataFrame containing the subhalo catalogue.
 
-
     """
+    # Check if just one path is given
+    if type(path)==str:
+        path=[path]
     
-    files=os.listdir(basepath)
-    numfiles=len(files)
-    if snapnums is None:
-        snapnums=list(range(numfiles))
+    # Grab metadata from the metadata file
+    if metadata is not None:
+        metadata_path=metadata
+        metadata=load_metadata(metadata)
+    else:
+        simflist=os.listdir(os.getcwd())
+        for metadata_path in simflist:
+            if '.pkl' in metadata_path:
+                metadata_path=metadata_path
+                metadata=load_metadata(metadata_path)
+                print(f"Metadata file found: {metadata_path}")
+                break
 
-    snapnums=sorted(snapnums)
+    # Ensure that some catalogues exist
+    if len(path)==0:
+        print("No catalogue paths given. Exiting...")
+        return None
 
-    if len(snapnums)==0:
-        logging.info(f'No snapshots found in {basepath}')
-        return
-    
+    # Extract snapshot numbers from the paths and metadata
+    snapnums=[]
+    afacs=[]
+    hval=metadata.hval
+    for ipath in path:
+        snapnum=int(ipath.split('.hdf5')[0][-3:]);snapnums.append(snapnum)
+        mask=np.where(metadata.snapshots_idx==snapnum)[0][0]
+        afac=metadata.snapshots_afac[mask];afacs.append(afac)
 
-    if not os.path.exists('catalogues'):
-        os.mkdir('catalogues')
+    # Base output path
+    outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
 
-    snapm1=snapnums[-1]
-    if os.path.exists(f'jobs/logs/read_subcat_{snapm1}.log'):
-        os.remove(f'jobs/logs/read_subcat_{snapm1}.log')
+    # Conversion factors
+    mconv=1 #convert to Msun
+    dconv=1e-3 #convert to cMpc
 
-
-    t0=time.time()
-    logging.basicConfig(filename=f'jobs/logs/read_subcat_{snapm1}.log', level=logging.INFO)
-    logging.info(f'Running subhalo extraction for {len(snapnums)} snaps ending at {snapnums[-1]} ...')
-
+    # Initialize the subcat list
     subhalo_dfs=[]
 
+    # Iterate over the snapshots
+    for isnapnum,snapnum in enumerate(snapnums):
+        print (f"Loading snapshot {snapnum}...")
 
-    for snapnum in snapnums:
-        logging.info(f'')
-        logging.info(f'***********************************************************************')
-        logging.info(f'Processing snapnum {snapnum} [runtime {time.time()-t0:.2f} sec]')
-        logging.info(f'***********************************************************************')
+        # Load the caesar file
+        caesarfile=h5py.File(path[isnapnum],mode='r')
+        zval=caesarfile['simulation_attributes'].attrs['redshift']
+        afac=1/(1+zval)
 
-        rockstarfile=h5py.File(basepath+'/'+f'{prefix}{str(snapnum).zfill(3)}.hdf5')
-        zval=rockstarfile['simulation_attributes'].attrs['redshift']
-
+        # Initialize the group data structure
         group_df=pd.DataFrame()
-        mcut=1e10
 
-        ### group data
-        group_df.loc[:,'Mass']=rockstarfile['/halo_data/dicts/masses.total'][:]
-        group_df.loc[:,'GroupMass']=rockstarfile['/halo_data/dicts/masses.total'][:]
-        group_df.loc[:,'Group_M_Crit200']=rockstarfile['/halo_data/dicts/virial_quantities.m200c'][:]
-        group_df.loc[:,'Group_R_Crit200']=rockstarfile['/halo_data/dicts/virial_quantities.r200c'][:]*1e-3
-        group_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=rockstarfile['/halo_data/minpotpos'][:]*1e-3
-        group_df.loc[:,'GroupNumber']=rockstarfile['/halo_data/GroupID'][:]
+        # Load the group data
+        group_df.loc[:,'SnapNum']=snapnum
+        group_df.loc[:,'Redshift']=zval
+        group_df.loc[:,'GroupNumber']=caesarfile['/halo_data/GroupID'][:]
+        group_df.loc[:,'GalaxyID']=np.int64(snapnum*1e12+group_df.loc[:,'GroupNumber'])
+        group_df.loc[:,'Mass']=caesarfile['/halo_data/dicts/masses.total'][:]*mconv
+        group_df.loc[:,'GroupMass']=caesarfile['/halo_data/dicts/masses.total'][:]*mconv
+        group_df.loc[:,'Group_M_Crit200']=caesarfile['/halo_data/dicts/virial_quantities.m200c'][:]*mconv
+        group_df.loc[:,'Group_R_Crit200']=caesarfile['/halo_data/dicts/virial_quantities.r200c'][:]*dconv
         group_df.loc[:,'SubGroupNumber']=0
         group_df.loc[:,'StellarMass']=np.nan
         group_df.loc[:,'StarFormationRate']=np.nan
         group_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=np.nan
-        group_df.loc[:,'SnapNum']=snapnum
-        group_df.loc[:,'Redshift']=zval
-        group_df.loc[:,'GalaxyID']=np.int64(snapnum*1e12+group_df.loc[:,'GroupNumber'])
+        group_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=caesarfile['/halo_data/minpotpos'][:]*dconv
 
-        group_df.sort_values('GroupNumber',inplace=True)
+        # Remove groups with mass below the cut and reindex
+        group_df=group_df[group_df.Mass>=mcut]
+        group_df.sort_values(['Mass'],inplace=True,ascending=False)
         group_df.reset_index(drop=True,inplace=True)
 
+        # Append the group data to the list
         subhalo_dfs.append(group_df)
 
-    logging.info(f'')
-    logging.info(f'*********************************************')
-    logging.info(f'Concatenating final subhalo data structure...')
-    logging.info(f'*********************************************')
-
+    # Concatenate the subhalo dataframes
     if len (subhalo_dfs)>1:
         subcat=pd.concat(subhalo_dfs)
     else:
         subcat=subhalo_dfs[0]
 
-    subcat=subcat.loc[subcat.Mass>=mcut,:].copy()
+    # Sort the subcat by snapshot number and mass
     subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False],inplace=True)
     subcat.reset_index(inplace=True,drop=True)
 
-    if len(snapnums)==1:
-        outname=f'catalogues/catalogue_subhalo_{str(int(snapnums[0])).zfill(3)}.hdf5'
+    # Dump the subhalo catalogue
+    dump_hdf(outpath,subcat)
+
+    # Add path to metadata in hdf5
+    if metadata is not None:
+        with h5py.File(outpath, 'r+') as subcatfile:
+            header= subcatfile.create_group("Header")
+            header.attrs['metadata'] = metadata_path
     else:
-        outname=f'catalogues/catalogue_subhalo_{str(int(snapnums[0])).zfill(3)}_to_{str(int(snapnums[-1])).zfill(3)}.hdf5'
-        
-    logging.info(f'')
-    logging.info(f'*********************************************')
-    logging.info(f'Saving final subhalo data structure to {outname}...')
-    logging.info(f'*********************************************')
-    if os.path.exists(f'{outname}'):
-        os.remove(f'{outname}')
-    subcat.to_hdf(f'{outname}',key='Subhalo')
+        print("No metadata file found. Metadata path not added to subhalo catalogue.")
 
     return subcat

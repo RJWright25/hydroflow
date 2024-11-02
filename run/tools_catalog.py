@@ -99,8 +99,6 @@ def dump_hdf(fname,data,verbose=False):
             print(f'Dumping {column} ... {icol+1}/{len(columns)}')
         outfile.create_dataset(name=column,data=data[column].values)
 
-
-
     outfile.close()
 
 # Read an hdf5 file and return a pandas DataFrame
@@ -226,7 +224,6 @@ def combine_catalogs(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False):
     logging.info(f'Snapdirs: {snapdirs} ... \n')
 
     snapdirs=[snapdir for snapdir in snapdirs if ('gas' not in snapdir)]
-
     snap_outputs=[]
 
     for snapdir in snapdirs:
