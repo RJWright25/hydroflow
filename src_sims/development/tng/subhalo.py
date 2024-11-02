@@ -89,7 +89,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
 
         # Extract group data
         print('Extracting group data...')
-        numgroups=groupcat['Mass'][:].shape[0]
+        numgroups=groupcat['GroupMass'][:].shape[0]
         group_df['SnapNum']=np.ones(numgroups)*snapnum
         group_df['Redshift']=np.ones(numgroups)*zval
         group_df['GroupNumber']=np.float64(list(range(group_df.shape[0])))
