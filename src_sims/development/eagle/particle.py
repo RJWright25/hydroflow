@@ -81,6 +81,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
         pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*np.sqrt(afac) #peculiar velocity in km/s
         pdata[ptype].loc[:,'ParticleType']=ptype
 
+        logging.info('Max x = %.2f, min x = %.2f'%(np.max(pdata[ptype][f'Coordinates_x'].values),np.min(pdata[ptype][f'Coordinates_x'].values)))
+
         # Get masses (use the mass table value for DM particles)
         if ptype==1:
             pdata[ptype].loc[:,'Masses']=file['Header'].attrs['MassTable'][1]*10**10/hval #mass in Msun
