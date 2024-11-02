@@ -114,6 +114,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     pdata.reset_index(inplace=True,drop=True)
 
     #Print the min/max x,y,z coordinates
+    logging.info('Limits:' + ' '.join([f'{lims[i]:.2f}' for i in range(6)]))
     logging.info(f"Coordinates: {np.nanmin(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)} {np.nanmax(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)}")
 
     # Create a spatial KDTree for the particle data
