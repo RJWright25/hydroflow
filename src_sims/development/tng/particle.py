@@ -18,7 +18,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     Input:
     -----------
     path: str
-        Path to the simulation snapshot.
+        Path to the simulation snapshot. This is the path to first snapshot chunk, not the containing folder.
     ivol: int
         Subvolume index.
     nslice: int
