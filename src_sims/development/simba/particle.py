@@ -1,8 +1,9 @@
+import logging
+import h5py
 import numpy as np
 import pandas as pd
-import h5py 
 from scipy.spatial import cKDTree
-from hydroflow.src_physics.utils import get_limits
+from hydroflow.src_physics.utils import get_limits, calc_temperature
 
 ##### READ PARTICLE DATA
 def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
@@ -31,13 +32,23 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
 
     """
 
-    pdata_file=h5py.File(path,'r')
+    # Set up logging
+    if logfile is not None:
+        logging.basicConfig(filename=logfile,level=logging.INFO)
+        logging.info(f"Reading subvolume {ivol} from {path}...")
+
+    # Retrieve metadata
     boxsize=metadata.boxsize
     hval=metadata.hval
-    afac=metadata.afac
-    pdata_file.close()
+
+    # Get the scale factor
+    snap_idx_in_metadata=np.where(metadata.snapshots_flist==path)[0][0]
+    afac=metadata.snapshots_afac[snap_idx_in_metadata]
     
+    # Get limits for the subvolume
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
+
+    # Particle type fields -- will always read ParticleIDs, ParticleType, Coordinates, Velocities, Masses
     ptype_fields={0:['InternalEnergy',
                      'ElectronAbundance',
                      'Density',
@@ -45,19 +56,24 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                      'StarFormationRate'],
                   4:['Metallicity'],
                   5:[]}
-
     pdata=[{} for iptype in range(len(ptype_fields))]
 
+    # Open the snapshot file
     pdata_ifile=h5py.File(path,'r')
     npart_ifile=pdata_ifile['Header'].attrs['NumPart_ThisFile']
 
+    # Loop over particle types
     for iptype,ptype in enumerate(ptype_fields):
+        logging.info(f"Reading ptype {ptype}...")
+        
         if npart_ifile[ptype]:
-
-            #mask for subvolume
+            # Generate a mask for the particles in the subvolume
             subvol_mask=np.ones(npart_ifile[ptype])
             coordinates=np.float32(pdata_ifile[f'PartType{ptype}']['Coordinates'][:]*1e-3/hval)
-            
+
+            logging.info(f"min/max coordinates: {np.min(coordinates)}/{np.max(coordinates)}")
+
+            # Check for periodicity
             for idim,dim in enumerate('xyz'):
                 lims_idim=lims[2*idim:(2*idim+2)]
                 if lims_idim[0]<0 and nslice>1:#check for periodic
@@ -71,58 +87,47 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
                 npart_ifile_invol=np.nansum(subvol_mask)
 
+            # Check if there are particles in the subvolume
             if npart_ifile_invol:
-                print(f'There are {npart_ifile_invol} ivol ptype {ptype} particles in this file')
+                logging.info(f'There are {npart_ifile_invol} ivol ptype {ptype} particles in this file')
                 subvol_mask=np.where(subvol_mask)
-                coordinates=coordinates[subvol_mask]
-                
-                # print('Loading IDs,ptypes')
+
+                # Save basic particle data 
+                logging.info(f"Reading IDs, coordinates, velocities and masses for ptype {ptype}...")
                 pdata[iptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
                 pdata[iptype]['ParticleType']=np.uint16(np.ones(npart_ifile_invol)*ptype)
+                pdata[iptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates[subvol_mask];del coordinates
+                pdata[iptype].loc[:,[f'Velocities_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask]*np.sqrt(afac)#peculiar velocity in km/s
+                pdata[iptype]['Masses']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*1e10/hval #mass in Msun
 
-                # print('Loading')
-                pdata[iptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates
-                if not ptype==1:
-                    pdata[iptype].loc[:,[f'Velocity_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask]*np.sqrt(afac)#peculiar
-
-                # print('Loading masses')
-                pdata[iptype]['Mass']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*1e10/hval      
-
-
-                # print('Loading rest')
+                # Load extra baryonic properties
                 for field in ptype_fields[ptype]:
                     if not field=='Metallicity':
                         pdata[iptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
                     else:
                         pdata[iptype][field]=pdata_ifile[f'PartType{ptype}'][field][:,0][subvol_mask]
 
-                #if gas, do temp clc
+                # If gas, do temp calculation
+                logging.info(f"Calculating temperature for {ptype} particles...")
                 if ptype==0:
-                    ne     = pdata[iptype].ElectronAbundance; del pdata[iptype]['ElectronAbundance']
-                    energy =  pdata[iptype].InternalEnergy;del pdata[iptype]['InternalEnergy']
-                    energy*=(1e10/hval/(1.67262178e-24))#convert to grams from 1e10Msun/h
-                    energy*=3.086e21*3.086e21/(3.1536e16*3.1536e16) #convert to cm^2/s^2
-                    mu=4.0/(1.0 + 3.0*0.76 + 4.0*0.76*ne)*1.67262178e-24
-                    temp = energy*(5/3-1)*mu/1.38065e-16
-                    pdata[iptype]['Temperature']=np.float32(temp)
-    
+                    pdata[iptype]['Temperature']=calc_temperature(pdata[ptype],XH=0.76,gamma=5/3)
+                    del pdata[iptype]['InternalEnergy']
+                    del pdata[iptype]['ElectronAbundance']    
             else:
-                print(f'No ivol ptype {ptype} particles in this file!')
+                logging.info(f'No ivol ptype {ptype} particles in this file!')
                 pdata[iptype]=pd.DataFrame([])
         else:
-            print(f'No ptype {ptype} particles in this file!')
+            logging.info(f'No ptype {ptype} particles in this file!')
             pdata[iptype]=pd.DataFrame([])
 
     pdata_ifile.close()
 
-    print('Successfully loaded')
-
-    #concat all pdata into one df
+    # Combine the particle data
     pdata=pd.concat(pdata)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
 
-    #generate KDtree
+    # Create a spatial KDTree for the particle data
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
     
     return pdata, pdata_kdtree

@@ -88,7 +88,6 @@ class simulation_metadata:
         self.omegab = cosmology.Ob0
         self.omegade = cosmology.Ode0
 
-
         # Read the redshifts and times of the snapshots
         for iidx,(idx, snapshot_file) in enumerate(zip(self.snapshots_idx,self.snapshots_flist)):
             with h5py.File(snapshot_file, 'r') as f:
@@ -115,8 +114,7 @@ class simulation_metadata:
             elif simtype == 'tng':
                 self.boxsize = f['Header'].attrs['BoxSize']/1e3/self.hval 
             elif simtype == 'simba':
-                self.boxsize = f['Header'].attrs['BoxSize']/1e3
-
+                self.boxsize = f['Header'].attrs['BoxSize']/1e3/self.hval
 
         #create directories for outputs
         if not os.path.exists('catalogues'):
