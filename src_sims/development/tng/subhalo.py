@@ -55,7 +55,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
     afacs=[]
     hval=metadata.hval
     for ipath in path:
-        snapnum=int(ipath.split('snap_')[-1][:3]);snapnums.append(snapnum)
+        snapnum=int(ipath.split('groups_')[-1][:3]);snapnums.append(snapnum)
         mask=np.where(metadata.snapshots_idx==snapnum)[0][0]
         afac=metadata.snapshots_afac[mask];afacs.append(afac)
 
