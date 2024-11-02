@@ -45,7 +45,10 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     # Retrieve metadata
     boxsize=metadata.boxsize
     hval=metadata.hval
-    afac=metadata.afac
+
+    # Get the scale factor
+    snap_idx_in_metadata=np.where(metadata.snapshots_flist==path)[0][0]
+    afac=metadata.snapshots_afac[snap_idx_in_metadata]
 
     # Get limits for the subvolume
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
