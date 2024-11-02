@@ -96,7 +96,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
             cgs=file[f'PartType{ptype}/{field}'].attrs['CGSConversionFactor']
             pdata[ptype][field]=snapshot.read_dataset(ptype,field)*(hval**hexp)*(afac**aexp)*cgs
 
-    snapshot.close()
 
     # Convert SFR to Msun/yr from g/s
     pdata[0]['StarFormationRate']=pdata[0]['StarFormationRate']*(1/msun)*sec_in_Gyr
