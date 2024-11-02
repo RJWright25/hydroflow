@@ -29,6 +29,7 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
         
     # Grab metadata from the metadata file
     if metadata is not None:
+        metadata_path=metadata
         metadata=load_metadata(metadata)
     else:
         simflist=os.listdir(os.getcwd())
