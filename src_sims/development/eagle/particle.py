@@ -60,7 +60,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     snap_idx_in_metadata=np.where(metadata.snapshots_flist==path)[0][0]
     afac=metadata.snapshots_afac[snap_idx_in_metadata]
 
-    # Get limits for the subvolume
+    # Get limits for the subvolume -- these are in cMpc
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
 
     # Define the fields to read for each particle type (always include ParticleIDs, Masses, Coordinates, Velocity)
