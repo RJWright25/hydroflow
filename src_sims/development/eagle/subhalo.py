@@ -66,10 +66,9 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 FOF.GroupMass as GroupMass, \
                 FOF.Group_M_Crit200 as Group_M_Crit200, \
                 FOF.Group_R_Crit200 as Group_R_Crit200, \
-                FOF.GroupCentreOfPotential_x, \
-                square(Subhalo.CentreOfPotential_x-FOF.GroupCentreOfPotential_x) \
-                      + square(Subhalo.CentreOfPotential_y-FOF.GroupCentreOfPotential_y) \
-                      + square(Subhalo.CentreOfPotential_z-FOF.GroupCentreOfPotential_z) as Group_Rrel \
+                FOF.GroupCentreOfPotential_x as GroupCentreOfPotential_x, \
+                FOF.GroupCentreOfPotential_y as GroupCentreOfPotential_y, \
+                FOF.GroupCentreOfPotential_z as GroupCentreOfPotential_z \
               FROM \
                 {simname}_Subhalo as Subhalo,\
                 {simname}_Aperture as Aperture,\
@@ -102,6 +101,9 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
 
     # Convert R_halfmass30 to pMpc
     data_pd['R_halfmass30']=data_pd['R_halfmass30']/1e3
+
+    # Add Rrel to the subhalo catalogue
+    data_pd['Group_Rrel']=np.sqrt((data_pd['CentreOfPotential_x']-data_pd['GroupCentreOfPotential_x'])**2+(data_pd['CentreOfPotential_y']-data_pd['GroupCentreOfPotential_y'])**2+(data_pd['CentreOfPotential_z']-data_pd['GroupCentreOfPotential_z'])**2)
 
     # Output path
     outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
