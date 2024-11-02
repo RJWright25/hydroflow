@@ -101,6 +101,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         group_df.sort_values(by='GroupNumber',inplace=True,ascending=False)
         group_df=group_df.loc[group_df['GroupMass'].values>=mcut,:].copy()
         group_df.reset_index(drop=True,inplace=True)
+        print(group_df['GroupNumber'].values)
 
         # Extract subhalo data
         print('Extracting subhalo data...')
