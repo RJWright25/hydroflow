@@ -64,6 +64,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                 'Metallicity',
                 'Density',
                 'StarFormationRate'],
+            1:[],
             4:['Metallicity']}
     
     # Use the EagleSnapshot class to read the particle data
@@ -80,8 +81,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
         pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')/hval #comoving position in Mpc
         pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*np.sqrt(afac) #peculiar velocity in km/s
         pdata[ptype].loc[:,'ParticleType']=ptype
-
-        logging.info('Max x = %.2f, min x = %.2f'%(np.max(pdata[ptype][f'Coordinates_x'].values),np.min(pdata[ptype][f'Coordinates_x'].values)))
 
         # Get masses (use the mass table value for DM particles)
         if ptype==1:
