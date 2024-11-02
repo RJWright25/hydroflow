@@ -132,7 +132,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         for igroup,group in enumerate(unique_groups):
             if igroup%1000==0:
                 print(f'Group {igroup+1}/{unique_groups.shape[0]}...')
-                print(f"Searching for {group} in {group_df['GroupNumber'].values} ...")
+                # print(f"Searching for {group} in {group_df['GroupNumber'].values} ...")
             
             # Using the searchsorted method to find the group index
             group_idx=np.searchsorted(group_df['GroupNumber'].values,group)
@@ -146,7 +146,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
 
             # Check if there are subhalos in the group  
             if subhalo_idx_2-subhalo_idx_1==0:
-                print(f'No subhalos in group {group}...')
+                # print(f'No subhalos in group {group}...')
                 continue
             
             # Assign group data to subhalo data
