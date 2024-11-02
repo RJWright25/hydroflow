@@ -40,7 +40,7 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 break
 
     # This uses the eagleSqlTools module to connect to the database with your username and password. # If the password is not given , the module will prompt for it .
-    con = sql.connect("uname", password="pw")
+    con = sql.connect(f"{uname}", password=f"{pw}")
     # Construct and execute query for each simulation. 
     snapnum_str=["SnapNum="+str(snapnum) for snapnum in snapnums]
     snapnum_str=" OR ".join(snapnum_str)
