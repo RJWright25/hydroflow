@@ -149,14 +149,11 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
                 continue
             
             # Assign group data to subhalo data
-            print(subhalo_df['GroupNumber'].values[:10])
-            print(subhalo_df.loc[subhalo_idx_1:subhalo_idx_2].shape)
-            print(np.array(range(subhalo_idx_2-subhalo_idx_1)).shape)
-            subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'SubGroupNumber']=np.array(range(subhalo_idx_2-subhalo_idx_1))
-            subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'GroupMass']=group_df.loc[group_idx,'GroupMass']
-            subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'Group_M_Crit200']=group_df.loc[group_idx,'Group_M_Crit200']
-            subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'Group_R_Crit200']=group_df.loc[group_idx,'Group_R_Crit200']
-            subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,[f'Group_CentreOfPotential_{x}' for x in 'xyz']]=group_df.loc[group_idx,[f'CentreOfPotential_{x}' for x in 'xyz']]
+            subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,'SubGroupNumber']=np.array(range(subhalo_idx_2-subhalo_idx_1))
+            subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,'GroupMass']=group_df.loc[group_idx,'GroupMass']
+            subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,'Group_M_Crit200']=group_df.loc[group_idx,'Group_M_Crit200']
+            subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,'Group_R_Crit200']=group_df.loc[group_idx,'Group_R_Crit200']
+            subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,[f'Group_CentreOfPotential_{x}' for x in 'xyz']]=group_df.loc[group_idx,[f'CentreOfPotential_{x}' for x in 'xyz']]
 
             # Add relative distance to group centre
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'Group_Rrel']=np.sqrt((subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'CentreOfPotential_x'].values-group_df.loc[group_idx,'CentreOfPotential_x'])**2+(subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'CentreOfPotential_y'].values-group_df.loc[group_idx,'CentreOfPotential_y'])**2+(subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'CentreOfPotential_z'].values-group_df.loc[group_idx,'CentreOfPotential_z'])**2)
