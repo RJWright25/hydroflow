@@ -60,9 +60,9 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
 
     ptype_fields={0:['InternalEnergy',
                      'ElectronAbundance',
-                     'Metallicity',
                      'Density',
-                     'StarFormationRate'],
+                     'StarFormationRate',
+                     'GFM_Metallicity',],
                   1:[],
                   4:['GFM_Metallicity']}
 
