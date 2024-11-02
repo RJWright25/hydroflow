@@ -8,8 +8,31 @@ import pandas as pd
 from hydroflow.src_physics.utils import constant_G,constant_MpcpGyrtokmps
 
 def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None): 
+	"""
+	
+	retrieve_galaxy_candidates: Retrieve the baryonic candidates for a galaxy within a specified radius.
 
-	print('Getting candidates from KDtree')
+	Input:
+	-----------
+	galaxy: dict or pd.Series
+		Dictionary containing the properties of the galaxy, including the virial radius.
+
+	pdata_subvol: pd.DataFrame
+		DataFrame containing the particle data for the relevant subvolume.
+
+	kdtree_subvol: scipy.spatial.cKDTree
+		KDTree containing the particle data for the relevant subvolume -- used to speed up the search.
+
+	maxrad: float
+		Maximum radius to search for candidates (in comoving Mpc).
+
+	Output:
+	-----------
+	pdata_candidates: pd.DataFrame
+		DataFrame containing the baryonic candidates for the galaxy within the specified radius.
+	
+
+	"""
 
 	# Define the centre of mass and scale factor
 	com=np.array([galaxy[f'CentreOfPotential_{x}'] for x in 'xyz'])
