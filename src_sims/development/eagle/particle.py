@@ -8,6 +8,8 @@ import pandas as pd
 import h5py 
 import logging
 
+import matplotlib.pyplot as plt
+
 from scipy.spatial import KDTree
 from pyread_eagle import EagleSnapshot
 
@@ -82,6 +84,14 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
         pdata[ptype]['ParticleType']=np.ones(pdata[ptype].shape[0])*ptype
         pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')/hval #comoving position in Mpc
         pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*np.sqrt(afac) #peculiar velocity in km/s
+
+        # make a histogram of the particle coordinates
+        #import matplotlib.pyplot as plt
+        fig,ax=plt.subplots(1,3,figsize=(15,5))
+        for i,coord in enumerate([f'Coordinates_{x}' for x in 'xyz']):
+            ax[i].hist(pdata[ptype].loc[:,coord],bins=100)
+            ax[i].set_xlabel(coord)
+        plt.savefig(f'{ptype}_coords_ivol_{str(ivol).zfill(3)}.png')
 
         # Get masses (use the mass table value for DM particles)
         if ptype==1:
