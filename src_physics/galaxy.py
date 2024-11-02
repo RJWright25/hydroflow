@@ -5,7 +5,7 @@
 import numpy as np
 import pandas as pd
 
-from hydroflow.src_physics.utils import constant_G,MpcpGyr_to_kmps
+from hydroflow.src_physics.utils import constant_G,constant_MpcpGyrtokmps
 
 def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None): 
 
@@ -244,7 +244,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 						if vcut_str=='pdoev':
 							vrad_vals+=-vcut
 
-						galaxy_output[f'{rshell_str}_shell-dm-mdot_tot_{flowstr}']=1/dr*np.nansum(mass[dm_shell_mask][vrad_mask]*vrad_vals/MpcpGyr_to_kmps)*sign
+						galaxy_output[f'{rshell_str}_shell-dm-mdot_tot_{flowstr}']=1/dr*np.nansum(mass[dm_shell_mask][vrad_mask]*vrad_vals/constant_MpcpGyrtokmps)*sign
 
 			### STARS shell properties
 			stars_shell_mask=np.logical_and(mask_shell,star)
@@ -267,7 +267,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 						if vcut_str=='pdoev':
 							vrad_vals+=-vcut
 
-						galaxy_output[f'{rshell_str}_shell-star-mdot_tot_{flowstr}']=1/dr*np.nansum(mass[stars_shell_mask][vrad_mask]*vrad_vals/MpcpGyr_to_kmps)*sign
+						galaxy_output[f'{rshell_str}_shell-star-mdot_tot_{flowstr}']=1/dr*np.nansum(mass[stars_shell_mask][vrad_mask]*vrad_vals/constant_MpcpGyrtokmps)*sign
 
 			### GAS shell properties
 			# Break down the gas mass by phase
@@ -299,7 +299,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 								vrad_vals+=-vcut
 								
 							for spec in specfrac.keys():
-								galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-mdot_{spec}_{flowstr}']=1/dr*np.nansum(mass[Tmask_shell][vrad_mask]*specfrac[spec][Tmask_shell][vrad_mask]*vrad_vals/MpcpGyr_to_kmps)*sign
+								galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-mdot_{spec}_{flowstr}']=1/dr*np.nansum(mass[Tmask_shell][vrad_mask]*specfrac[spec][Tmask_shell][vrad_mask]*vrad_vals/constant_MpcpGyrtokmps)*sign
 								if spec=='tot' and '000' in vcut_str:
 									galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-vrad_{spec}_{flowstr}']=np.nanmean(vrad_vals)
 			else:

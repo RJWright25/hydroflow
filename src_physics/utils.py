@@ -106,23 +106,60 @@ def get_limits(ivol,nslice,boxsize,buffer=0.1):
 	
 	return xmin,xmax,ymin,ymax,zmin,zmax
 
+
+def calc_temperature(pdata,XH=0.76,gamma=5/3):
+
+	"""
+	
+	calc_temperature: Calculate the temperature of the gas particles in a subvolume 
+	                  based on the internal energy and electron abundance.
+
+	Input:
+	-----------
+	pdata: pd.DataFrame
+		DataFrame containing the particle data.
+
+	Output:
+	-----------
+	T: np.array
+		Array containing the temperature of the gas particles. 
+
+	"""
+
+	#### Equation: T = (gamma-1)*u/k_B*mu
+	#### where mu = 4/(1+3*XH+4*XH*ne)*m_p is the mean molecular weight
+
+	u=pdata['InternalEnergy'].values
+	ne=pdata['ElectronAbundance'].values
+
+	mu=4/(1+3*XH+4*XH*ne)*1.67262178e-24
+
+
+	return T
+
 ##### CONSTANTS #####
 
 # Gravitational constant in (km/s)^2*Mpc/Ms
 constant_G=4.30073691e-09 #(km/s)^2*Mpc/Msun
 
+# Boltzmann constant in (km/s)^2*g/K
+constant_kB=1.38064852e-16 #(km/s)^2*g/K
+
+# Mass of the proton in g
+constant_mp=1.67262178e-24
+
 # Solar mass in g
-msun=1.989e33
+constant_gpmsun=1.989e33
 
 # Seconds in a year
-sec_in_yr=3.154e7
+constant_spyr=3.154e7
 
 # Conversion factor from pMpc/Gyr to km/s -- used to align the units of particle velocities for the gas flow calculations
 vel_conversion=1*units.Mpc/units.Gyr #from pMpc/Gyr to km/s
 vel_conversion=vel_conversion.to(units.km/units.s)
-MpcpGyr_to_kmps=vel_conversion.value
+constant_MpcpGyrtokmps=vel_conversion.value
 
 # Conversion factor from Mpc to km
 distance_conversion=1*units.Mpc
 distance_conversion=distance_conversion.to(units.km)
-Mpc_to_km=distance_conversion.value
+constant_Mpcpkm=distance_conversion.value
