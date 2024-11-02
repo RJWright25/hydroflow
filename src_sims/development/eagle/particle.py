@@ -12,7 +12,7 @@ from scipy.spatial import cKDTree
 from pyread_eagle import EagleSnapshot
 
 from hydroflow.src_physics.utils import get_limits
-from hydroflow.src_physics.utils import msun,sec_in_Gyr
+from hydroflow.src_physics.utils import msun,sec_in_yr
 
 ##### READ PARTICLE DATA
 def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
