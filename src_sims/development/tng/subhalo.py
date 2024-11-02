@@ -155,7 +155,9 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,'Group_R_Crit200']=group_df.loc[group_idx,'Group_R_Crit200']
 
             # Add relative distance to group centre
-            rrel=np.sqrt((subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,'CentreOfPotential_x'].values-group_df.loc[group_idx,'CentreOfPotential_x'])**2+(subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,'CentreOfPotential_y'].values-group_df.loc[group_idx,'CentreOfPotential_y'])**2+(subhalo_df.loc[subhalo_idx_1-1:subhalo_idx_2,'CentreOfPotential_z'].values-group_df.loc[group_idx,'CentreOfPotential_z'])**2)
+            cop_group=group_df.loc[group_idx,[f'CentreOfPotential_{x}' for x in 'xyz']].values
+            cop_subhalo=subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,[f'CentreOfPotential_{x}' for x in 'xyz']].values
+            rrel=np.sqrt(np.sum((cop_subhalo-cop_group)**2,axis=1))
             print(rrel)
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,'Group_Rrel']=rrel
 
