@@ -82,6 +82,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
         pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
         pdata[ptype]['ParticleType']=np.ones(pdata[ptype].shape[0])*ptype
         pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')/hval #comoving position in Mpc
+        #print min/max
+        logging.info(f"Coordinates min/max: {np.min(pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)} / {np.max(pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)}")
         pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*np.sqrt(afac) #peculiar velocity in km/s
 
         # Get masses (use the mass table value for DM particles)
