@@ -177,8 +177,8 @@ if numgal:
     logging.info(f'Loading snap particle data: {snap_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
     pdata_subvol,kdtree_subvol=read_subvol(snap_pdata_fname,ivol,nslice,metadata,logfile=logging_folder+logging_name+'.log')
 
-    logging.info('Coordinate minima: x - {:.2f}, y - {:.2f}, z - {:.2f} [runtime {:.3f} sec]'.format(np.nanmin(pdata_subvol['Coordinates_x'].values),np.nanmin(pdata_subvol['Coordinates_y'].values),np.nanmin(pdata_subvol['Coordinates_z'].values)))
-    logging.info('Coordinate maxima: x - {:.2f}, y - {:.2f}, z - {:.2f} [runtime {:.3f} sec]'.format(np.nanmax(pdata_subvol['Coordinates_x'].values),np.nanmax(pdata_subvol['Coordinates_y'].values),np.nanmax(pdata_subvol['Coordinates_z'].values)))
+    logging.info(f'Coordinate minima: x - {pdata_subvol["Coordinates_x"].min():.2f}, y - {pdata_subvol["Coordinates_y"].min():.2f}, z - {pdata_subvol["Coordinates_z"].min():.2f} [runtime {time.time()-t1:.3f} sec]')
+    logging.info(f'Coordinate maxima: x - {pdata_subvol["Coordinates_x"].max():.2f}, y - {pdata_subvol["Coordinates_y"].max():.2f}, z - {pdata_subvol["Coordinates_z"].max():.2f} [runtime {time.time()-t1:.3f} sec]')
 
     # If dumping pdata and mfracs are in pdata, add to pdata_fields
     if dump:
@@ -251,7 +251,6 @@ if numgal:
                     for key in list(galaxy_properties.keys()):
                         galaxy_output.loc[0,key]=galaxy_properties[key]
 
-                
                 # Dump a subset of the particle data if requested
                 if dump:
                     logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
