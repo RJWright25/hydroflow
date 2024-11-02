@@ -50,19 +50,20 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         print("No catalogue paths given. Exiting...")
         return None
     
-    # Units for masses
-    mconv=1e10/hval #convert to Msun
-    dconv=1e-3/hval #convert to cMpc
-
+    
     # Extract snapshot numbers from the paths and metadata
     snapnums=[]
     afacs=[]
     hval=metadata.hval
-    
     for ipath in path:
         mask=np.where(ipath==np.array(metadata.snapshots_flist))
         snapnum=metadata.snapshots_snapnums[mask];snapnums.append(snapnum)
         afac=metadata.snapshots_afac[mask];afacs.append(afac)
+        
+    # Units for loads
+    mconv=1e10/hval #convert to Msun
+    dconv=1e-3/hval #convert to cMpc
+
 
     # Base output path
     outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
