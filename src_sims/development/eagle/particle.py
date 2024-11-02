@@ -6,6 +6,7 @@
 import numpy as np
 import pandas as pd
 import h5py 
+import logging
 
 from scipy.spatial import cKDTree
 from pyread_eagle import EagleSnapshot
@@ -42,6 +43,11 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     # Open the snapshot file
     file=h5py.File(path,'r')
 
+    # Set up logging
+    if logfile is not None:
+        logging.basicConfig(filename=logfile,level=logging.INFO)
+        logging.info(f"Reading subvolume {ivol} from {path}...")
+
     # Retrieve metadata
     boxsize=metadata.boxsize
     hval=metadata.hval
@@ -67,11 +73,14 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
 
     # Loop over particle types
     for iptype,ptype in enumerate(ptypes):
+
+        logging.info(f"Reading {ptype} particle IDs, coordinates & velocities...")
+        
         pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
         pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')/hval #comoving position in Mpc
-        pdata[ptype].loc[:,[f'Velocity_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*np.sqrt(afac) #peculiar velocity in km/s
+        pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*np.sqrt(afac) #peculiar velocity in km/s
         pdata[ptype].loc[:,'ParticleType']=ptype
-        
+
         # Get masses (use the mass table value for DM particles)
         if ptype==1:
             pdata[ptype].loc[:,'Masses']=file['Header'].attrs['MassTable'][1]*10**10/hval #mass in Msun
@@ -79,11 +88,12 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
             pdata[ptype]['Masses']=snapshot.read_dataset(ptype,'Mass')*10**10/hval #mass in Msun
         
         # Convert other properties to physical units
+        logging.info(f"Reading extra baryonic properties...")
         for field in ptypes[ptype]:
-                hexp=file[f'PartType{ptype}/{field}'].attrs['h-scale-exponent']
-                aexp=file[f'PartType{ptype}/{field}'].attrs['aexp-scale-exponent']
-                cgs=file[f'PartType{ptype}/{field}'].attrs['CGSConversionFactor']
-                pdata[ptype][field]=snapshot.read_dataset(ptype,field)*(hval**hexp)*(afac**aexp)*cgs
+            hexp=file[f'PartType{ptype}/{field}'].attrs['h-scale-exponent']
+            aexp=file[f'PartType{ptype}/{field}'].attrs['aexp-scale-exponent']
+            cgs=file[f'PartType{ptype}/{field}'].attrs['CGSConversionFactor']
+            pdata[ptype][field]=snapshot.read_dataset(ptype,field)*(hval**hexp)*(afac**aexp)*cgs
 
     snapshot.close()
 
@@ -97,11 +107,13 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
             pdata[4][field]=np.ones(npart_star)+np.nan
 
     # Combine the particle data
+    logging.info(f"Concatenating particle data...")
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
 
     # Create a spatial KDTree for the particle data
+    logging.info(f"Creating KDTree for particle data...")
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
 
     return pdata, pdata_kdtree
