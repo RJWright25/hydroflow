@@ -42,10 +42,8 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
     # This uses the eagleSqlTools module to connect to the database with your username and password. # If the password is not given , the module will prompt for it .
     con = sql.connect(f"{uname}", password=f"{pw}")
     # Construct and execute query for each simulation. 
-    snapnum_str=["Subhalo.SnapNum="+str(snapnum) for snapnum in snapnums]
-    snapnum_str=" OR ".join(snapnum_str)
-    print(snapnum_str)
-    myQuery =f"SELECT\
+    snapnum_strs=["Subhalo.SnapNum="+str(snapnum) for snapnum in snapnums]
+    myQueries =[f"SELECT\
                 Subhalo.Redshift as Redshift, \
                 Subhalo.SnapNum as SnapNum, \
                 Subhalo.GalaxyID as GalaxyID, \
@@ -85,13 +83,19 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
               ORDER BY \
                 Subhalo.SnapNum desc, \
                 Subhalo.Mass desc \
-              "
-    print(myQuery)
+              " for snapnum_str in snapnum_strs]
 
-    # Execute the query and convert the data to a pandas DataFrame          
-    data=sql.execute_query(con, myQuery)
-    columns=list(data.dtype.names)
-    data_pd=pd.DataFrame(data,columns=columns)
+
+    subcats=[]
+    for myQuery in myQueries:
+      # Execute the query and convert the data to a pandas DataFrame          
+      data=sql.execute_query(con, myQuery)
+      data=pd.DataFrame(data,columns=list(data.dtype.names))
+      data.reset_index(inplace=True,drop=True)
+      subcats.append(data)
+    
+    # Concatenate the subhalo dataframes
+    data_pd=pd.concat(subcats)
     data_pd.reset_index(inplace=True,drop=True)
 
     # Remove "flag" from column names
