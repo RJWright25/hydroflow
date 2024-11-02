@@ -129,6 +129,6 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
     if metadata is not None:
         with h5py.File(outpath, 'r+') as subcatfile:
             header= subcatfile.create_group("Header")
-            header.attrs['metadata'] = metadata
+            header.attrs['metadata'] = metadata_path
     else:
         print("No metadata file found. Metadata path not added to subhalo catalogue.")
