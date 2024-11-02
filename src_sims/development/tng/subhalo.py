@@ -36,6 +36,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
     # Grab metadata from the metadata file
     if metadata is not None:
         metadata=load_metadata(metadata)
+        metadata_path=metadata
     else:
         simflist=os.listdir(os.getcwd())
         for metadata_path in simflist:
@@ -141,10 +142,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             
             # Find the subhalo indices range for the group
             subhalo_idx_1=np.searchsorted(subhalo_df['GroupNumber'].values,group)
-            if igroup==unique_groups.shape[0]-1:
-                subhalo_idx_2=subhalo_df.shape[0]
-            else:
-                subhalo_idx_2=np.searchsorted(subhalo_df['GroupNumber'].values,unique_groups[igroup+1])
+            subhalo_idx_2=np.nanmin([subhalo_df.shape[0],np.searchsorted(subhalo_df['GroupNumber'].values,group+1)])
 
             # Check if there are subhalos in the group  
             if subhalo_idx_2-subhalo_idx_1==0:
