@@ -66,7 +66,7 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 FOF.GroupMass as GroupMass, \
                 FOF.Group_M_Crit200 as Group_M_Crit200, \
                 FOF.Group_R_Crit200 as Group_R_Crit200, \
-                FOF.GroupCentreOfPotential_x,
+                FOF.GroupCentreOfPotential_x, \
                 square(Subhalo.CentreOfPotential_x-FOF.GroupCentreOfPotential_x) \
                       + square(Subhalo.CentreOfPotential_y-FOF.GroupCentreOfPotential_y) \
                       + square(Subhalo.CentreOfPotential_z-FOF.GroupCentreOfPotential_z) as Group_Rrel \
