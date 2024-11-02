@@ -121,7 +121,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             subhalo_df[key]=np.zeros(subhalo_df.shape[0])+np.nan
         
         # Sort subhalo data
-        subhalo_df.sort_values(by=['GroupNumber','Mass'],inplace=True,ascending=[False,True])
+        subhalo_df.sort_values(by=['GroupNumber','Mass'],inplace=True,ascending=[True,False])
         subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut,:] #apply mass cut
         subhalo_df.reset_index(inplace=True,drop=True)
 
@@ -135,6 +135,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             
             # Using the searchsorted method to find the group index
             group_idx=np.searchsorted(group_df['GroupNumber'].values,group)
+            print(group,group_idx,group_df['GroupNumber'].values[group_idx])
             if group!=group_df['GroupNumber'].values[group_idx]:
                 print(f"Group {group} does not match {group_df['GroupNumber'].values[group_idx]}...")
                 continue
