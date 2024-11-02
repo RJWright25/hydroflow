@@ -33,7 +33,8 @@ vcuts_flow=[0];vcuts_str=[str(int(vcut)).zfill(3)+'kmps' for vcut in vcuts_flow]
 vcuts={vcut_str:vcut for vcut_str,vcut in zip(vcuts_str,vcuts_flow)}
 
 #dump fields
-pdata_fields=['Masses','Relative_r_comoving','Relative_v_rad_pec','Relative_phi','Temperature','Density','mfrac_HI','mfrac_HII','mfrac_H2','Metallicity']
+pdata_fields=['Masses','Relative_r_comoving','Relative_v_rad_pec','Relative_phi','Temperature','Density','Metallicity']
+
 
 #arguments
 parser=argparse.ArgumentParser()
@@ -171,9 +172,18 @@ galaxy_outputs=[]
 if numgal:
     logging.info(f'Will generate outputs for {numgal} galaxies in this subvolume [runtime {time.time()-t1:.3f} sec]')
 
-    #Load in final particle data
+    # Load in particle data
     logging.info(f'Loading snap particle data: {snap_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
     pdata_subvol,kdtree_subvol=read_subvol(snap_pdata_fname,ivol,nslice,metadata,logfile=logging_folder+logging_name+'.log')
+
+    # If dumping pdata and mfracs are in pdata, add to pdata_fields
+    if dump:
+        if 'mfrac_HI' in pdata_subvol.columns:
+            pdata_fields.append('mfrac_HI')
+        if 'mfrac_HII' in pdata_subvol.columns:
+            pdata_fields.append('mfrac_HII')
+        if 'mfrac_H2' in pdata_subvol.columns:
+            pdata_fields.append('mfrac_H2')
 
     logging.info(f'')
     logging.info(f'****** Entering main galaxy loop [runtime {time.time()-t1:.3f} sec] ******')
