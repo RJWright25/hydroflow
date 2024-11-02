@@ -21,7 +21,6 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 
 	# Retrieve the candidates from the KDTree
 	pidx_candidates=kdtree_subvol.query_ball_point(com,maxrad)
-	print(com,maxrad,len(pidx_candidates))
 	pdata_candidates=pdata_subvol.loc[pidx_candidates,:]
 	pdata_candidates.reset_index(drop=True,inplace=True)
 	numcdt=pdata_candidates.shape[0]
