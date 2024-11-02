@@ -108,8 +108,8 @@ elif code=='eagle':
     from hydroflow.src_sims.development.eagle.particle import read_subvol
 elif code=='tng':
     from hydroflow.src_sims.development.tng.particle import read_subvol
-# elif code=='simba':
-#     from hydroflow.src_sims.colibre.particle import read_subvol
+elif code=='simba':
+    from hydroflow.src_sims.development.simba.particle import read_subvol
 
 else:
     raise ValueError('Particle data type not recognised. Must be one of: colibre, eagle, simba, tng.')
