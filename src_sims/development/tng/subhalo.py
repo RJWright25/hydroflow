@@ -121,7 +121,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             subhalo_df[key]=np.zeros(subhalo_df.shape[0])+np.nan
         
         # Sort subhalo data
-        subhalo_df.sort_values(by=['GroupNumber','Mass'],inplace=True,ascending=[False,True])
+        subhalo_df.sort_values(by=['GroupNumber','Mass'],inplace=True,ascending=[True,False])
         subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut,:] #apply mass cut
         subhalo_df.reset_index(inplace=True,drop=True)
 
