@@ -59,8 +59,8 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 Subhalo.MassType_Gas as subhalodashgasdashm_totdashsubfexcl, \
                 Aperture.Mass_Star as flag030pkpc_spheredashstardashm_totdashsubfexcl, \
                 Aperture.Mass_Gas as flag030pkpc_spheredashgas_alldashm_totdashsubfexcl, \
-                Aperture.Mass_BH as flag030pkpc_spheredashbh_m_totdashsubfexcl, \
-                Aperture.Mass_DM as flag030pkpc_spheredashdm_m_totdashsubfexcl, \
+                Aperture.Mass_BH as flag030pkpc_spheredashbhdashm_totdashsubfexcl, \
+                Aperture.Mass_DM as flag030pkpc_spheredashdmdashm_totdashsubfexcl, \
                 Aperture.SFR as flag030pkpc_spheredashgas_alldashSFRdashsubfexcl, \
                 Sizes.R_halfmass30 as flag030pkpc_spheredashstardashr_halfdashsubfexcl, \
                 FOF.GroupMass as GroupMass, \
@@ -106,12 +106,12 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
 
     # Use '-' instead of 'dash' in column names
     data_pd.columns=data_pd.columns.str.replace('dash','-')
-    print(data_pd.columns)
+    print(np.array(list(data_pd.columns)))
 
-    # # Convert GasSpin to angular momentum
-    # data_pd['subhalo-L_tot-subfexcl_x']=data_pd['subhalo-L_tot-subfexcl_x']*data_pd['subhalo-gas-m_tot-subfexcl']
-    # data_pd['subhalo-L_tot-subfexcl_y']=data_pd['subhalo-L_tot-subfexcl_y']*data_pd['subhalo-gas-m_tot-subfexcl']
-    # data_pd['subhalo-L_tot-subfexcl_z']=data_pd['subhalo-L_tot-subfexcl_z']*data_pd['subhalo-gas-m_tot-subfexcl']
+    # Convert GasSpin to angular momentum
+    data_pd['subhalo-L_tot-subfexcl_x']=data_pd['subhalo-L_tot-subfexcl_x']*data_pd['subhalo-gas-m_tot-subfexcl']
+    data_pd['subhalo-L_tot-subfexcl_y']=data_pd['subhalo-L_tot-subfexcl_y']*data_pd['subhalo-gas-m_tot-subfexcl']
+    data_pd['subhalo-L_tot-subfexcl_z']=data_pd['subhalo-L_tot-subfexcl_z']*data_pd['subhalo-gas-m_tot-subfexcl']
     
     # Convert Group_R_Crit200 to cMpc
     data_pd['Group_R_Crit200']=data_pd['Group_R_Crit200']/1e3*(1+data_pd['Redshift'])
