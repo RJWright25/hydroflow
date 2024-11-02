@@ -63,7 +63,7 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 Aperture.Mass_BH as flag030pkpc_spheredashbh_m_totdashsubfexcl, \
                 Aperture.Mass_DM as flag030pkpc_spheredashdm_m_totdashsubfexcl, \
                 Aperture.SFR as flag030pkpc_spheredashgas_alldashSFRdashsubfexcl, \
-                Sizes.R_halfmass30 as R_halfmass30 as flag030pkpc_spheredashstardashr_halfdashsubfexcl, \
+                Sizes.R_halfmass30 as flag030pkpc_spheredashstardashr_halfdashsubfexcl, \
                 FOF.GroupMass as GroupMass, \
                 FOF.Group_M_Crit200 as Group_M_Crit200, \
                 FOF.Group_R_Crit200 as Group_R_Crit200, \
