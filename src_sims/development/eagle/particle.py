@@ -82,7 +82,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
         logging.info(f"Reading {ptype} particle IDs, coordinates & velocities...")
         pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
         pdata[ptype]['ParticleType']=np.ones(pdata[ptype].shape[0])*ptype
-        pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')/hval #comoving position in Mpc
+        pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates') #comoving position in Mpc
         pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*np.sqrt(afac) #peculiar velocity in km/s
 
         # make a histogram of the particle coordinates
