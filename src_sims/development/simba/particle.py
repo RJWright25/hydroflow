@@ -127,16 +127,9 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     # Combine the particle data
     pdata=pd.concat(pdata)
     pdata.sort_values(by="ParticleIDs",inplace=True)
-    pdata.reset_index(inplace=True,drop=True)
-
-    # Check for negative coordinates
-    for dim in 'xyz':
-        mask=pdata[f'Coordinates_{dim}'].values<0
-        if np.sum(mask):
-            logging.info(f'Found {np.sum(mask)} particles ({np.sum(mask)/len(mask)*100:.4f}%) with negative coordinates in {dim} direction -- adding the boxsize')
-            pdata.loc[mask,f'Coordinates_{dim}']+=(boxsize)            
+    pdata.reset_index(inplace=True,drop=True)         
 
     # Create a spatial KDTree for the particle data
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values,boxsize=boxsize)
+    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
     
     return pdata, pdata_kdtree
