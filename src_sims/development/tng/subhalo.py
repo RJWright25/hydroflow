@@ -98,10 +98,9 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         group_df['Group_M_Crit200']=groupcat['Group_M_Crit200'][:]*mconv
         group_df['Group_R_Crit200']=groupcat['Group_R_Crit200'][:]*dconv #convert to cMpc
         group_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=groupcat['GroupPos'][:]*dconv #convert to cMpc
-        group_df.sort_values(by='GroupNumber',inplace=True,ascending=False)
+        group_df.sort_values(by='GroupNumber',inplace=True,ascending=True)
         group_df=group_df.loc[group_df['GroupMass'].values>=mcut,:].copy()
         group_df.reset_index(drop=True,inplace=True)
-        print(group_df['GroupNumber'].values)
 
         # Extract subhalo data
         print('Extracting subhalo data...')
