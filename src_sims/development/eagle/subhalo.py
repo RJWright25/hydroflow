@@ -102,10 +102,10 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
 
     # Remove "flag" from column names
     data_pd.columns=data_pd.columns.str.replace('flag','')
-    print(data_pd.columns)
 
     # Use '-' instead of 'dash' in column names
     data_pd.columns=data_pd.columns.str.replace('dash','-')
+    print(data_pd.columns)
 
     # # Convert GasSpin to angular momentum
     # data_pd['subhalo-L_tot-subfexcl_x']=data_pd['subhalo-L_tot-subfexcl_x']*data_pd['subhalo-gas-m_tot-subfexcl']
@@ -116,7 +116,7 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
     data_pd['Group_R_Crit200']=data_pd['Group_R_Crit200']/1e3*(1+data_pd['Redshift'])
 
     # Convert R_halfmass30 to pMpc
-    data_pd['R_halfmass30']=data_pd['R_halfmass30']/1e3
+    data_pd['030pkpc_sphere-star-r_half-subfexcl']=data_pd['R_halfmass30']/1e3
 
     # Add Rrel to the subhalo catalogue
     data_pd['Group_Rrel']=np.sqrt((data_pd['CentreOfPotential_x']-data_pd['GroupCentreOfPotential_x'])**2+(data_pd['CentreOfPotential_y']-data_pd['GroupCentreOfPotential_y'])**2+(data_pd['CentreOfPotential_z']-data_pd['GroupCentreOfPotential_z'])**2)
