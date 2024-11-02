@@ -87,13 +87,15 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
 
 
     subcats=[]
-    for myQuery in myQueries:
-      # Execute the query and convert the data to a pandas DataFrame          
+    # Execute the query and convert the data to a pandas DataFrame          
+    for isnap,myQuery in enumerate(myQueries):
+      print('Executing query: ',snapnum_strs[isnap])
       data=sql.execute_query(con, myQuery)
       data=pd.DataFrame(data,columns=list(data.dtype.names))
       data.reset_index(inplace=True,drop=True)
       subcats.append(data)
     
+    print('Concatenating subhalo dataframes...')
     # Concatenate the subhalo dataframes
     data_pd=pd.concat(subcats)
     data_pd.reset_index(inplace=True,drop=True)
