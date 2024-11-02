@@ -84,18 +84,16 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         group_df=pd.DataFrame()
 
         # Load the group data
-        group_df.loc[:,'SnapNum']=snapnum
-        group_df.loc[:,'Redshift']=zval
-        group_df.loc[:,'GroupNumber']=caesarfile['/halo_data/GroupID'][:]
-        group_df.loc[:,'GalaxyID']=np.int64(snapnum*1e12+group_df.loc[:,'GroupNumber'])
-        group_df.loc[:,'Mass']=caesarfile['/halo_data/dicts/masses.total'][:]*mconv
-        group_df.loc[:,'GroupMass']=caesarfile['/halo_data/dicts/masses.total'][:]*mconv
-        group_df.loc[:,'Group_M_Crit200']=caesarfile['/halo_data/dicts/virial_quantities.m200c'][:]*mconv
-        group_df.loc[:,'Group_R_Crit200']=caesarfile['/halo_data/dicts/virial_quantities.r200c'][:]*dconv
-        group_df.loc[:,'SubGroupNumber']=0
-        group_df.loc[:,'StellarMass']=np.nan
-        group_df.loc[:,'StarFormationRate']=np.nan
-        group_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=np.nan
+        numgroups=caesarfile['/halo_data/GroupID'].shape[0]
+        group_df['SnapNum']=np.ones(numgroups)*snapnum
+        group_df['Redshift']=np.ones(numgroups)*zval
+        group_df['GroupNumber']=caesarfile['/halo_data/GroupID'][:]
+        group_df['SubGroupNumber']=np.zeros(numgroups)
+        group_df['GalaxyID']=np.int64(snapnum*1e12+group_df.loc[:,'GroupNumber'])
+        group_df['Mass']=caesarfile['/halo_data/dicts/masses.total'][:]*mconv
+        group_df['GroupMass']=caesarfile['/halo_data/dicts/masses.total'][:]*mconv
+        group_df['Group_M_Crit200']=caesarfile['/halo_data/dicts/virial_quantities.m200c'][:]*mconv
+        group_df['Group_R_Crit200']=caesarfile['/halo_data/dicts/virial_quantities.r200c'][:]*dconv
         group_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=caesarfile['/halo_data/minpotpos'][:]*dconv
 
         # Remove groups with mass below the cut and reindex
