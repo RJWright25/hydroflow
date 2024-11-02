@@ -35,8 +35,8 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
     
     # Grab metadata from the metadata file
     if metadata is not None:
-        metadata=load_metadata(metadata)
         metadata_path=metadata
+        metadata=load_metadata(metadata)
     else:
         simflist=os.listdir(os.getcwd())
         for metadata_path in simflist:
