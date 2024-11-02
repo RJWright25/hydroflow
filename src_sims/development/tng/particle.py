@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from scipy.spatial import cKDTree
-from hydroflow.src_physics.utils import get_limits
+from hydroflow.src_physics.utils import get_limits, calc_temperature
 
 ##### READ PARTICLE DATA
 def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
@@ -102,6 +102,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                         otherside=coordinates[:,idim]<=(lims_idim[1]-boxsize)
                         coordinates[:,idim][otherside]=coordinates[:,idim][otherside]+boxsize
 
+                    # Mask for the subvolume
                     idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
                     subvol_mask=np.logical_and(subvol_mask,idim_mask)
                     npart_ifile_invol=np.nansum(subvol_mask)
@@ -133,16 +134,12 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                             field_out=field[4:]
                             pdata[ifile][ptype][field_out]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
 
-                    #if gas, do temp clc
+                    # If gas, do temp calculation
                     if ptype==0:
-                        ne     = pdata[iptype].ElectronAbundance; del pdata[iptype]['ElectronAbundance']
-                        energy =  pdata[iptype].InternalEnergy;del pdata[iptype]['InternalEnergy']
-                        energy*=(1e10/hval/(1.67262178e-24))#convert to grams from 1e10Msun/h
-                        energy*=3.086e21*3.086e21/(3.1536e16*3.1536e16) #convert to cm^2/s^2
-                        mu=4.0/(1.0 + 3.0*0.76 + 4.0*0.76*ne)*1.67262178e-24
-                        temp = energy*(5/3-1)*mu/1.38065e-16
-                        pdata[iptype]['Temperature']=np.float32(temp)
-            
+                        pdata[ifile][ptype]['Temperature']=calc_temperature(pdata[ifile][ptype],XH=0.76,gamma=5/3)
+                        del pdata[ifile][ptype]['InternalEnergy']
+                        del pdata[ifile][ptype]['ElectronAbundance']
+    
                 else:
                     print(f'No ivol ptype {ptype} particles in this file!')
                     pdata[ifile][ptype]=pd.DataFrame([])
@@ -151,15 +148,19 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                 pdata[ifile][ptype]=pd.DataFrame([])
 
             print(f'Loaded itype {ptype} for ifile {ifile+1}/{numfiles} in {time.time()-t0:.3f} sec')
+        
+        # Concatenate the dataframes for this file
+        pdata[ifile]=pd.concat([pdata[ifile][ptype] for ptype in ptype_fields])
+        pdata[ifile].reset_index(inplace=True,drop=True)
 
-    print('Successfully loaded')
-
-    #concat all pdata into one df
+    # Concatenate the particle dataframes
+    print('Concatenating all particle data...')
     pdata=pd.concat(pdata)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
 
-    #generate KDtree
+    # Create a spatial KDTree for the particle data
+    print('Creating KDTree for particle data...')
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
     
     return pdata, pdata_kdtree
