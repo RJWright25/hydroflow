@@ -114,7 +114,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         subhalo_df['StellarMass']=subcat['SubhaloMassType'][:,4]*mconv
         subhalo_df['Mass']=subcat['SubhaloMass'][:]*mconv 
         subhalo_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=subcat['SubhaloPos'][:]*dconv
-        subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=subcat['SubhaloVel'][:,:]*np.sqrt(afac) #peculiar velocity in km/s
+        subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=subcat['SubhaloVel'][:,:] #peculiar velocity in km/s (no need to convert)
 
         # Initialize group data in subhalo data
         keys_groups=['SubGroupNumber','GroupMass','Group_M_Crit200','Group_R_Crit200','Group_CentreOfPotential_x','Group_CentreOfPotential_y','Group_CentreOfPotential_z']
