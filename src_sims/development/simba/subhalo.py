@@ -9,11 +9,11 @@ import time
 from hydroflow.run.tools_catalog import dump_hdf
 from hydroflow.run.initialise import load_metadata
 
-def read_subcat(path,mcut=1e11,metadata=None):
+def extract_subhaloes(path,mcut=1e11,metadata=None):
 
     """
-    read_subcat: Read the subhalo catalogue from a SIMBA caesar output file. 
-                 Currently only reads central galaxies.
+    extract_subhaloes: Read the subhalo catalogue from a SIMBA caesar output file. 
+                       Currently only reads central galaxies.
 
     Input:
     -----------
