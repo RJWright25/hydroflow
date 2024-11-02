@@ -177,6 +177,9 @@ if numgal:
     logging.info(f'Loading snap particle data: {snap_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
     pdata_subvol,kdtree_subvol=read_subvol(snap_pdata_fname,ivol,nslice,metadata,logfile=logging_folder+logging_name+'.log')
 
+    logging.info('Coordinate minima: x - {:.2f}, y - {:.2f}, z - {:.2f} [runtime {:.3f} sec]'.format(np.nanmin(pdata_subvol['Coordinates_x'].values),np.nanmin(pdata_subvol['Coordinates_y'].values),np.nanmin(pdata_subvol['Coordinates_z'].values)))
+    logging.info('Coordinate maxima: x - {:.2f}, y - {:.2f}, z - {:.2f} [runtime {:.3f} sec]'.format(np.nanmax(pdata_subvol['Coordinates_x'].values),np.nanmax(pdata_subvol['Coordinates_y'].values),np.nanmax(pdata_subvol['Coordinates_z'].values)))
+
     # If dumping pdata and mfracs are in pdata, add to pdata_fields
     if dump:
         if 'mfrac_HI' in pdata_subvol.columns:
