@@ -221,13 +221,14 @@ if numgal:
             t2_c=time.time()
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
 
+            print(pdata_candidates)
+
             # Dump a subset of the particle data if requested
             if dump:
                 logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
                 group=str(int(galaxy[galid_key]))
                 print(pdata_candidates.columns)
                 gasmask=pdata_candidates['ParticleType'].values==0
-
                 data=pdata_candidates.loc[gasmask,pdata_fields]
                 dump_hdf_group(dumpcat_fname,group,data,metadata=galaxy,verbose=False)
 
