@@ -67,7 +67,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
     outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
 
     # Input base path
-    basepath=path[0].split('/fof')[0]
+    basepath=path[0].split('/groups')[0]
 
     # Initialize the subhalo data structure
     subhalo_dfs=[]
