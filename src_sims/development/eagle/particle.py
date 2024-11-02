@@ -87,14 +87,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
         pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')/hval #comoving position in Mpc
         pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*np.sqrt(afac) #peculiar velocity in km/s
 
-        # make a histogram of the particle coordinates
-        #import matplotlib.pyplot as plt
-        fig,ax=plt.subplots(1,3,figsize=(15,5))
-        for i,coord in enumerate([f'Coordinates_{x}' for x in 'xyz']):
-            ax[i].hist(pdata[ptype].loc[:,coord],bins=100)
-            ax[i].set_xlabel(coord)
-        plt.savefig(f'{ptype}_coords_ivol_{str(ivol).zfill(3)}.png')
-
         # Get masses (use the mass table value for DM particles)
         if ptype==1:
             pdata[ptype].loc[:,'Masses']=file['Header'].attrs['MassTable'][1]*1e10/hval #mass in Msun
@@ -124,11 +116,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
-
-    #Print the min/max x,y,z coordinates
-    logging.info('Limits:' + ' '.join([f'{lims[i]:.2f}' for i in range(6)]))
-    logging.info(f"Coordinates: {np.nanmin(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)} {np.nanmax(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)}")
-    logging.info(f"Number of particles: {pdata.shape[0]}")
 
     # Create a spatial KDTree for the particle data
     logging.info(f"Creating KDTree for particle data...")

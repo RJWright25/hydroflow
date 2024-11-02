@@ -228,9 +228,7 @@ if numgal:
             if dump:
                 logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
                 group=str(int(galaxy[galid_key]))
-                print(pdata_candidates.columns)
-                gasmask=pdata_candidates['ParticleType'].values==0
-                data=pdata_candidates.loc[gasmask,pdata_fields]
+                data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
                 dump_hdf_group(dumpcat_fname,group,data,metadata=galaxy,verbose=False)
 
             # Process the galaxy if candidates were found
