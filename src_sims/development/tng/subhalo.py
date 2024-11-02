@@ -2,21 +2,26 @@
 import os
 import numpy as np
 import pandas as pd
-import logging
-import time
+import h5py
+
+from hydroflow.run.tools_catalog import dump_hdf
+from hydroflow.run.initialise import load_metadata
+
 import illustris_python as tng_tools
 
-def read_subcat(basepath,snapnums=None):
+def extract_subhaloes(path,mcut=1e11,metadata=None):
 
     """
     read_subcat: Read the subhalo catalogue from an Illustris simulation snapshot. Uses the illustris_python package.
     
     Input:
     -----------
-    basepath: str   
-        Path to the simulation snapshot.
-    snapnums: list
-        List of snapshot indices to read.
+    path: str or list of str
+        Path(s) to the halo catalogues.
+    mcut: float
+        Minimum mass of subhaloes to include [log10(M/Msun)].
+    metadata: str
+        Path to the metadata file.
 
     Output:
     -----------
@@ -24,141 +29,150 @@ def read_subcat(basepath,snapnums=None):
         DataFrame containing the subhalo catalogue.
 
     """
-    mcut=3.16e10
-    mstarcut=3.16e8
-
-    files=os.listdir(basepath)
-    numfiles=len(files)
-    if snapnums is None:
-        snapnums=list(range(numfiles))
-
-    if len(snapnums)==0:
-        logging.info(f'No snapshots found in {basepath}')
-        return
+    # Check if just one path is given
+    if type(path)==str:
+        path=[path]
     
-    if not os.path.exists('jobs'):
-        os.mkdir('jobs')
-    if not os.path.exists('jobs/logs'):
-        os.mkdir('jobs/logs')
+    # Grab metadata from the metadata file
+    if metadata is not None:
+        metadata=load_metadata(metadata)
+    else:
+        simflist=os.listdir(os.getcwd())
+        for metadata_path in simflist:
+            if '.pkl' in metadata_path:
+                metadata_path=metadata_path
+                metadata=load_metadata(metadata_path)
+                print(f"Metadata file found: {metadata_path}")
+                break
+    
+    # Ensure that some catalogues exist
+    if len(path)==0:
+        print("No catalogue paths given. Exiting...")
+        return None
+    
+    # Units for masses
+    mconv=1e10/hval #convert to Msun
+    dconv=1e-3/hval #convert to cMpc
 
-    snapm1=snapnums[-1]
-    if os.path.exists(f'jobs/logs/read_subcat_{snapm1}.log'):
-        os.remove(f'jobs/logs/read_subcat_{snapm1}.log')
+    # Extract snapshot numbers from the paths and metadata
+    snapnums=[];afac=[]
+    hval=metadata.hval
+    
+    for ipath in path:
+        mask=np.where(ipath==np.array(metadata.snapshots_flist))
+        snapnum=metadata.snapshots_snapnums[mask];snapnums.append(snapnum)
+        afac=metadata.snapshots_afac[mask];afac.append(afac)
 
-        
-    t0=time.time()
-    logging.basicConfig(filename=f'jobs/logs/read_subcat_{snapm1}.log', level=logging.INFO)
-    logging.info(f'Running subhalo extraction for {len(snapnums)} snaps ending at {snapnums[-1]} ...')
+    # Base output path
+    outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
 
+    # Input base path
+    basepath=path[0].split('/fof')[0]
+
+    # Initialize the subhalo data structure
     subhalo_dfs=[]
 
-    for snapnum in snapnums:
-        logging.info(f'')
-        logging.info(f'***********************************************************************')
-        logging.info(f'Processing snapnum {snapnum} [runtime {time.time()-t0:.2f} sec]')
-        logging.info(f'***********************************************************************')
-
+    # Iterate over the snapshots
+    for isnapnum,snapnum in enumerate(snapnums):
+        print (f"Loading snapshot {snapnum}...")
         subfind_raw=tng_tools.groupcat.load(basepath,snapNum=snapnum)
         groupcat=subfind_raw['halos']
         subcat=subfind_raw['subhalos']
 
-        hfac=subfind_raw['header']['HubbleParam']
-        zval=subfind_raw['header']['Redshift']
-        afac=1/(1+zval)
+        # Get the redshift
+        afac=afac[isnapnum]
+        zval=1/afac-1
 
+        # Initialize the group and subhalo dataframes
         group_df=pd.DataFrame()
         subhalo_df=pd.DataFrame()
 
-        ### group data
-        group_df.loc[:,'Mass']=groupcat['GroupMass'][:]*10**10/hfac
-        group_df.loc[:,'GroupMass']=groupcat['GroupMass'][:]*10**10/hfac
-        group_df.loc[:,'Group_M_Crit200']=groupcat['Group_M_Crit200'][:]*10**10/hfac
-        group_df.loc[:,'Group_R_Crit200']=groupcat['Group_R_Crit200'][:]*1e-3
-        group_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=groupcat['GroupPos'][:]*1e-3
-        group_df.loc[:,'GroupNumber']=np.float64(list(range(group_df.shape[0])))
-        group_df.loc[:,'SubGroupNumber']=0
-        group_df.loc[:,'SnapNum']=snapnum
-        group_df.loc[:,'Redshift']=zval
+        # Extract group data
+        print('Extracting group data...')
+        numgroups=groupcat['Mass'][:].shape[0]
+        group_df['SnapNum']=np.ones(numgroups)*snapnum
+        group_df['Redshift']=np.ones(numgroups)*zval
+        group_df['GroupNumber']=np.float64(list(range(group_df.shape[0])))
+        group_df['SubGroupNumber']=np.zeros(numgroups)
+        group_df['GroupMass']=groupcat['GroupMass'][:]*mconv
+        group_df['Group_M_Crit200']=groupcat['Group_M_Crit200'][:]*mconv
+        group_df['Group_R_Crit200']=groupcat['Group_R_Crit200'][:]*dconv #convert to cMpc
+        group_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=groupcat['GroupPos'][:]*dconv #convert to cMpc
         group_df.sort_values(by='GroupNumber',inplace=True,ascending=False)
-        logging.info(f'Loaded group data {snapnum} [runtime {time.time()-t0:.2f} sec]')
-
-        group_df=group_df.loc[group_df['Mass'].values>=mcut,:].copy()
+        group_df=group_df.loc[group_df['GroupMass'].values>=mcut,:].copy()
         group_df.reset_index(drop=True,inplace=True)
 
-        ### subhalo data
+        # Extract subhalo data
+        print('Extracting subhalo data...')
+        numsubhaloes=subcat['SubhaloMass'][:].shape[0]
+        subhalo_df['SnapNum']=np.ones(numsubhaloes)*snapnum
+        subhalo_df['Redshift']=np.ones(numsubhaloes)*zval
         subhalo_df['GroupNumber']=np.float64(subcat['SubhaloGrNr'][:])
-        subhalo_df['SubfindID']=np.array(range(subhalo_df.shape[0]))
-        subhalo_df['StarFormationRate']=subcat['SubhaloSFR'][:]
-        subhalo_df['StellarMass']=subcat['SubhaloMassType'][:,4]*10**10/hfac
-        subhalo_df['Mass']=subcat['SubhaloMass'][:]*10**10/hfac
-        subhalo_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=subcat['SubhaloPos'][:]*1e-3
-        subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=subcat['SubhaloVel'][:,:]*np.sqrt(afac)
-        subhalo_df.loc[:,'SnapNum']=snapnum
-        subhalo_df.loc[:,'Redshift']=zval
+        subhalo_df['GalaxyID']=np.array(range(subhalo_df.shape[0]))
+        subhalo_df['StarFormationRate']=subcat['SubhaloSFR'][:] #Msun/yr
+        subhalo_df['StellarMass']=subcat['SubhaloMassType'][:,4]*mconv
+        subhalo_df['Mass']=subcat['SubhaloMass'][:]*mconv 
+        subhalo_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=subcat['SubhaloPos'][:]*dconv
+        subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=subcat['SubhaloVel'][:,:]*np.sqrt(afac) #peculiar velocity in km/s
 
+        # Initialize group data in subhalo data
         keys_groups=['GroupMass','Group_M_Crit200','Group_R_Crit200','Group_CentreOfPotential_x','Group_CentreOfPotential_y','Group_CentreOfPotential_z']
         for key in keys_groups:
             subhalo_df[key]=np.zeros(subhalo_df.shape[0])+np.nan
         
-        #sort subhalo data
-        subhalo_df.sort_values(by=['GroupNumber','Mass'],inplace=True,ascending=[False,True])
-        subhalo_df=subhalo_df.loc[np.logical_and(subhalo_df['Mass'].values>=mcut,subhalo_df['StellarMass'].values>=mstarcut),:].copy()
+        # Sort subhalo data
+        subhalo_df.sort_values(by=['GroupNumber','Mass'],inplace=True,ascending=[True,False])
+        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut,:] #apply mass cut
         subhalo_df.reset_index(inplace=True,drop=True)
 
-        print(subhalo_df.loc[:,["Mass","GroupNumber"]])
-
-        #match subhalo data to group data
+        # Match group data to subhalo data
         print('Matching group data to subhalo data...')
         unique_groups=subhalo_df['GroupNumber'].unique()
         for igroup,group in enumerate(unique_groups):
-            print(group)
             if igroup%1000==0:
                 print(f'Group {igroup+1}/{unique_groups.shape[0]}...')
                 print(f"Searching for {group} in {group_df['GroupNumber'].values} ...")
+            
+            # Using the searchsorted method to find the group index
             group_idx=np.searchsorted(group_df['GroupNumber'].values,group)
             if group!=group_df['GroupNumber'].values[group_idx]:
                 print(f"Group {group} does not match {group_df['GroupNumber'].values[group_idx]}...")
                 continue
+            
+            # Find the subhalo indices range for the group
             subhalo_idx_1=np.searchsorted(subhalo_df['GroupNumber'].values,group)
             subhalo_idx_2=np.searchsorted(subhalo_df['GroupNumber'].values,subhalo_df['GroupNumber'].values[igroup+1])
-            
             if subhalo_idx_2-subhalo_idx_1==0:
                 print(f'No subhalos in group {group}...')
                 continue
-
+            
+            # Assign group data to subhalo data
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'SubGroupNumber']=np.array(range(np.sum(subhalo_idx_2-subhalo_idx_1)))
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'GroupMass']=group_df.loc[group_idx,'GroupMass']
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'Group_M_Crit200']=group_df.loc[group_idx,'Group_M_Crit200']
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,'Group_R_Crit200']=group_df.loc[group_idx,'Group_R_Crit200']
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2,[f'Group_CentreOfPotential_{x}' for x in 'xyz']]=group_df.loc[group_idx,[f'CentreOfPotential_{x}' for x in 'xyz']]
 
+        # Append the group and subhalo dataframes to the subhalo data structure
         subhalo_dfs.append(subhalo_df)
 
-        logging.info(f'Matched group data {snapnum} [runtime {time.time()-t0:.2f} sec]')
-
-    logging.info(f'')
-    logging.info(f'*********************************************')
-    logging.info(f'Concatenating final subhalo data structure...')
-    logging.info(f'*********************************************')
-
-    if len (subhalo_dfs)>1:
+    # Concatenate the subhalo dataframes
+    if len(subhalo_dfs)>1:
         subcat=pd.concat(subhalo_dfs)
     else:
         subcat=subhalo_dfs[0]
     subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False],inplace=True)
     subcat.reset_index(inplace=True,drop=True)
 
-    if len(snapnums)==1:
-        outname=f'catalogues/catalogue_subhalo_{str(int(snapnums[0])).zfill(3)}.hdf5'
+    # Dump the subhalo catalogue
+    dump_hdf(outpath,subcat)
+
+    # Add path to metadata in hdf5
+    if metadata is not None:
+        with h5py.File(outpath, 'r+') as subcatfile:
+            header= subcatfile.create_group("Header")
+            header.attrs['metadata'] = metadata_path
     else:
-        outname=f'catalogues/catalogue_subhalo_{str(int(snapnums[0])).zfill(3)}_to_{str(int(snapnums[-1])).zfill(3)}.hdf5'    
-    
-    logging.info(f'')
-    logging.info(f'*********************************************')
-    logging.info(f'Saving final subhalo data structure to {outname}...')
-    logging.info(f'*********************************************')
-    if os.path.exists(f'{outname}'):
-        os.remove(f'{outname}')
-    subcat.to_hdf(f'{outname}',key='Subhalo')
+        print("No metadata file found. Metadata path not added to subhalo catalogue.")
 
     return subcat
