@@ -115,7 +115,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
 
     # Create a spatial KDTree for the particle data
     logging.info(f"Creating KDTree for particle data...")
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
+    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
 
     return pdata, pdata_kdtree
 
