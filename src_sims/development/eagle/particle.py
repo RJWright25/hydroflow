@@ -8,7 +8,7 @@ import pandas as pd
 import h5py 
 import logging
 
-from scipy.spatial import cKDTree
+from scipy.spatial import KDTree
 from read_eagle import EagleSnapshot
 
 from hydroflow.src_physics.utils import get_limits
@@ -71,7 +71,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     
     # Use the EagleSnapshot class to read the particle data
     snapshot=EagleSnapshot(path)
-    snapshot.select_region(*lims)
+    snapshot.select_region(xmin=lims[0],xmax=lims[1],ymin=lims[2],ymax=lims[3],zmin=lims[4],zmax=lims[5]) 
     pdata={}
 
     # Loop over particle types
@@ -120,7 +120,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
 
     # Create a spatial KDTree for the particle data
     logging.info(f"Creating KDTree for particle data...")
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values)
+    pdata_kdtree=KDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
 
     return pdata, pdata_kdtree
 
