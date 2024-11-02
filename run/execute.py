@@ -217,6 +217,7 @@ if numgal:
 
             # Get the particle data for this halo
             t1_c=time.time()
+            print(subcat_limits)
             pdata_candidates=retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=maxrad)
             t2_c=time.time()
             logging.info(f"Candidates: {t2_c-t1_c:.3f} sec")
