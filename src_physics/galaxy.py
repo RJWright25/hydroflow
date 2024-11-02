@@ -31,7 +31,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 		# Compute relative position
 		pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']]=(pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com)
 		pdata_candidates['Relative_r_comoving']=np.linalg.norm(pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values,axis=1)
-		pdata_candidates['Relative_r_physical']=pdata_candidates['Relative_r_comoving']*afac
+		pdata_candidates['Relative_r_physical']=pdata_candidates['Relative_r_comoving'].values*afac
 
 		# Using the mean velocity of the halo (WITHIN R200, all particle types) to calculate relative velocities
 		vmask=pdata_candidates['Relative_r_comoving'].values<galaxy['Group_R_Crit200']
