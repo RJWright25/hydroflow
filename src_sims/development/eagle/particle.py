@@ -98,7 +98,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
 
 
     # Convert SFR to Msun/yr from g/s
-    pdata[0]['StarFormationRate']=pdata[0]['StarFormationRate']*(1/msun)*sec_in_Gyr
+    pdata[0]['StarFormationRate']=pdata[0]['StarFormationRate']*(1/msun)*sec_in_yr
 
     # Add missing fields to star particles
     npart_star=pdata[4].shape[0]

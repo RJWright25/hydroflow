@@ -114,8 +114,8 @@ constant_G=4.30073691e-09 #(km/s)^2*Mpc/Msun
 # Solar mass in g
 msun=1.989e33
 
-# Seconds in a Gigayear
-sec_in_Gyr=3.15576e16
+# Seconds in a year
+sec_in_yr=3.154e7
 
 # Conversion factor from pMpc/Gyr to km/s -- used to align the units of particle velocities for the gas flow calculations
 vel_conversion=1*units.Mpc/units.Gyr #from pMpc/Gyr to km/s
