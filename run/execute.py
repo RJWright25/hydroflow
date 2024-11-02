@@ -223,14 +223,9 @@ if numgal:
             t1_c=time.time()
             pdata_candidates=retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=maxrad)
             t2_c=time.time()
-            logging.info(f"Candidates: {t2_c-t1_c:.3f} sec (n = {pdata_candidates.shape[0]}, m = {np.nansum(pdata_candidates['Masses'].values):1e})")
 
-            # Dump a subset of the particle data if requested
-            if dump:
-                logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
-                group=str(int(galaxy[galid_key]))
-                data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
-                dump_hdf_group(dumpcat_fname,group,data,metadata=galaxy,verbose=False)
+            if pdata_candidates.shape[0]>0:
+                logging.info(f"Candidates: {t2_c-t1_c:.3f} sec (n = {pdata_candidates.shape[0]}, m = {np.nansum(pdata_candidates['Masses'].values):1e})")
 
             # Process the galaxy if candidates were found
             if pdata_candidates.shape[0]>0:
@@ -255,6 +250,14 @@ if numgal:
                 if list(galaxy_properties.keys()):
                     for key in list(galaxy_properties.keys()):
                         galaxy_output.loc[0,key]=galaxy_properties[key]
+
+                
+                # Dump a subset of the particle data if requested
+                if dump:
+                    logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
+                    group=str(int(galaxy[galid_key]))
+                    data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
+                    dump_hdf_group(dumpcat_fname,group,data,metadata=galaxy,verbose=False)
                 
             else:
                 logging.info(f'Could not process galaxy, could not retrieve candidates')
