@@ -78,19 +78,16 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     for iptype,ptype in enumerate(ptypes):
 
         logging.info(f"Reading {ptype} particle IDs, coordinates & velocities...")
-        
         pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
         pdata[ptype]['ParticleType']=np.ones(pdata[ptype].shape[0])*ptype
         pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')/hval #comoving position in Mpc
-        #print min/max
-        logging.info(f"Coordinates min/max: {np.min(pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)} / {np.max(pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']],axis=0)}")
         pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*np.sqrt(afac) #peculiar velocity in km/s
 
         # Get masses (use the mass table value for DM particles)
         if ptype==1:
-            pdata[ptype].loc[:,'Masses']=file['Header'].attrs['MassTable'][1]*10**10/hval #mass in Msun
+            pdata[ptype].loc[:,'Masses']=file['Header'].attrs['MassTable'][1]*1e10/hval #mass in Msun
         else:
-            pdata[ptype]['Masses']=snapshot.read_dataset(ptype,'Mass')*10**10/hval #mass in Msun
+            pdata[ptype]['Masses']=snapshot.read_dataset(ptype,'Mass')*1e10/hval #mass in Msun
         
         # Convert other properties to physical units
         logging.info(f"Reading extra baryonic properties...")

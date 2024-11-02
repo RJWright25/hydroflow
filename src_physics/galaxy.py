@@ -20,8 +20,8 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 		maxrad=galaxy['Group_R_Crit200']*3.5
 
 	# Retrieve the candidates from the KDTree
-	print(com,maxrad)
 	pidx_candidates=kdtree_subvol.query_ball_point(com,maxrad)
+	print(com,maxrad,pidx_candidates)
 	pdata_candidates=pdata_subvol.loc[pidx_candidates,:]
 	pdata_candidates.reset_index(drop=True,inplace=True)
 	numcdt=pdata_candidates.shape[0]
