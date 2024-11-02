@@ -162,6 +162,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
 
         # Append the group and subhalo dataframes to the subhalo data structure
         subhalo_dfs.append(subhalo_df)
+        print()
 
     # Concatenate the subhalo dataframes
     if len(subhalo_dfs)>1:
