@@ -85,7 +85,7 @@ def dump_hdf(fname,data,verbose=False):
     """
 
     if os.path.exists(fname):
-        print('Removing existing output file ...')
+        print('Removing existing output file...')
         os.remove(fname)
     
     columns=list(data.columns)
