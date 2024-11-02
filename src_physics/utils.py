@@ -4,6 +4,7 @@
 # src_physics/gasflow.py: lower level mathematical functions for the repository.
 
 import numpy as np
+from astropy import constants
 from astropy import units
 
 def ivol_gen(ix,iy,iz,nslice):
@@ -126,33 +127,35 @@ def calc_temperature(pdata,XH=0.76,gamma=5/3):
 
 	"""
 
-	#### Equation: T = (gamma-1)*u/k_B*mu
+	#### Equation: T = (gamma-1)*(u/k_B)*mu
 	#### where mu = 4/(1+3*XH+4*XH*ne)*m_p is the mean molecular weight
 
-	u=pdata['InternalEnergy'].values
-	ne=pdata['ElectronAbundance'].values
+	u=pdata['InternalEnergy'].values*units.km**2/(units.s**2)
+	ne=pdata['ElectronAbundance'].values*units.dimensionless_unscaled
 
-	mu=4/(1+3*XH+4*XH*ne)*1.67262178e-24
+	mu=4/(1+3*XH+4*XH*ne)*constant_mp*units.g
+	T=(gamma-1)*u*mu/(constant_kB*units.km**2*units.g/(units.K*units.s**2))
 
+	T=T.to(units.K).value
 
 	return T
 
 ##### CONSTANTS #####
 
-# Gravitational constant in (km/s)^2*Mpc/Ms
-constant_G=4.30073691e-09 #(km/s)^2*Mpc/Msun
+# Gravitational constant in (km/s)^2*Mpc/Msun
+constant_G=constants.G.to(units.km**2*units.Mpc/(units.Msun*units.s**2)).value
 
 # Boltzmann constant in (km/s)^2*g/K
-constant_kB=1.38064852e-16 #(km/s)^2*g/K
+constant_kB=constants.k_B.to(units.km**2*units.g/(units.K*units.s**2)).value
 
 # Mass of the proton in g
-constant_mp=1.67262178e-24
+constant_mp=constants.m_p.to(units.g).value
 
 # Solar mass in g
-constant_gpmsun=1.989e33
+constant_gpmsun=constants.M_sun.to(units.g).value
 
 # Seconds in a year
-constant_spyr=3.154e7
+constant_spyr=1*units.yr.to(units.s).value
 
 # Conversion factor from pMpc/Gyr to km/s -- used to align the units of particle velocities for the gas flow calculations
 vel_conversion=1*units.Mpc/units.Gyr #from pMpc/Gyr to km/s
