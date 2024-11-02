@@ -56,7 +56,9 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                      'StarFormationRate'],
                   4:['Metallicity'],
                   5:[]}
-    pdata=[{} for iptype in range(len(ptype_fields))]
+    
+    # Initialize particle data
+    pdata=[None for iptype in range(len(ptype_fields))]
 
     # Open the snapshot file
     pdata_ifile=h5py.File(path,'r')
@@ -128,6 +130,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     pdata.reset_index(inplace=True,drop=True)
 
     # Create a spatial KDTree for the particle data
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
+    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values,boxsize=boxsize)
     
     return pdata, pdata_kdtree

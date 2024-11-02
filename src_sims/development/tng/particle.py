@@ -134,8 +134,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                         del pdata[ifile][ptype]['InternalEnergy']
                         del pdata[ifile][ptype]['ElectronAbundance']
 
-                
-
                 else:
                     logging.info(f"No {ptype} particles in this file!")
                     pdata[ifile][ptype]=pd.DataFrame([])
