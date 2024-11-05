@@ -133,9 +133,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                         pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*1e10*hval**2/afac**3 #Msun/pkpc^3
                         pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*np.float128(constant_gpmsun)/np.float128(constant_cmpkpc)**3 #g/cm^3
 
-                        print(pdata[ifile][ptype]['Density'].values)
-
-
                     # If gas, do temp calculation
                     logging.info(f"Calculating temperature for {ptype} particles...")
                     if ptype==0:
