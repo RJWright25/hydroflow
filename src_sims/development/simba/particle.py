@@ -3,7 +3,7 @@ import h5py
 import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree
-from hydroflow.src_physics.utils import get_limits, calc_temperature
+from hydroflow.src_physics.utils import get_limits, calc_temperature, constant_gpmsun, constant_cmpkpc
 
 ##### READ PARTICLE DATA
 def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
@@ -106,9 +106,15 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                 # Load extra baryonic properties
                 for field in ptype_fields[ptype]:
                     if not field=='Metallicity':
-                        pdata[iptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
+                        pdata[iptype][field]=np.float128(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
                     else:
                         pdata[iptype][field]=pdata_ifile[f'PartType{ptype}'][field][:,0][subvol_mask]
+
+                # Convert density to g/cm^3
+                if ptype==0:
+                    # Raw data are in 1e10/h (ckpc/h)^-3
+                    pdata[ptype]['Density']=pdata[ptype]['Density'].values*1e10*hval**2/afac**3 #Msun/pkpc^3
+                    pdata[ptype]['Density']=pdata[ptype]['Density'].values*np.float128(constant_gpmsun)/np.float128(constant_cmpkpc)**3 #g/cm^3
 
                 # If gas, do temp calculation
                 if ptype==0:
