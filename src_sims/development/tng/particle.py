@@ -122,16 +122,16 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                     logging.info(f"Reading extra baryonic properties...")
                     for field in ptype_fields[ptype]:
                         if not 'GFM' in field:
-                            pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
+                            pdata[ifile][ptype][field]=np.float128(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
                         else:
                             field_out=field[4:]
                             pdata[ifile][ptype][field_out]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
 
                     # Convert density to g/cm^3
                     if ptype==0:
-                        pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*1e10/hval #Msun/ckpc^3
-                        pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*constant_gpmsun/afac**3 #g/pkpc^3
-                        pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*(1/constant_cmpkpc)**3 #g/cm^3
+                        # Raw data are in 1e10/h (ckpc/h)^-3
+                        pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*1e10*hval**2/afac**3 #Msun/pkpc^3
+                        pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*np.float128(constant_gpmsun)/np.float128(constant_cmpkpc)**3 #g/cm^3
 
                         print(pdata[ifile][ptype]['Density'].values)
 
