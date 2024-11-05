@@ -259,7 +259,7 @@ if numgal:
                     logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
                     group=str(int(galaxy[galid_key]))
                     data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
-                    dump_hdf_group(dumpcat_fname,group,data,metadata=galaxy,verbose=False)
+                    dump_hdf_group(dumpcat_fname,group,data,metadata=galaxy_output,verbose=False)
                 
             else:
                 logging.info(f'Could not process galaxy, could not retrieve candidates')
