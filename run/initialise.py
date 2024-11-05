@@ -116,7 +116,7 @@ class simulation_metadata:
             elif simtype == 'simba':
                 self.boxsize = f['Header'].attrs['BoxSize']/1e3/self.hval
 
-        #create directories for outputs
+        # Create directories for outputs
         if not os.path.exists('catalogues'):
             os.makedirs('catalogues')
         if not os.path.exists('jobs'):

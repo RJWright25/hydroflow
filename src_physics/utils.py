@@ -157,6 +157,9 @@ constant_gpmsun=constants.M_sun.to(units.g).value
 # Seconds in a year
 constant_spyr=1*units.yr.to(units.s)
 
+# cm in a kpc
+constant_cmpkpc=1*units.kpc.to(units.cm)
+
 # Conversion factor from pMpc/Gyr to km/s -- used to align the units of particle velocities for the gas flow calculations
 vel_conversion=1*units.Mpc/units.Gyr #from pMpc/Gyr to km/s
 vel_conversion=vel_conversion.to(units.km/units.s)

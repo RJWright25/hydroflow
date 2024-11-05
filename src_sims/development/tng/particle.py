@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from scipy.spatial import cKDTree
-from hydroflow.src_physics.utils import get_limits, calc_temperature
+from hydroflow.src_physics.utils import get_limits, calc_temperature, constant_gpmsun, constant_cmpkpc
 
 ##### READ PARTICLE DATA
 def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
@@ -122,10 +122,19 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                     logging.info(f"Reading extra baryonic properties...")
                     for field in ptype_fields[ptype]:
                         if not 'GFM' in field:
-                            pdata[ifile][ptype][field]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+                            pdata[ifile][ptype][field]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
                         else:
                             field_out=field[4:]
-                            pdata[ifile][ptype][field_out]=np.float32(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+                            pdata[ifile][ptype][field_out]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
+
+                    # Convert density to g/cm^3
+                    if ptype==0:
+                        pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*1e10/hval #Msun/ckpc^3
+                        pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*constant_gpmsun/afac**3 #g/pkpc^3
+                        pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*(1/constant_cmpkpc)**3 #g/cm^3
+
+                        print(pdata[ifile][ptype]['Density'].values)
+
 
                     # If gas, do temp calculation
                     logging.info(f"Calculating temperature for {ptype} particles...")
