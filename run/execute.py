@@ -38,9 +38,6 @@ pdata_fields=['Masses',
               'Coordinates_x',
               'Coordinates_y',
               'Coordinates_z',
-              'mfrac_HI',
-              'mfrac_HII',
-              'mfrac_H2',
               'Relative_v_rad_pec',
               'Relative_phi',
               'Temperature',
@@ -193,6 +190,15 @@ if numgal:
     logging.info(f'Temperature min: {np.nanmin(pdata_subvol["Temperature"]):.2e} K')
     logging.info(f'Temperature max: {np.nanmax(pdata_subvol["Temperature"]):.2e} K')
     logging.info(f'Temperature mean: {pdata_subvol["Temperature"].mean():.2e}')
+    
+    # If dumping pdata and mfracs are in pdata, add to pdata_fields
+    if dump:
+        if 'mfrac_HI' in pdata_subvol.columns:
+            pdata_fields.append('mfrac_HI')
+        if 'mfrac_HII' in pdata_subvol.columns:
+            pdata_fields.append('mfrac_HII')
+        if 'mfrac_H2' in pdata_subvol.columns:
+            pdata_fields.append('mfrac_H2')
 
     logging.info(f'')
     logging.info(f'****** Entering main galaxy loop [runtime {time.time()-t1:.3f} sec] ******')
