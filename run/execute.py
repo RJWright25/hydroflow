@@ -33,7 +33,7 @@ vcuts_flow=[0];vcuts_str=[str(int(vcut)).zfill(3)+'kmps' for vcut in vcuts_flow]
 vcuts={vcut_str:vcut for vcut_str,vcut in zip(vcuts_str,vcuts_flow)}
 
 #dump fields
-pdata_fields=['Masses','Relative_r_comoving','Relative_v_rad_pec','Relative_phi','Temperature','Density','Metallicity']
+pdata_fields=['Masses','Relative_r_comoving','Coordinates_x','Coordinates_y','Coordinates_z','Relative_v_rad_pec','Relative_phi','Temperature','Density','Metallicity']
 
 
 #arguments
