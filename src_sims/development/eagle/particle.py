@@ -13,8 +13,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial import KDTree
 from pyread_eagle import EagleSnapshot
 
-from hydroflow.src_physics.utils import get_limits
-from hydroflow.src_physics.utils import constant_gpmsun,constant_spyr
+from hydroflow.src_physics.utils import get_limits, partition_neutral_gas, constant_gpmsun,constant_spyr
 
 ##### READ PARTICLE DATA
 def read_subvol(path,ivol,nslice,metadata,logfile=None):
@@ -59,6 +58,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     # Get the scale factor
     snap_idx_in_metadata=np.where(metadata.snapshots_flist==path)[0][0]
     afac=metadata.snapshots_afac[snap_idx_in_metadata]
+    zval=metadata.snapshots_z[snap_idx_in_metadata]
 
     # Get limits for the subvolume -- these are in cMpc
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
@@ -116,6 +116,15 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
     pdata.sort_values(by="ParticleIDs",inplace=True)
     pdata.reset_index(inplace=True,drop=True)
+
+    # Add hydrogen partitions into HI, H2, HII from Rahmati (2013) and Blitz & Rosolowsky (2006)
+    logging.info(f"Adding hydrogen partitioning...")
+    gas=pdata['ParticleType'].values==0
+    fHI,fHII,fH2=partition_neutral_gas(pdata,redshift=zval,sfonly=True)
+    pdata.loc[:,['mfrac_HI','mfrac_HII','mfrac_H2']]=np.nan
+    pdata.loc[gas,'mfrac_HI']=fHI
+    pdata.loc[gas,'mfrac_HII']=fHII
+    pdata.loc[gas,'mfrac_H2']=fH2
 
     # Create a spatial KDTree for the particle data
     logging.info(f"Creating KDTree for particle data...")
