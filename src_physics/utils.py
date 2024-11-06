@@ -278,12 +278,14 @@ def partition_neutral_gas(pdata,redshift,xH=0.76,sfonly=True):
     # Partition function
     Rmol=(midplane_pressure/4.3e4)**0.92 # Blitz & Rosolowsky (2006) 
     fH2=np.zeros(nH.shape[0])
-
     fH2[sfrmask]=1/(1+Rmol[sfrmask])
     fHI=1-fH2
     fH2*=fneutral*xH # convert from fraction of neutral mass to fraction of total mass
     fHI*=fneutral*xH # convert from fraction of neutral mass to fraction of total mass
 
+	print(fHI,fH2,fHII)
+    print(fHI.shape,fH2.shape,fHII.shape)
+    
     return fHI,fH2,fHII
 
 
