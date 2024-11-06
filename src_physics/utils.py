@@ -282,8 +282,7 @@ def partition_neutral_gas(pdata,redshift,xH=0.76,sfonly=True):
     fHI=1-fH2
     fH2*=fneutral*xH # convert from fraction of neutral mass to fraction of total mass
     fHI*=fneutral*xH # convert from fraction of neutral mass to fraction of total mass
-
-	print(fHI,fH2,fHII)
+    print(fHI,fH2,fHII)
     print(fHI.shape,fH2.shape,fHII.shape)
     
     return fHI,fH2,fHII
