@@ -57,6 +57,12 @@ def dump_hdf_group(fname,group,data,metadata={},verbose=False):
     for icol,column in enumerate(columns):
         if verbose:
             print(f'Dumping {column} ... {icol+1}/{len(columns)}')
+        
+        # Remove data if it already exists
+        if group in outfile:
+            if column in outfile[group]:
+                del outfile[f'{group}/{column}']
+                
         outfile.create_dataset(name=f'{group}/{column}',data=data[column].values)
 
     # Add optional metadata to the group
