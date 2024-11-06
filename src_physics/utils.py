@@ -259,7 +259,6 @@ def partition_neutral_gas(pdata,redshift,xH=0.76,sfonly=True):
 	
 	# Get gas properties in correct units
     nH=pdata.loc[gas,'Density'].values*xH/constant_mp
-    print(nH)
     T=pdata.loc[gas,'Temperature'].values
     sfr=pdata.loc[gas,'StarFormationRate'].values
 
