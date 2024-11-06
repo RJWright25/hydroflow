@@ -141,11 +141,13 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     logging.info(f"Adding hydrogen partitioning...")
     gas=pdata['ParticleType'].values==0
     fHI,fHII,fH2=partition_neutral_gas(pdata,redshift=zval,sfonly=True)
+    logging.info(f"Minima: fHI: {np.nanmin(fHI)}, fHII: {np.nanmin(fHII)}, fH2: {np.nanmin(fH2)}]")
+    logging.info(f"Maxima: fHI: {np.nanmax(fHI)}, fHII: {np.nanmax(fHII)}, fH2: {np.nanmax(fH2)}]")
     pdata.loc[:,['mfrac_HI','mfrac_HII','mfrac_H2']]=np.nan
     pdata.loc[gas,'mfrac_HI']=fHI
     pdata.loc[gas,'mfrac_HII']=fHII
     pdata.loc[gas,'mfrac_H2']=fH2
-
+    
     # Create a spatial KDTree for the particle data
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
     
