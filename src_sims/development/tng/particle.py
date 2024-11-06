@@ -62,7 +62,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                      'ElectronAbundance',
                      'Density',
                      'StarFormationRate',
-                     'NeutralHydrogenAbundance',
                      'GFM_Metallicity',],
                   1:[],
                   4:['GFM_Metallicity']}
