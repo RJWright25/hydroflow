@@ -57,7 +57,7 @@ def dump_hdf_group(fname,group,data,metadata={},verbose=False):
     for icol,column in enumerate(columns):
         if verbose:
             print(f'Dumping {column} ... {icol+1}/{len(columns)}')
-            print(data[column].values)
+            print(data[column])
         
         # Remove data if it already exists
         if group in outfile:
