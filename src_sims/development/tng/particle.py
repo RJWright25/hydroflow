@@ -167,7 +167,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     logging.info(f"minima: fHI: {np.nanmin(fHI)}, fHII: {np.nanmin(fHII)}, fH2: {np.nanmin(fH2)}]")
     logging.info(f"maxima: fHI: {np.nanmax(fHI)}, fHII: {np.nanmax(fHII)}, fH2: {np.nanmax(fH2)}]")
     pdata.loc[:,['mfrac_HI','mfrac_HII','mfrac_H2']]=np.nan
-    pdata.loc[gas,'mfrac_HI']=fHI
+    pdata.loc[gas,'mfrac_HI']=fHI;print(fHI);print(pdata.loc[gas,'mfrac_HI'])
     pdata.loc[gas,'mfrac_HII']=fHII
     pdata.loc[gas,'mfrac_H2']=fH2
 
