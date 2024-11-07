@@ -133,3 +133,5 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
             header.attrs['metadata'] = metadata_path
     else:
         print("No metadata file found. Metadata path not added to subhalo catalogue.")
+
+    return data_pd
