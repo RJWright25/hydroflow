@@ -14,7 +14,7 @@ from scipy.spatial import cKDTree
 from swiftsimio import load as swiftsimio_loader
 from swiftsimio import mask as swiftsimio_mask
 
-from hydroflow.src_physics.utils import get_limits
+from hydroflow.src_physics.utils import get_limits, partition_neutral_gas
 
 def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=False):
     """
@@ -150,6 +150,16 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
     pdata=pd.concat(pdata)
     pdata.sort_values('ParticleIDs',inplace=True)
     pdata.reset_index(drop=True,inplace=True)
+
+    # Add post-processed partitions into HI, H2, HII from Rahmati (2013) and Blitz & Rosolowsky (2006)
+    logging.info(f"Adding hydrogen partitioning...")
+    gas=pdata['ParticleType'].values==0
+    fHI,fH2,fHII=partition_neutral_gas(pdata,redshift=zval,sfonly=True)
+    logging.info(f"Minima: fHI: {np.nanmin(fHI)}, fHII: {np.nanmin(fHII)}, fH2: {np.nanmin(fH2)}]")
+    logging.info(f"Maxima: fHI: {np.nanmax(fHI)}, fHII: {np.nanmax(fHII)}, fH2: {np.nanmax(fH2)}]")
+    pdata.loc[:,['mfrac_HI_BR06','mfrac_H2_BR06']]=np.nan
+    pdata.loc[gas,'mfrac_HI_BR06']=fHI
+    pdata.loc[gas,'mfrac_H2_BR06']=fH2
 
     # Generate KDtree
     logging.info(f"Generating KDTree... [pdata time: {time.time()-t0:.2f} s]")
