@@ -274,8 +274,7 @@ def partition_neutral_gas(pdata,redshift,xH=0.76,sfonly=True):
     # Neutral fraction
     fneutral=rahmati2013_neutral_fraction(nH,T,redshift=redshift)
     fHII=(1-fneutral)*xH
-
-	t0=time.time()
+    t0=time.time()
 
     # H2 fraction
     midplane_pressure = T*nH # true pressure have to multiply this by kB, this is in cm^-3 K
@@ -287,8 +286,7 @@ def partition_neutral_gas(pdata,redshift,xH=0.76,sfonly=True):
     fHI=1-fH2
     fH2*=fneutral*xH # convert from fraction of neutral mass to fraction of total mass
     fHI*=fneutral*xH # convert from fraction of neutral mass to fraction of total mass
-
-	t1=time.time()
+    t1=time.time()
     print(f"Time taken for neutral hydrogen partitioning: {t1-t0:.3f} sec")
 	
     return fHI,fH2,fHII
