@@ -6,6 +6,7 @@
 import numpy as np
 from astropy import constants
 from astropy import units
+import time 
 
 def ivol_gen(ix,iy,iz,nslice):
 
@@ -134,7 +135,7 @@ def rahmati2013_neutral_fraction(nH,T,redshift=0):
           
 
     """
-
+    t0=time.time()
     if redshift>5:
         redshift = 5.0
 
@@ -237,6 +238,9 @@ def rahmati2013_neutral_fraction(nH,T,redshift=0):
     f_neutral = (B - sqrt_term) / (2.0*A)
     f_neutral[f_neutral <= 0] = 1e-30 # negative values seem to arise from rounding errors - AlphaA and A are both positive, so B-sqrt_term should be positive!
     
+    t1=time.time()
+    print(f"Time taken for Rahmati neutral fraction: {t1-t0:.3f} sec")
+    
     return f_neutral
 
 
@@ -248,7 +252,7 @@ def partition_neutral_gas(pdata,redshift,xH=0.76,sfonly=True):
                                 
      
     """
-    
+
 	# Mask for gas particles
     gas=pdata['ParticleType'].values==0
 
@@ -271,6 +275,8 @@ def partition_neutral_gas(pdata,redshift,xH=0.76,sfonly=True):
     fneutral=rahmati2013_neutral_fraction(nH,T,redshift=redshift)
     fHII=(1-fneutral)*xH
 
+	t0=time.time()
+
     # H2 fraction
     midplane_pressure = T*nH # true pressure have to multiply this by kB, this is in cm^-3 K
 
@@ -282,7 +288,9 @@ def partition_neutral_gas(pdata,redshift,xH=0.76,sfonly=True):
     fH2*=fneutral*xH # convert from fraction of neutral mass to fraction of total mass
     fHI*=fneutral*xH # convert from fraction of neutral mass to fraction of total mass
 
-    
+	t1=time.time()
+    print(f"Time taken for neutral hydrogen partitioning: {t1-t0:.3f} sec")
+	
     return fHI,fH2,fHII
 
 
