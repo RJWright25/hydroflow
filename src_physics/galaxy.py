@@ -162,6 +162,10 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 		specfrac['HII']=pdata_candidates['mfrac_HII'].values
 	if 'mfrac_H2' in pdata_candidates.columns:
 		specfrac['H2']=pdata_candidates['mfrac_H2'].values
+	if 'mfrac_HI_BR06' in pdata_candidates.columns:
+		specfrac['HI_BR06']=pdata_candidates['mfrac_HI_BR06'].values
+	if 'mfrac_H2_BR06' in pdata_candidates.columns:
+		specfrac['H2_BR06']=pdata_candidates['mfrac_H2_BR06'].values
 	if 'Metallicity' in pdata_candidates.columns:
 		specfrac['Z']=pdata_candidates['Metallicity'].values
 	specfrac['tot']=np.ones_like(gas)

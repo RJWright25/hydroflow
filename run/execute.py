@@ -113,11 +113,11 @@ mass_key='Mass'
 if code=='colibre':
     from hydroflow.src_sims.colibre.particle import read_subvol
 elif code=='eagle':
-    from hydroflow.src_sims.development.eagle.particle import read_subvol
+    from hydroflow.src_sims.eagle.particle import read_subvol
 elif code=='tng':
-    from hydroflow.src_sims.development.tng.particle import read_subvol
+    from hydroflow.src_sims.tng.particle import read_subvol
 elif code=='simba':
-    from hydroflow.src_sims.development.simba.particle import read_subvol
+    from hydroflow.src_sims.simba.particle import read_subvol
 
 else:
     raise ValueError('Particle data type not recognised. Must be one of: colibre, eagle, simba, tng.')
@@ -193,12 +193,9 @@ if numgal:
     
     # If dumping pdata and mfracs are in pdata, add to pdata_fields
     if dump:
-        if 'mfrac_HI' in pdata_subvol.columns:
-            pdata_fields.append('mfrac_HI')
-        if 'mfrac_HII' in pdata_subvol.columns:
-            pdata_fields.append('mfrac_HII')
-        if 'mfrac_H2' in pdata_subvol.columns:
-            pdata_fields.append('mfrac_H2')
+        for field in pdata_subvol.columns:
+            if 'mfrac' in field:
+                pdata_fields.append(field)
 
     logging.info(f'')
     logging.info(f'****** Entering main galaxy loop [runtime {time.time()-t1:.3f} sec] ******')

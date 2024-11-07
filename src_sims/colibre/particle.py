@@ -46,6 +46,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
     # Load snapshot with swiftsimio
     pdata_snap=swiftsimio_loader(path)
     boxsize=metadata.boxsize
+    zval=metadata.snapshots_z[np.where(metadata.snapshots_flist==path)[0][0]]
+
     logging.info(f"Boxsize: {boxsize}")
     if verbose:
         print(f"Boxsize: {boxsize}")
