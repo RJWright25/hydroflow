@@ -226,19 +226,18 @@ def rahmati2013_neutral_fraction(nH,T,redshift=0):
 
     gamma_ratio = (1.-f) * (1. + (nH / n0)**beta)**alpha1 + f*(1. + (nH / n0))**alpha2
     gamma_phot  = gamma_uvb * gamma_ratio
-    
 
     lambda_T  = 315614.0 / T
     AlphaA    = 1.269e-13 * (lambda_T)**(1.503) / ((1. + (lambda_T / 0.522)**0.470)**1.923)
-    LambdaT   = 1.17e-10*(np.sqrt(T)*np.exp(-157809.0/T)/(1.0 + np.sqrt(T/1.0e5)))
-    
+    LambdaT   = 1.17e-10 * (np.sqrt(T) * np.exp(-157809.0 / T) / (1.0 + np.sqrt(T / 1.0e5)))
+
     A = AlphaA + LambdaT
-    B = 2.0*AlphaA + (gamma_phot/nH) + LambdaT
-    sqrt_term = np.array([np.sqrt(B[i]*B[i] - 4.0*A[i]*AlphaA[i]) if (B[i]*B[i] - 4.0*A[i]*AlphaA[i])>0 else 0.0 for i in range(len(B))])
-    f_neutral = (B - sqrt_term) / (2.0*A)
-    f_neutral[f_neutral <= 0] = 1e-30 # negative values seem to arise from rounding errors - AlphaA and A are both positive, so B-sqrt_term should be positive!
+    B = 2.0 * AlphaA + (gamma_phot / nH) + LambdaT
+    sqrt_term = np.sqrt(np.maximum(B**2 - 4.0 * A * AlphaA, 0))
+    f_neutral = (B - sqrt_term) / (2.0 * A)
+    f_neutral = np.maximum(f_neutral, 1e-30)  # negative values seem to arise from rounding errors - AlphaA and A are both positive, so B-sqrt_term should be positive!
     
-    t1=time.time()
+    t1 = time.time()
     print(f"Time taken for Rahmati neutral fraction: {t1-t0:.3f} sec")
     
     return f_neutral
