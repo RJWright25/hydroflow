@@ -107,7 +107,7 @@ class simulation_metadata:
 
         # Read boxsize (in cMpc) from the last snapshot
         with h5py.File(snapshots_flist[-1], 'r') as f:
-            if simtype == 'colibre':
+            if simtype == 'colibre' or simtype=='bosca':
                 self.boxsize = f['Header'].attrs['BoxSize'][0]
             elif simtype == 'eagle':
                 self.boxsize = f['Header'].attrs['BoxSize']/self.hval
@@ -167,7 +167,7 @@ def read_cosmology(fname,simtype):
         else:
             omegab=h5file['Header'].attrs['OmegaBaryon']
 
-    elif simtype == 'colibre':
+    elif simtype == 'colibre' or simtype == 'bosca':
         cosmo=h5file['Cosmology']
         hval=cosmo.attrs['H0 [internal units]'][0]/100
         omegam=cosmo.attrs['Omega_m'][0]
