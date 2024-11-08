@@ -28,7 +28,7 @@ class simulation_metadata:
         The list of snapshot indices. Assumed to be in the same order as the snapshot_file_list. If not provided, the snapshot indices are inferred from the order of the snapshot files.
 
     simtype: str
-        The type of simulation. Supported: 'eagle', 'tng', 'simba', 'colibre'.
+        The type of simulation. Supported: 'eagle', 'tng', 'simba', 'colibre', 'swift-bosca'.
 
     
 
@@ -107,7 +107,7 @@ class simulation_metadata:
 
         # Read boxsize (in cMpc) from the last snapshot
         with h5py.File(snapshots_flist[-1], 'r') as f:
-            if simtype == 'colibre' or simtype=='bosca':
+            if simtype == 'colibre' or simtype=='swift-bosca':
                 self.boxsize = f['Header'].attrs['BoxSize'][0]
             elif simtype == 'eagle':
                 self.boxsize = f['Header'].attrs['BoxSize']/self.hval
@@ -144,7 +144,7 @@ def read_cosmology(fname,simtype):
         Filename of the snapshot.
 
     simtype: str
-        Type of simulation. Supported: 'eagle', 'tng', 'simba', 'colibre'.
+        Type of simulation. Supported: 'eagle', 'tng', 'simba', 'colibre', 'swift-bosca'.
     
     Output:
     -----------
@@ -155,7 +155,7 @@ def read_cosmology(fname,simtype):
     h5file=h5py.File(fname,'r')
 
     if not simtype in ['eagle','tng','simba','colibre','bosca']:
-        raise ValueError('Invalid simulation type. Supported: eagle, tng, simba, colibre')
+        raise ValueError('Invalid simulation type. Supported: eagle, tng, simba, colibre, swift-bosca.')
 
     if simtype == 'eagle' or simtype == 'tng' or simtype == 'simba':
         hval=h5file['Header'].attrs['HubbleParam']
@@ -167,7 +167,7 @@ def read_cosmology(fname,simtype):
         else:
             omegab=h5file['Header'].attrs['OmegaBaryon']
 
-    elif simtype == 'colibre' or simtype == 'bosca':
+    elif simtype == 'colibre' or simtype == 'swift-bosca':
         cosmo=h5file['Cosmology']
         hval=cosmo.attrs['H0 [internal units]'][0]/100
         omegam=cosmo.attrs['Omega_m'][0]
