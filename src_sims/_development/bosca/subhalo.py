@@ -92,7 +92,8 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         subhalo_df['SnapNum']=np.ones(numgroups)*snapnum
         subhalo_df['Redshift']=np.ones(numgroups)*1/afacs[isnapnum]-1
         subhalo_df['GalaxyID']=h5file['ID'][:]
-        subhalo_df['GroupMass']=h5file['Mass_tot'][:]*mconv
+        subhalo_df['Mass']=h5file['Mass_tot'][:]*mconv
+        subhalo_df['GroupMass']=h5file['Mass_FOF'][:]*mconv
         subhalo_df['Group_M_Crit200']=h5file['Mass_200crit'][:]*mconv
         subhalo_df['Group_R_Crit200']=h5file['R_200crit'][:]*dconv #convert to cMpc
         subhalo_df['CentreOfPotential_x']=h5file['Xcmbp'][:]*dconv #convert to cMpc
