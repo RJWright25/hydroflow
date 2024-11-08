@@ -154,7 +154,7 @@ def read_cosmology(fname,simtype):
     """
     h5file=h5py.File(fname,'r')
 
-    if not simtype in ['eagle','tng','simba','colibre']:
+    if not simtype in ['eagle','tng','simba','colibre','bosca']:
         raise ValueError('Invalid simulation type. Supported: eagle, tng, simba, colibre')
 
     if simtype == 'eagle' or simtype == 'tng' or simtype == 'simba':
