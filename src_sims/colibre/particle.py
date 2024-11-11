@@ -125,7 +125,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
 
             # Smoothing length
             logging.info(f"Reading smoothing length... [pdata time: {time.time()-t0:.2f} s]")
-            hsml=pdata_masked_object.hsml
+            hsml=pdata_masked_object.smoothing_lengths
             hsml.convert_to_units('Mpc');hsml.convert_to_physical()
             pdata_ptype['SmoothingLength']=hsml.value;del hsml
 
