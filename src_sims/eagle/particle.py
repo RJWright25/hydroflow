@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial import KDTree
 from pyread_eagle import EagleSnapshot
 
-from hydroflow.src_physics.utils import get_limits, partition_neutral_gas, constant_gpmsun,constant_spyr
+from hydroflow.src_physics.utils import get_limits, partition_neutral_gas, constant_gpmsun, constant_spyr, constant_cmpkpc
 
 ##### READ PARTICLE DATA
 def read_subvol(path,ivol,nslice,metadata,logfile=None):
@@ -105,6 +105,9 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
 
     # Convert SFR to Msun/yr from g/s
     pdata[0]['StarFormationRate']=pdata[0]['StarFormationRate']*(1/constant_gpmsun)*constant_spyr
+
+    # Convert hsml to Mpc
+    pdata[0]['SmoothingLength']=pdata[0]['SmoothingLength']/(constant_cmpkpc*1e3)
 
     # Add missing fields to star particles
     npart_star=pdata[4].shape[0]
