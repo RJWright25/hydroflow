@@ -123,6 +123,12 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
             sfr.convert_to_units('Msun/yr')
             pdata_ptype['StarFormationRate']=sfr.value
 
+            # Smoothing length
+            logging.info(f"Reading smoothing length... [pdata time: {time.time()-t0:.2f} s]")
+            hsml=pdata_masked_object.hsml
+            hsml.convert_to_units('Mpc');hsml.convert_to_physical()
+            pdata_ptype['SmoothingLength']=hsml.value;del hsml
+
             # Species fractions
             if 'species_fractions' in pdata_snap.metadata.gas_properties.field_names:
                 logging.info(f"Reading species fractions... [pdata time: {time.time()-t0:.2f} s]")
