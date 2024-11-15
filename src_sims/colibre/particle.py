@@ -138,7 +138,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
                 logging.info(f"Reading HII... [pdata time: {time.time()-t0:.2f} s]")
                 pdata_ptype['mfrac_HII']=pdata_snap_masked.gas.species_fractions.HII.value
                 logging.info(f"Reading HM... [pdata time: {time.time()-t0:.2f} s]")
-                pdata_ptype['mfrac_H2']=pdata_snap_masked.gas.species_fractions.Hm.value*2
+                pdata_ptype['mfrac_H2']=pdata_snap_masked.gas.species_fractions.H2.value*2
                 logging.info(f"Reading Z... [pdata time: {time.time()-t0:.2f} s]")
                 pdata_ptype['Metallicity']=pdata_masked_object.metal_mass_fractions.value
                 logging.info(f"Converting H species fractions to mass fractions... [pdata time: {time.time()-t0:.2f} s]")
