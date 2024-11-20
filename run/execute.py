@@ -210,9 +210,6 @@ if numgal:
 
         # Initialise outputs
         galaxy_output=pd.DataFrame([])
-        galaxy_output.loc[0,'HydroflowID']=np.int64(galaxy[galid_key])
-        galaxy_output.loc[0,'ivol']=ivol
-        
         central=galaxy['SubGroupNumber']==0
         processgal=True # Process all galaxies (including satellites)
 
@@ -224,11 +221,7 @@ if numgal:
             else:
                 maxrad=150e-3 #150 kpc
 
-            # Calculate effective v200
-            galaxy_output.loc[0,'r200_eff']=galaxy['Group_R_Crit200']
-            galaxy_output.loc[0,'m200_eff']=galaxy['Group_M_Crit200']
-            galaxy_output.loc[0,'v200_eff']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']*afac))
-
+ 
             # Get the particle data for this halo
             t1_c=time.time()
             pdata_candidates=retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=maxrad)
@@ -242,7 +235,7 @@ if numgal:
 
                 #### MAIN GALAXY ANALYSIS ####
                 t1_f=time.time()
-                galaxy_properties=analyse_galaxy(galaxy,
+                galaxy_output=analyse_galaxy(galaxy,
                                                  pdata_candidates,
                                                  metadata=metadata,
                                                  r200_shells=r200_shells,
@@ -256,6 +249,14 @@ if numgal:
                 logging.info(f"Galaxy routine took: {t2_f-t1_f:.3f} sec")
                 logging.info(f'Galaxy successfully processed [runtime {time.time()-t1:.3f} sec]')
 
+                # Add galaxy properties to output
+                galaxy_output['ivol']=ivol
+                galaxy_output['HydroflowID']=np.int64(galaxy[galid_key])
+                galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']*afac))
+                print(galaxy_output)
+                galaxy_output=pd.DataFrame(galaxy_output)
+                print(galaxy_output)
+                
                 # Dump a subset of the particle data if requested
                 if dump:
                     logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
@@ -265,12 +266,9 @@ if numgal:
                 
             else:
                 logging.info(f'Could not process galaxy, could not retrieve candidates')
-                galaxy_outputs.append(galaxy_output)
-
 
         else:
             logging.info(f'Did not process galaxy')
-            galaxy_outputs.append(galaxy_output)
 
         logging.info(f'Appending galaxy to output [runtime {time.time()-t1:.3f} sec]')
         galaxy_outputs.append(galaxy_output)
@@ -283,10 +281,10 @@ if galaxy_outputs:
     galaxy_outputs=pd.concat(galaxy_outputs,ignore_index=True)
     galaxy_outputs.reset_index(drop=True,inplace=True)
 
-    # #Add existing subhalo properties
-    # for key in subcat_selection.columns:
-    #     if key not in galaxy_outputs.columns:
-    #         galaxy_outputs[key]=subcat_selection[key].values
+    #Add existing subhalo properties
+    for key in subcat_selection.columns:
+        if key not in galaxy_outputs.columns:
+            galaxy_outputs[key]=subcat_selection[key].values
 
 else:
     logging.info(f'No galaxies in this subvolume, empty output [runtime {time.time()-t1:.3f} sec]')
