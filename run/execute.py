@@ -283,10 +283,10 @@ if galaxy_outputs:
     galaxy_outputs=pd.concat(galaxy_outputs,ignore_index=True)
     galaxy_outputs.reset_index(drop=True,inplace=True)
 
-    #Add existing subhalo properties
-    for key in subcat_selection.columns:
-        if key not in galaxy_outputs.columns:
-            galaxy_outputs[key]=subcat_selection[key].values
+    # #Add existing subhalo properties
+    # for key in subcat_selection.columns:
+    #     if key not in galaxy_outputs.columns:
+    #         galaxy_outputs[key]=subcat_selection[key].values
 
 else:
     logging.info(f'No galaxies in this subvolume, empty output [runtime {time.time()-t1:.3f} sec]')
