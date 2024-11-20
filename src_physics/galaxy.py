@@ -108,7 +108,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	r200_shells: list
 		List of radii at which to calculate properties (multiples of R200).
 	ckpc_shells: list
-		List of radii at which to calculate properties (in ckpc).
+		List of radii at which to calculate properties (in ckpc, but will also calculate for pkpc). 
 	Tbins: list
 		Dict of temperature bins to use for gas properties.
 	vcuts: dict

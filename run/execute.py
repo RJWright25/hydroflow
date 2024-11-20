@@ -256,11 +256,6 @@ if numgal:
                 logging.info(f"Galaxy routine took: {t2_f-t1_f:.3f} sec")
                 logging.info(f'Galaxy successfully processed [runtime {time.time()-t1:.3f} sec]')
 
-                # Add existing properties from subhalo catalogue
-                if list(galaxy_properties.keys()):
-                    for key in list(galaxy_properties.keys()):
-                        galaxy_output.loc[0,key]=galaxy_properties[key]
-
                 # Dump a subset of the particle data if requested
                 if dump:
                     logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
@@ -287,6 +282,11 @@ if numgal:
 if galaxy_outputs:
     galaxy_outputs=pd.concat(galaxy_outputs,ignore_index=True)
     galaxy_outputs.reset_index(drop=True,inplace=True)
+
+    #Add existing subhalo properties
+    for key in subcat_selection.columns:
+        if key not in galaxy_outputs.columns:
+            galaxy_outputs[key]=subcat_selection[key].values
 
 else:
     logging.info(f'No galaxies in this subvolume, empty output [runtime {time.time()-t1:.3f} sec]')
