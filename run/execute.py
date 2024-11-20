@@ -270,10 +270,14 @@ if numgal:
                 
             else:
                 logging.info(f'Could not process galaxy, could not retrieve candidates')
+                galaxy_outputs.append(galaxy_output)
+
 
         else:
             logging.info(f'Did not process galaxy')
+            galaxy_outputs.append(galaxy_output)
 
+        logging.info(f'Appending galaxy to output [runtime {time.time()-t1:.3f} sec]')
         galaxy_outputs.append(galaxy_output)
 
     logging.info(f'')

@@ -209,7 +209,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			mask_sphere=rrel<=rshell
 			
 			# Add the sphere volume in pkpc^3
-			galaxy_output[f'{rshell_str}_sphere-vol']=4/3*np.pi*(rshell*afac)**3
+			galaxy_output[f'{rshell_str}_sphere-vol']=4/3*np.pi*(rshell*afac*1e3)**3
 
 			### DARK MATTER
 			galaxy_output[f'{rshell_str}_sphere-dm-m_tot']=np.nansum(mass[np.logical_and(mask_sphere,dm)])
@@ -242,14 +242,14 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			r_lo=(rshell*(1-drfac/2))
 			mask_shell=np.logical_and(rrel<r_hi,rrel>=r_lo)
 
-			# Convert the shell values to physical units for the calculations
+			# Now convert the shell values to physical units for the calculations
 			r_hi=r_hi*afac
 			r_lo=r_lo*afac
 			dr=r_hi-r_lo
 
 			# Shell volume and area in pkpc^3 and pkpc^2
-			galaxy_output[f'{rshell_str}_shell-vol']=4/3*np.pi*((r_hi*1e3)**3-(r_lo*1e3)**3)
-			galaxy_output[f'{rshell_str}_shell-area']=4*np.pi*((r_hi*1e3)**2-(r_lo*1e3)**2)
+			galaxy_output[f'{rshell_str}_shell-vol']=4/3*np.pi*((r_hi*afac*1e3)**3-(r_lo*afac*1e3)**3)
+			galaxy_output[f'{rshell_str}_shell-area']=4*np.pi*((r_hi*afac*1e3)**2-(r_lo*afac*1e3)**2)
 
 			### DM shell properties
 			dm_shell_mask=np.logical_and(mask_shell,dm)
