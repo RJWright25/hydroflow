@@ -253,10 +253,8 @@ if numgal:
                 galaxy_output['ivol']=ivol
                 galaxy_output['HydroflowID']=np.int64(galaxy[galid_key])
                 galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']*afac))
-                print(galaxy_output)
-                galaxy_output=pd.DataFrame(galaxy_output)
-                print(galaxy_output)
-                
+                galaxy_output=pd.DataFrame(galaxy_output,index=[igal])
+
                 # Dump a subset of the particle data if requested
                 if dump:
                     logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
