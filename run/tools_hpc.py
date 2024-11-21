@@ -68,10 +68,12 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,account=No
     snap=int(arguments['snap'])
     mcut=arguments['mcut']
     dump=arguments['dump']
+    drfac=arguments['dr']
     namecat=pathcat.split('/')[-1][:-5]
     cwd=pathcat.split('catalogues')[0]    
+    dr_str=f"{drfac:.2f}".replace('.','p')
 
-    jobfolder=f'{cwd}/jobs/gasflow/{namecat}/nvol_{str(nvol).zfill(3)}/snap{str(snap).zfill(3)}/'
+    jobfolder=f'{cwd}/jobs/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}_dr{dr_str}/snap{str(snap).zfill(3)}/'
     jobname=f"s{str(snap).zfill(3)}_n{str(int(nslice**3)).zfill(3)}"
     create_dir(jobfolder)
 
@@ -105,7 +107,7 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,account=No
         jobfile.writelines(f"date\n")
         jobfile.writelines(f"echo CPU DETAILS\n")
         jobfile.writelines(f"lscpu\n")
-        jobfile.writelines(f"python {runscriptfilepath}  --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snap} --mcut {mcut} --dump {dump} --ivol $SLURM_ARRAY_TASK_ID \n")
+        jobfile.writelines(f"python {runscriptfilepath}  --repo {repo} --code {code} --path {pathcat} --nslice {nslice} --snap {snap} --mcut {mcut} --dump {dump} --dr {drfac}--ivol $SLURM_ARRAY_TASK_ID \n")
         jobfile.writelines(f"echo JOB END TIME\n")
         jobfile.writelines(f"date\n")
 

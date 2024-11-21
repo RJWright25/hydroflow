@@ -16,7 +16,6 @@ warnings.filterwarnings("ignore")
 from datetime import datetime
 
 sys.path.append('/Users/rwright/GitHub/')
-sys.path.append('/Users/rwright/GitHub/hydroflow_colibre/')
 
 #params
 r200_shells=[0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3]
@@ -80,6 +79,7 @@ from hydroflow.src_physics.galaxy import analyse_galaxy, retrieve_galaxy_candida
 namecat=pathcat.split('/')[-1][:-5]
 run=path.split('/')[-1]
 sim=run.split('_')[0]
+dr_str=f"{drfac:.2f}".replace('.','p')
 
 current_dir=os.getcwd()
 create_dir(current_dir+'/jobs/gasflow')
@@ -87,7 +87,7 @@ create_dir(current_dir+'/catalogues/gasflow')
 
 #logging file
 t1=time.time()
-logging_folder=f'{path}/jobs/gasflow/{namecat}/nvol_{str(int(nslice**3)).zfill(3)}/snap{str(snap).zfill(3)}/'
+logging_folder=f'{path}/jobs/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}_dr{dr_str}/snap{str(snap).zfill(3)}/'
 logging_name=f"s{str(snap).zfill(3)}_n{str(int(nslice**3)).zfill(3)}_ivol{str(ivol).zfill(3)}"
 create_dir(logging_folder)
 if os.path.exists(f'{logging_folder}{logging_name}.log'):
@@ -150,7 +150,6 @@ hval=metadata.hval
 afac=metadata.snapshots_afac[snap_mask][0]
 
 #outputs
-dr_str=f"{drfac:.2f}".replace('.','p')
 output_folder=f'{path}/catalogues/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}_dr{dr_str}/snap{str(snap).zfill(3)}/'
 outcat_fname=output_folder+f'ivol_{str(ivol).zfill(3)}.hdf5'
 
