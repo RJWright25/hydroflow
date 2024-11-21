@@ -80,7 +80,7 @@ def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,account=No
     runscriptfilepath=repo+'/run/execute.py'
     num=len(array.split(','))
 
-    jobscriptfilepath=f'{jobfolder}submit-{jobname}_n{num}.slurm'
+    jobscriptfilepath=f'{jobfolder}submit-{jobname}_a{str(num).zfill(3)}.slurm'
     
     if os.path.exists(jobscriptfilepath):
         os.remove(jobscriptfilepath)

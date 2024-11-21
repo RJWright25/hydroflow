@@ -205,6 +205,9 @@ def combine_catalogs(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False):
     idx_key='GalaxyID'
     mass_key='Mass'
 
+    #gasflow calc string
+    calc_str=path_gasflow.split('nvol')[-1].split('/')[0]
+
     if not snaps:
         snap_min=int(np.nanmin(subcat[snap_key].values))
         snap_max=int(np.nanmax(subcat[snap_key].values))
@@ -220,9 +223,9 @@ def combine_catalogs(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False):
     subcat_masked.reset_index(drop=True,inplace=True)
 
     if snap_max-snap_min==0:
-        outpath=path_gasflow+f'/gasflow_snap{int(snap_max)}.hdf5'
+        outpath=path_gasflow+f'/gasflow_snap{int(snap_max)}_{calc_str}.hdf5'
     else:
-        outpath=path_gasflow+f'/gasflow_snap{int(snap_min)}to{int(snap_max)}.hdf5'
+        outpath=path_gasflow+f'/gasflow_snap{int(snap_min)}to{int(snap_max)}_{calc_str}.hdf5'
 
     logging.info(f'Reading hydroflow outputs ... (t={time.time()-t1}) \n')
 
