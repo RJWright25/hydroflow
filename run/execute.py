@@ -19,7 +19,6 @@ sys.path.append('/Users/rwright/GitHub/')
 sys.path.append('/Users/rwright/GitHub/hydroflow_colibre/')
 
 #params
-drfac=0.4 #fractional shell width for radial profiles
 r200_shells=[0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3]
 ckpc_shells=[1,2,3,4,5,10,20,30,40,50,60,70,80,90,100]
 
@@ -54,6 +53,7 @@ parser.add_argument('--ivol',metavar='-I',type=int,help='which sub-volume to con
 parser.add_argument('--snap',metavar='-S',type=int,help='which snapshot to consider')
 parser.add_argument('--mcut',metavar='-M',type=float,help='lower mass limit for calc (log mass)')
 parser.add_argument('--dump',metavar='-D',type=int,help='whether to dump particle data')
+parser.add_argument('--dr',metavar='-W',type=float,help='fractional shell width for binning')
 
 args=parser.parse_args()
 repo=args.repo
@@ -65,6 +65,8 @@ ivol=int(args.ivol)
 snap=int(args.snap)
 dump=bool(args.dump)
 mcut=10**(args.mcut)
+drfac=args.dr
+
 
 sys.path.append(f"{repo.split('hydroflow')[0]}")
 
@@ -148,7 +150,8 @@ hval=metadata.hval
 afac=metadata.snapshots_afac[snap_mask][0]
 
 #outputs
-output_folder=f'{path}/catalogues/gasflow/{namecat}/nvol_{str(int(nslice**3)).zfill(3)}/snap{str(snap).zfill(3)}/'
+dr_str=f"{drfac:.2f}".replace('.','p')
+output_folder=f'{path}/catalogues/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}_dr{dr_str}/snap{str(snap).zfill(3)}/'
 outcat_fname=output_folder+f'ivol_{str(ivol).zfill(3)}.hdf5'
 
 logging.info(f'Output file: {outcat_fname} [runtime {time.time()-t1:.3f} sec]')
