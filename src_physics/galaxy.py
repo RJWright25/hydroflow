@@ -219,8 +219,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 
 			# Calculate the relative velocity of particles in the sphere
 			vrel=np.sum(velocities-vcom_sphere,axis=1)
-			galaxy_output[f'{rshell_str}_sphere-vcom_x']=np.nanmean(velocities[mask_sphere],axis=0)
-			vrad={'pec':np.sum(vrel*positions/np.linalg.norm(positions,axis=1)[:,np.newaxis],axis=1)}
+			vrad={'pec': np.sum(vrel*positions/np.linalg.norm(positions,axis=1)[:,np.newaxis],axis=1)}
 			print('Min vrad:',np.nanmin(vrad['pec']))
 			print('Max vrad:',np.nanmax(vrad['pec']))
 			print('Mean vrad:',np.nanmean(vrad['pec']))
