@@ -147,7 +147,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	# Fields
 	mass=pdata_candidates['Masses'].values
 	rrel=pdata_candidates['Relative_r_comoving'].values
-	positions=pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values
+	coordinates=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values
 	velocities=pdata_candidates.loc[:,[f'Velocities_{x}' for x in 'xyz']].values
 
 	# Gas properties
@@ -211,11 +211,20 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			# Add the sphere volume in pkpc^3
 			galaxy_output[f'{rshell_str}_sphere-vol']=4/3*np.pi*(rshell*afac*1e3)**3
 
+			# Calculate the centre of mass position in the given sphere
+			com_sphere=np.nansum(mass[mask_sphere,np.newaxis]*coordinates[mask_sphere],axis=0)/np.nansum(mass[mask_sphere])
+			galaxy_output[f'{rshell_str}_sphere-com_x']=com_sphere[0]
+			galaxy_output[f'{rshell_str}_sphere-com_y']=com_sphere[1]
+			galaxy_output[f'{rshell_str}_sphere-com_z']=com_sphere[2]
+
 			# Calculate the centre of mass velocity in the given sphere
 			vcom_sphere=np.nansum(mass[mask_sphere,np.newaxis]*velocities[mask_sphere],axis=0)/np.nansum(mass[mask_sphere])
 			galaxy_output[f'{rshell_str}_sphere-vcom_x']=vcom_sphere[0]
 			galaxy_output[f'{rshell_str}_sphere-vcom_y']=vcom_sphere[1]
 			galaxy_output[f'{rshell_str}_sphere-vcom_z']=vcom_sphere[2]
+
+			# Calculate the relative position of particles in the sphere
+			positions=coordinates-com_sphere
 
 			# Calculate the relative velocity of particles in the sphere
 			vrel=velocities-vcom_sphere
