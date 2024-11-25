@@ -241,7 +241,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 				vcom_1p00r200=pdata_candidates.attrs['1p00r200_sphere-vcom']
 				vrel_test=velocities-vcom_1p00r200
 
-				positions_test=pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values-
+				positions_test=pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values
 				radii_test=np.linalg.norm(positions_test,axis=1)
 				rhat_test = positions_test / np.stack(3 * [radii_test], axis=1)
 				vrad_test = np.sum(vrel_test * rhat_test, axis=1)
