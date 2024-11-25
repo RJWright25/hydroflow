@@ -90,7 +90,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             halodata_out['Group_R_Crit200']=np.array(r200.value) #comoving
 
             # Centre of mass -- use the central galaxy 30kpc inclusive sphere
-            cop_halo=halodata.inclusive_sphere_30kpc.centre_of_mass
+            cop_halo=halodata.exclusive_sphere_30kpc.centre_of_mass
             cop_halo.convert_to_units('Mpc')
             halodata_out['CentreOfPotential_x']=np.array(cop_halo[:,0].value)
             halodata_out['CentreOfPotential_y']=np.array(cop_halo[:,1].value)

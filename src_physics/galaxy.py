@@ -232,25 +232,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			vrad = np.sum((velocities-vcom_sphere) * rhat, axis=1)			
 			vrad={'pec':vrad}
 
-			if '0p10r200' in rshell_str:
-				print('Shell:',rshell_str)
-				print('Min vrad:',np.nanmin(vrad['pec']))
-				print('Max vrad:',np.nanmax(vrad['pec']))
-				print('Median vrad:',np.nanmedian(vrad['pec']))
-
-				vcom_1p00r200=pdata_candidates.attrs['1p00r200_sphere-vcom']
-				vrel_test=velocities-vcom_1p00r200
-
-				positions_test=pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values
-				radii_test=np.linalg.norm(positions_test,axis=1)
-				rhat_test = positions_test / np.stack(3 * [radii_test], axis=1)
-				vrad_test = np.sum(vrel_test * rhat_test, axis=1)
-
-				print('Min vrad using R200:',np.nanmin(vrad_test))
-				print('Max vrad using R200::',np.nanmax(vrad_test))
-				print('Median vrad using R200:',np.nanmedian(vrad_test))
-
-
 			### DARK MATTER
 			galaxy_output[f'{rshell_str}_sphere-dm-m_tot']=np.nansum(mass[np.logical_and(mask_sphere,dm)])
 			galaxy_output[f'{rshell_str}_sphere-dm-n_tot']=np.nansum(np.logical_and(mask_sphere,dm))
@@ -278,9 +259,9 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			#### SHELL CALCULATIONS (r between r-dr/2 and r+dr/2) ####
 
 			# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
-			r_hi=rshell+drfac*rshell/2
-			r_lo=rshell-drfac*rshell/2
-			mask_shell=np.logical_and(rrel<r_hi,rrel>=r_lo)
+			r_hi=rshell+(drfac*rshell)/2
+			r_lo=rshell-(drfac*rshell)/2
+			mask_shell=np.logical_and(rrel>=r_lo,rrel<r_hi)
 
 			# Now convert the shell values to physical units for the calculations
 			r_hi=r_hi*afac
