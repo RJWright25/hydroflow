@@ -262,7 +262,12 @@ if numgal:
                     logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
                     group=str(int(galaxy[galid_key]))
                     data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
-                    dump_hdf_group(dumpcat_fname,group,data,metadata=galaxy_output,verbose=False)
+                    columns=list(subcat_selection.columns)
+                    for column in galaxy_output.columns:
+                        if '0p20r200' in column or '1p00r200' in column or '030pkpc' in column:
+                            columns.append(column)
+                    metadata={key:galaxy_output[key] for key in columns}
+                    dump_hdf_group(dumpcat_fname,group,data,metadata=metadata,verbose=False)
                 
             else:
                 logging.info(f'Could not process galaxy, could not retrieve candidates')
