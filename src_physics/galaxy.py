@@ -213,10 +213,14 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			galaxy_output[f'{rshell_str}_sphere-vol']=4/3*np.pi*(rshell*afac*1e3)**3
 
 			# Calculate the centre of mass velocity in the sphere
-			galaxy_output[f'{rshell_str}_sphere-vcom']=np.nanmean(mass[mask_sphere]*velocities[mask_sphere],axis=0)/np.nansum(mass[mask_sphere])
+			vcom_sphere=np.nanmean(mass[mask_sphere]*velocities[mask_sphere],axis=0)/np.nansum(mass[mask_sphere])
+			galaxy_output[f'{rshell_str}_sphere-vcom_x']=vcom_sphere[0]
+			galaxy_output[f'{rshell_str}_sphere-vcom_y']=vcom_sphere[1]
+			galaxy_output[f'{rshell_str}_sphere-vcom_z']=vcom_sphere[2]
 
 			# Calculate the relative velocity of particles in the sphere
-			vrel=np.sum(velocities-galaxy_output[f'{rshell_str}_sphere-vcom'],axis=1)
+			vrel=np.sum(velocities-vcom_sphere,axis=1)
+			galaxy_output[f'{rshell_str}_sphere-vcom_x']=np.nanmean(velocities[mask_sphere],axis=0)
 			vrad={'pec':np.sum(vrel*positions/np.linalg.norm(positions,axis=1)[:,np.newaxis],axis=1)}
 			print('Min vrad:',np.nanmin(vrad['pec']))
 			print('Max vrad:',np.nanmax(vrad['pec']))
