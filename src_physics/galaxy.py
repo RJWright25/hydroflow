@@ -66,7 +66,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 		
 		# Define the angular momentum of the galaxy with baryonic elements within 30ckpc
 		Lbarmask=np.logical_or(pdata_candidates['ParticleType'].values==0,pdata_candidates['ParticleType'].values==4)
-		Lbarmask=np.logical_and(Lbarmask,pdata_candidates['Relative_r_comoving'].values<30*1e-3/afac) 
+		Lbarmask=np.logical_and(Lbarmask,pdata_candidates['Relative_r_comoving'].values*afac<30*1e-3) 
 		Lbarspec=np.cross(pdata_candidates.loc[Lbarmask,[f'Relative_{x}_comoving' for x in 'xyz']].values*afac,pdata_candidates.loc[Lbarmask,[f'Relative_v_{x}' for x in 'xyz']].values)
 		Lbartot=Lbarspec*pdata_candidates.loc[Lbarmask,'Masses'].values[:,np.newaxis]
 		Lbartot=np.nansum(Lbartot,axis=0)
@@ -78,9 +78,8 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 		deg_theta[deg_theta>90]=180-deg_theta[deg_theta>90]
 		pdata_candidates['Relative_phi']=deg_theta
 
-		# Save the angular momentum and velocity of the galaxy
+		# Save the angular momentum of the galaxy
 		pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow']=Lbartot
-		pdata_candidates.attrs['1p00r200_sphere-vcom']=vcom
 
 		return pdata_candidates
 	else:
@@ -89,10 +88,10 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 
 # Main function to analyse the galaxy and surrounding baryonic reservoirs
 
-def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells=None,Tbins=None,vcuts=None,drfac=None,logfile=None):
+def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells=None,Tbins=None,drfac=None,logfile=None):
 
 	"""
-	analyse_galaxy: Analyse the static properties of a galaxy, including the mass and properties of its baryonic reservoirs.
+	analyse_galaxy: Main function to analyse the galaxy and baryonic reservoirs. Computes properties within spheres and shells of the galaxy.
 
 	Input:
 	-----------
@@ -106,8 +105,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 		List of radii at which to calculate properties (in ckpc, but will also calculate for pkpc). 
 	Tbins: list
 		Dict of temperature bins to use for gas properties.
-	vcuts: dict
-		Dictionary containing the velocity cuts to use for inflows/outflows. Psuedo-R200 evolution added by default.
 	drfac: float
 		Fractional width of the shell.
 	
@@ -123,9 +120,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	galaxy_output={}
 
 	# Retrieve computed quantities from candidates
-	galaxy_output['1p00r200_sphere-vcom_x']=pdata_candidates.attrs['1p00r200_sphere-vcom'][0]
-	galaxy_output['1p00r200_sphere-vcom_y']=pdata_candidates.attrs['1p00r200_sphere-vcom'][1]
-	galaxy_output['1p00r200_sphere-vcom_z']=pdata_candidates.attrs['1p00r200_sphere-vcom'][2]
 	galaxy_output['030pkpc_sphere-baryon-L_tot-hydroflow_x']=pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow'][0]
 	galaxy_output['030pkpc_sphere-baryon-L_tot-hydroflow_y']=pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow'][1]
 	galaxy_output['030pkpc_sphere-baryon-L_tot-hydroflow_z']=pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow'][2]
