@@ -56,18 +56,19 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 		pdata_candidates['Relative_r_physical']=pdata_candidates['Relative_r_comoving'].values*afac
 
 		# Using the mean velocity of the halo (WITHIN R200, all particle types) to calculate relative velocities
-		vmask=pdata_candidates['Relative_r_comoving'].values<galaxy['Group_R_Crit200']
-		vcom=np.array([np.nanmean(pdata_candidates[f'Velocities_{x}'].values[vmask]) for x in 'xyz'])
+		# vmask=pdata_candidates['Relative_r_comoving'].values<galaxy['Group_R_Crit200']
+		# vcom=np.array([np.nanmean(pdata_candidates[f'Velocities_{x}'].values[vmask]) for x in 'xyz'])
+		vcom=np.array([0,0,0])
 		
 		# These velocities are all a*dx/dt (peculiar velocity)
 		for idim,dim in enumerate('xyz'):
 			pdata_candidates[f'Relative_v_{dim}']=pdata_candidates[f'Velocities_{dim}'].values-vcom[idim]
 		
-		# Magnitude of the relative velocity
-		pdata_candidates[f'Relative_v_abs_pec']=np.sqrt(np.nansum(np.square(pdata_candidates.loc[:,[f'Relative_v_{dim}' for dim in 'xyz']].values),axis=1))
+		# # Magnitude of the relative velocity
+		# pdata_candidates[f'Relative_v_abs_pec']=np.sqrt(np.nansum(np.square(pdata_candidates.loc[:,[f'Relative_v_{dim}' for dim in 'xyz']].values),axis=1))
 
-		# Radial velocity is the dot product of the unit vector relative position and velocity (units of radial position don't matter, only the unit vector)
-		pdata_candidates[f'Relative_v_rad_pec']=np.nansum(pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values*pdata_candidates.loc[:,[f'Relative_v_{dim}' for dim in 'xyz']].values,axis=1)/pdata_candidates['Relative_r_comoving'].values
+		# # Radial velocity is the dot product of the unit vector relative position and velocity (units of radial position don't matter, only the unit vector)
+		# pdata_candidates[f'Relative_v_rad_pec']=np.nansum(pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values*pdata_candidates.loc[:,[f'Relative_v_{dim}' for dim in 'xyz']].values,axis=1)/pdata_candidates['Relative_r_comoving'].values
  
 		# Define the angular momentum of the galaxy with baryonic elements within 30ckpc
 		Lbarmask=np.logical_or(pdata_candidates['ParticleType'].values==0,pdata_candidates['ParticleType'].values==4)
@@ -147,8 +148,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	# Fields
 	mass=pdata_candidates['Masses'].values
 	rrel=pdata_candidates['Relative_r_comoving'].values
-	vrad={'pec':pdata_candidates['Relative_v_rad_pec'].values}
-	# 'hub':pdata_candidates['Relative_v_rad_hub'].values}
+	velocities=pdata_candidates.loc[:,[f'Relative_v_{x}' for x in 'xyz']].values
+	positions=pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values
 	
 	# Gas properties
 	temp=pdata_candidates['Temperature'].values
@@ -211,6 +212,22 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			# Add the sphere volume in pkpc^3
 			galaxy_output[f'{rshell_str}_sphere-vol']=4/3*np.pi*(rshell*afac*1e3)**3
 
+			# Calculate the centre of mass velocity in the sphere
+			galaxy_output[f'{rshell_str}_sphere-vcom']=np.nanmean(mass[mask_sphere]*velocities[mask_sphere],axis=0)/np.nansum(mass[mask_sphere])
+
+			# Calculate the relative velocity of particles in the sphere
+			vrel=np.sum(velocities-galaxy_output[f'{rshell_str}_sphere-vcom'],axis=1)
+			vrad={'pec':np.sum(vrel*positions/np.linalg.norm(positions,axis=1)[:,np.newaxis],axis=1)}
+			print('Min vrad:',np.nanmin(vrad['pec']))
+			print('Max vrad:',np.nanmax(vrad['pec']))
+			print('Mean vrad:',np.nanmean(vrad['pec']))
+
+			#print values assuming r200 vcom
+			vrad_test=np.sum(velocities-galaxy_output['1p00r200_sphere-vcom'],axis=1)
+			print('Min vrad r200:',np.nanmin(vrad_test))
+			print('Max vrad r200:',np.nanmax(vrad_test))
+			print('Mean vrad r200:',np.nanmean(vrad_test))
+
 			### DARK MATTER
 			galaxy_output[f'{rshell_str}_sphere-dm-m_tot']=np.nansum(mass[np.logical_and(mask_sphere,dm)])
 			galaxy_output[f'{rshell_str}_sphere-dm-n_tot']=np.nansum(np.logical_and(mask_sphere,dm))
@@ -248,8 +265,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			dr=r_hi-r_lo
 
 			# Shell volume and area in pkpc^3 and pkpc^2
-			galaxy_output[f'{rshell_str}_shell-vol']=4/3*np.pi*((r_hi*afac*1e3)**3-(r_lo*afac*1e3)**3)
-			galaxy_output[f'{rshell_str}_shell-area']=4*np.pi*((r_hi*afac*1e3)**2-(r_lo*afac*1e3)**2)
+			galaxy_output[f'{rshell_str}_shell-vol']=4/3*np.pi*((r_hi*1e3)**3-(r_lo*1e3)**3)
+			galaxy_output[f'{rshell_str}_shell-area']=4*np.pi*((r_hi*1e3)**2-(r_lo*1e3)**2)
 
 			### DM shell properties
 			dm_shell_mask=np.logical_and(mask_shell,dm)
