@@ -305,13 +305,13 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 
 				# Calculate the total flow rates for the gas
 				for vboundary, vkey in zip([0, vpseudo_ishell], ['000kmps', 'pdoev']):
-					gas_flow_rates=calculate_flow_rate(mass=mass[Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary)
+					gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary)
 					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_pec']=gas_flow_rates[0]
 					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_pec']=gas_flow_rates[1]
 
 					# Calculate the flow rates for the gas by species
 					for spec in specfrac.keys():
-						gas_flow_rates_species=calculate_flow_rate(mass=mass[Tmask_shell]*specfrac[spec][Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary)
+						gas_flow_rates_species=calculate_flow_rate(masses=mass[Tmask_shell]*specfrac[spec][Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary)
 						galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_pec']=gas_flow_rates_species[0]
 						galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_pec']=gas_flow_rates_species[1]
 
