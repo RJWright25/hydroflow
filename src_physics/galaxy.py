@@ -218,11 +218,11 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			galaxy_output[f'{rshell_str}_sphere-vcom_y']=vcom_sphere[1]
 			galaxy_output[f'{rshell_str}_sphere-vcom_z']=vcom_sphere[2]
 
-			# Calculate the relative position of particles in this sphere
+			# Calculate the relative position of particles in this sphere using the new centre of mass
 			positions=coordinates-com_sphere
 			radii=np.linalg.norm(positions,axis=1)
 
-			# Calculate the relative velocity of particles in this sphere
+			# Calculate the relative velocity of particles in this sphere using the new centre of mass
 			rhat = positions / np.stack(3 * [radii], axis=1)
 			vrad = np.sum((velocities-vcom_sphere) * rhat, axis=1)			
 
