@@ -4,7 +4,7 @@
 # src_physics/galaxy.py: routines to analyse a galaxy (in shells). Both 
 import numpy as np
 import pandas as pd
-
+import astropy.units as apy_units
 from hydroflow.src_physics.utils import constant_MpcpGyrtokmps
 
 
@@ -35,8 +35,9 @@ def calculate_flow_rate(masses,vrad,dr,vboundary=0):
     outflow_mask=vrad>0
 
     # Convert vrad to Mpc/Gyr
-    vrad/=constant_MpcpGyrtokmps
-    vrad=np.abs(vrad)
+    vrad=vrad*apy_units.km/apy_units.s
+    vrad=vrad.to(apy_units.Mpc/apy_units.Gyr)
+    vrad=np.abs(vrad.value)
 
     # Calculate the flow rate
     inflow=np.sum(masses[inflow_mask]*vrad[inflow_mask])/dr
