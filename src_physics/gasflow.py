@@ -8,7 +8,7 @@ import pandas as pd
 from hydroflow.src_physics.utils import constant_MpcpGyrtokmps
 
 
-def calculate_flow_rate(masses,vrad,dR,vboundary=0):
+def calculate_flow_rate(masses,vrad,dr,vboundary=0):
     """
     calculate_flow_rate: Calculate the mass flow rate across a boundary for a set of particles in a shell.
 
@@ -39,8 +39,8 @@ def calculate_flow_rate(masses,vrad,dR,vboundary=0):
     vrad=np.abs(vrad)
 
     # Calculate the flow rate
-    inflow=np.sum(masses[inflow_mask]*vrad[inflow_mask])/dR
-    outflow=np.sum(masses[outflow_mask]*vrad[outflow_mask])/dR
+    inflow=np.sum(masses[inflow_mask]*vrad[inflow_mask])/dr
+    outflow=np.sum(masses[outflow_mask]*vrad[outflow_mask])/dr
 
     return np.array([inflow,outflow])
 
