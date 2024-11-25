@@ -141,9 +141,9 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 
 	# Fields
 	mass=pdata_candidates['Masses'].values
-	rrel=pdata_candidates['Relative_r_comoving'].values
-	coordinates=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values
-	velocities=pdata_candidates.loc[:,[f'Velocities_{x}' for x in 'xyz']].values
+	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the halo catalogue centre
+	coordinates=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values #comoving coordinates
+	velocities=pdata_candidates.loc[:,[f'Velocities_{x}' for x in 'xyz']].values #peculiar velocity in km/s
 
 	# Gas properties
 	temp=pdata_candidates['Temperature'].values
@@ -255,7 +255,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
 			r_hi=rshell+(drfac*rshell)/2
 			r_lo=rshell-(drfac*rshell)/2
-			mask_shell=np.logical_and(rrel>=r_lo,rrel<r_hi)
+			mask_shell=np.logical_and(radii>=r_lo,radii<r_hi)
 
 			# Now convert the shell values to physical units for the calculations
 			r_hi=r_hi*afac
