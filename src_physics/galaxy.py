@@ -225,11 +225,11 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 
 			# Calculate the relative position of particles in the sphere
 			positions=coordinates-com_sphere
+			radii=np.linalg.norm(positions,axis=1)
 
 			# Calculate the relative velocity of particles in the sphere
-			vrel=velocities-vcom_sphere
-			vrad=positions*vrel/np.linalg.norm(positions,axis=1)[:,np.newaxis]
-			vrad=np.nansum(vrad**2,axis=1)**0.5
+			rhat = positions / np.stack(3 * [radii], axis=1)
+			vrad = np.sum((velocities-vcom_sphere) * rhat, axis=1)			
 			vrad={'pec':vrad}
 
 			if '0p10r200' in rshell_str:
@@ -273,8 +273,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			#### SHELL CALCULATIONS (r between r-dr/2 and r+dr/2) ####
 
 			# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
-			r_hi=(rshell*(1+drfac/2))
-			r_lo=(rshell*(1-drfac/2))
+			r_hi=rshell+drfac*rshell/2
+			r_lo=rshell-drfac*rshell/2
 			mask_shell=np.logical_and(rrel<r_hi,rrel>=r_lo)
 
 			# Now convert the shell values to physical units for the calculations
