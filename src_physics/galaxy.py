@@ -223,7 +223,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			vrad=np.nansum(vrad**2,axis=1)**0.5
 			vrad={'pec':vrad}
 
-			if 'r200' in rshell_str:
+			if '0p10r200' in rshell_str:
 				print('Shell:',rshell_str)
 				print('Min vrad:',np.nanmin(vrad['pec']))
 				print('Max vrad:',np.nanmax(vrad['pec']))
