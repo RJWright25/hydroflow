@@ -240,11 +240,16 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 
 				vcom_1p00r200=pdata_candidates.attrs['1p00r200_sphere-vcom']
 				vrel_test=velocities-vcom_1p00r200
-				vrad_test=positions*vrel_test/np.linalg.norm(positions,axis=1)[:,np.newaxis]
-				vrad_test=np.nansum(vrad_test**2,axis=1)**0.5
-				print('Min vrad r200:',np.nanmin(vrad_test))
-				print('Max vrad r200:',np.nanmax(vrad_test))
-				print('Mean vrad r200:',np.nanmedian(vrad_test))
+
+				positions_test=pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values-
+				radii_test=np.linalg.norm(positions_test,axis=1)
+				rhat_test = positions_test / np.stack(3 * [radii_test], axis=1)
+				vrad_test = np.sum(vrel_test * rhat_test, axis=1)
+
+				print('Min vrad using R200:',np.nanmin(vrad_test))
+				print('Max vrad using R200::',np.nanmax(vrad_test))
+				print('Median vrad using R200:',np.nanmedian(vrad_test))
+
 
 			### DARK MATTER
 			galaxy_output[f'{rshell_str}_sphere-dm-m_tot']=np.nansum(mass[np.logical_and(mask_sphere,dm)])
