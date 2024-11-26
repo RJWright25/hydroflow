@@ -66,6 +66,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 	
 		# Renormalise 	
 		pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']]=(pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com_0p10r200)
+		pdata_candidates.loc[:,[f'Relative_{x}_physical' for x in 'xyz']]=(pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com_0p10r200)*afac
 		pdata_candidates['Relative_r_comoving']=np.linalg.norm(pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values,axis=1)
 		pdata_candidates['Relative_r_physical']=pdata_candidates['Relative_r_comoving']*afac
 
