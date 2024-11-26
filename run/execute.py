@@ -268,8 +268,8 @@ if numgal:
                     for column in galaxy_output.columns:
                         if '0p10r200' in column or '1p00r200' in column or '030pkpc' in column:
                             columns.append(column)
-                    metadata={key:galaxy_output[key] for key in columns}
-                    dump_hdf_group(dumpcat_fname,group,data,metadata=metadata,verbose=False)
+                    metadata_dump={key:galaxy_output[key] for key in columns}
+                    dump_hdf_group(dumpcat_fname,group,data,metadata=metadata_dump,verbose=False)
                 
             else:
                 logging.info(f'Could not process galaxy, could not retrieve candidates')
