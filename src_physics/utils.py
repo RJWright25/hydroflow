@@ -146,7 +146,7 @@ def compute_relative_phi(pdata,baryons=True,aperture=30*1e-3):
         mask=(radii<aperture)
 
 	# Define the angular momentum of the galaxy with baryonic elements within aperture
-    Lbartot=np.cross(positions[mask],masses[mask][:,np.newaxis]*velocities[mask])
+    Lbartot=np.nansum(np.cross(positions[mask],masses[mask][:,np.newaxis]*velocities[mask]),axis=0) 
 
 	# Find the angle between the angular momentum of the galaxy and the position vector of each particle
     cos_theta=np.sum(Lbartot*positions,axis=1)/(np.linalg.norm(Lbartot)*np.linalg.norm(positions,axis=1))
