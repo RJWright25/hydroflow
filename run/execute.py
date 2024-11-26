@@ -239,6 +239,7 @@ if numgal:
 
                 #### MAIN GALAXY ANALYSIS ####
                 t1_f=time.time()
+                print(metadata)
                 galaxy_output=analyse_galaxy(galaxy,
                                                  pdata_candidates,
                                                  metadata=metadata,
