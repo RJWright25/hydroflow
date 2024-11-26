@@ -32,11 +32,13 @@ vcuts={vcut_str:vcut for vcut_str,vcut in zip(vcuts_str,vcuts_flow)}
 
 #dump fields
 pdata_fields=['Masses',
-              'Relative_r_comoving',
               'Coordinates_x',
               'Coordinates_y',
               'Coordinates_z',
-              'Relative_v_rad_pec',
+              'Relative_vrad_pec',
+              'Relative_vx_pec',
+              'Relative_vy_pec',
+              'Relative_vz_pec',
               'Relative_phi',
               'Temperature',
               'Density',
@@ -65,7 +67,6 @@ snap=int(args.snap)
 dump=bool(args.dump)
 mcut=10**(args.mcut)
 drfac=args.dr
-
 
 sys.path.append(f"{repo.split('hydroflow')[0]}")
 
@@ -189,6 +190,7 @@ if numgal:
     logging.info(f'Loading snap particle data: {snap_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
     pdata_subvol,kdtree_subvol=read_subvol(snap_pdata_fname,ivol,nslice,metadata,logfile=logging_folder+logging_name+'.log')
 
+    # Sanity checks for particle data
     logging.info(f'Coordinate minima: x - {pdata_subvol["Coordinates_x"].min():.2f}, y - {pdata_subvol["Coordinates_y"].min():.2f}, z - {pdata_subvol["Coordinates_z"].min():.2f} [runtime {time.time()-t1:.3f} sec]')
     logging.info(f'Coordinate maxima: x - {pdata_subvol["Coordinates_x"].max():.2f}, y - {pdata_subvol["Coordinates_y"].max():.2f}, z - {pdata_subvol["Coordinates_z"].max():.2f} [runtime {time.time()-t1:.3f} sec]')
     logging.info(f'Temperature min: {np.nanmin(pdata_subvol["Temperature"]):.2e} K')
@@ -264,7 +266,7 @@ if numgal:
                     data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
                     columns=list(subcat_selection.columns)
                     for column in galaxy_output.columns:
-                        if '0p20r200' in column or '1p00r200' in column or '030pkpc' in column:
+                        if '0p10r200' in column or '1p00r200' in column or '030pkpc' in column:
                             columns.append(column)
                     metadata={key:galaxy_output[key] for key in columns}
                     dump_hdf_group(dumpcat_fname,group,data,metadata=metadata,verbose=False)

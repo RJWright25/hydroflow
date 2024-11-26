@@ -5,13 +5,14 @@
 import numpy as np
 import pandas as pd
 
-from hydroflow.src_physics.utils import constant_G,constant_MpcpGyrtokmps
+from hydroflow.src_physics.utils import constant_G, compute_relative_phi
 from hydroflow.src_physics.gasflow import calculate_flow_rate
 
 def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None): 
 	"""
 	
 	retrieve_galaxy_candidates: Retrieve the baryonic candidates for a galaxy within a specified radius.
+
 
 	Input:
 	-----------
@@ -30,7 +31,8 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 	Output:
 	-----------
 	pdata_candidates: pd.DataFrame
-		DataFrame containing the baryonic candidates for the galaxy within the specified radius.
+		DataFrame containing the particle for the galaxy within the specified radius. 
+		Additional columns are added to the DataFrame to include the relative position and radial distance of each particle from the galaxy.
 	
 
 	"""
@@ -51,35 +53,28 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 
 	# Get derived quantities if there are elements within the radius
 	if numcdt>0:
-		# Compute relative position
-		pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']]=(pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com)
+		# Compute relative position (comoving) based on catalogue centre
+		positions_relative=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com
+		radii_relative=np.linalg.norm(positions_relative,axis=1)
+
+		# Calculate 0p10r200 centre of mass
+		mask=(radii_relative<0.1*galaxy['Group_R_Crit200'])
+		
+		# Calculate the com, and vcom
+		com_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Coordinates_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
+		vcom_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Velocities_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
+	
+		# Renormalise 	
+		pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']]=(pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com_0p10r200)
 		pdata_candidates['Relative_r_comoving']=np.linalg.norm(pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values,axis=1)
-		pdata_candidates['Relative_r_physical']=pdata_candidates['Relative_r_comoving'].values*afac
+		pdata_candidates['Relative_r_physical']=pdata_candidates['Relative_r_comoving']*afac
 
-		# Using the mean velocity of particles within 30pkpc of the galaxy as the centre of mass velocity for Lbar calculation
-		vmask=pdata_candidates['Relative_r_comoving'].values*afac<30*1e-3
-		vcom=np.array([np.nanmean(pdata_candidates[f'Velocities_{x}'].values[vmask]) for x in 'xyz'])
-		
-		# These velocities are all a*dx/dt (peculiar velocity)
-		for idim,dim in enumerate('xyz'):
-			pdata_candidates[f'Relative_v_{dim}']=pdata_candidates[f'Velocities_{dim}'].values-vcom[idim]
-		
-		# Define the angular momentum of the galaxy with baryonic elements within 30ckpc
-		Lbarmask=np.logical_or(pdata_candidates['ParticleType'].values==0,pdata_candidates['ParticleType'].values==4)
-		Lbarmask=np.logical_and(Lbarmask,pdata_candidates['Relative_r_comoving'].values*afac<30*1e-3) 
-		Lbarspec=np.cross(pdata_candidates.loc[Lbarmask,[f'Relative_{x}_comoving' for x in 'xyz']].values*afac,pdata_candidates.loc[Lbarmask,[f'Relative_v_{x}' for x in 'xyz']].values)
-		Lbartot=Lbarspec*pdata_candidates.loc[Lbarmask,'Masses'].values[:,np.newaxis]
-		Lbartot=np.nansum(Lbartot,axis=0)
+		# Calculate the relative velocity
+		pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']]=pdata_candidates.loc[:,[f'Velocities_{x}' for x in 'xyz']].values-vcom_0p10r200
 
-		# Find the angle between the angular momentum of the galaxy and the position vector of each particle
-		position = pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values
-		cos_theta=np.sum(Lbartot*position,axis=1)/(np.linalg.norm(Lbartot)*np.linalg.norm(position,axis=1))
-		deg_theta=np.arccos(cos_theta)*180/np.pi
-		deg_theta[deg_theta>90]=180-deg_theta[deg_theta>90]
-		pdata_candidates['Relative_phi']=deg_theta
-
-		# Save the angular momentum of the galaxy
-		pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow']=Lbartot
+		# Calculate the relative radial velocity
+		rhat = pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values / np.stack(3 * [pdata_candidates['Relative_r_comoving']], axis=1)
+		pdata_candidates['Relative_vrad_pec'] = np.sum(pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values * rhat, axis=1)
 
 		return pdata_candidates
 	else:
@@ -119,11 +114,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 
 	galaxy_output={}
 
-	# Retrieve computed quantities from candidates
-	galaxy_output['030pkpc_sphere-baryon-L_tot-hydroflow_x']=pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow'][0]
-	galaxy_output['030pkpc_sphere-baryon-L_tot-hydroflow_y']=pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow'][1]
-	galaxy_output['030pkpc_sphere-baryon-L_tot-hydroflow_z']=pdata_candidates.attrs['030pkpc_sphere-baryon-L_tot-hydroflow'][2]
-
 	# Add existing galaxy properties
 	for key in galaxy.keys():
 		galaxy_output[key]=galaxy[key]
@@ -143,28 +133,29 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	temp=pdata_candidates['Temperature'].values
 	sfr=pdata_candidates['StarFormationRate'].values
 
-	# Species fractions (if available)
-	specfrac={}
-	if 'mfrac_HI' in pdata_candidates.columns:
-		specfrac['HI']=pdata_candidates['mfrac_HI'].values
-	if 'mfrac_HII' in pdata_candidates.columns:
-		specfrac['HII']=pdata_candidates['mfrac_HII'].values
-	if 'mfrac_H2' in pdata_candidates.columns:
-		specfrac['H2']=pdata_candidates['mfrac_H2'].values
-	if 'mfrac_HI_BR06' in pdata_candidates.columns:
-		specfrac['HI_BR06']=pdata_candidates['mfrac_HI_BR06'].values
-	if 'mfrac_H2_BR06' in pdata_candidates.columns:
-		specfrac['H2_BR06']=pdata_candidates['mfrac_H2_BR06'].values
-	if 'Metallicity' in pdata_candidates.columns:
-		specfrac['Z']=pdata_candidates['Metallicity'].values
-	specfrac['tot']=np.ones_like(gas)
-
 	# Gas selections by temperature
 	Tmasks={'all':gas}
 	if Tbins is not None:
 		for Tstr,Tbin in Tbins.items():
 			Tmasks[Tstr]=np.logical_and.reduce([gas,temp>Tbin[0],temp<Tbin[1]])
 
+	# Species fractions (if available)
+	specfrac={}
+	mfrac_columns=[col for col in pdata_candidates.columns if 'mfrac' in col]
+	for mfrac_col in mfrac_columns:
+		specfrac[mfrac_col.split('mfrac_')[0]]=pdata_candidates[mfrac_col].values
+	specfrac['Z']=pdata_candidates['Metallicity'].values
+	specfrac['tot']=np.ones_like(gas)
+
+	# Get relative phi
+	Lbar,phirel=compute_relative_phi(pdata=pdata_candidates,baryons=True,aperture=galaxy['Group_R_Crit200']*0.1)
+	pdata_candidates['Relative_phi']=phirel
+
+	# Add to the galaxy output
+	galaxy_output['0p10r200-Lbartot_x']=Lbar[0]
+	galaxy_output['0p10r200-Lbartot_y']=Lbar[1]
+	galaxy_output['0p10r200-Lbartot_z']=Lbar[2]
+	
 	# Compute psuedoevolution velocity
 	omegar=metadata.cosmology.Ogamma(galaxy['Redshift'])
 	omegam=metadata.cosmology.Om(galaxy['Redshift'])

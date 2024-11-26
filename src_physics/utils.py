@@ -109,6 +109,54 @@ def get_limits(ivol,nslice,boxsize,buffer=0.1):
 	return xmin,xmax,ymin,ymax,zmin,zmax
 
 
+
+def compute_relative_phi(pdata,baryons=True,aperture=30*1e-3):
+    """
+    compute_relative_phi: Calculate the angular momentum of a system of particles.
+
+    Input:
+    -----------
+    pdata: pd.DataFrame
+        DataFrame containing the particle data.
+    baryons: bool
+        Flag to only consider baryonic particles.
+    aperture: float
+        Aperture radius to mask the particles (in physical kpc).
+    
+    Output:
+    -----------
+    Lbartot: np.array
+        Array containing the angular momentum of the system.
+
+    deg_theta: np.array
+        Array containing the angle between the angular momentum of the system and the position vector of each particle.
+
+    """
+
+    # Mask the particles within the aperture and only baryonic particles
+    ptypes=pdata['ParticleType'].values
+    radii=pdata['Relative_r_comoving'].values
+    masses=pdata['Mass'].values
+    positions=pdata.loc[:,[f'Relative_{x}_physical' for x in 'xyz']].values
+    velocities=pdata.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values
+
+    if baryons:
+        mask=(ptypes==0) & (radii<aperture)
+    else:
+        mask=(radii<aperture)
+
+	# Define the angular momentum of the galaxy with baryonic elements within aperture
+    Lbartot=np.cross(positions[mask],masses[mask][:,np.newaxis]*velocities[mask])
+
+	# Find the angle between the angular momentum of the galaxy and the position vector of each particle
+    cos_theta=np.sum(Lbartot*positions,axis=1)/(np.linalg.norm(Lbartot)*np.linalg.norm(positions,axis=1))
+    deg_theta=np.arccos(cos_theta)*180/np.pi
+    deg_theta[deg_theta>90]=180-deg_theta[deg_theta>90]
+
+    return Lbartot, deg_theta
+
+
+    
 def rahmati2013_neutral_fraction(nH,T,redshift=0):
     """
      
