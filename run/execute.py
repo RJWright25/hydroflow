@@ -246,7 +246,6 @@ if numgal:
                                                  ckpc_shells=ckpc_shells,
                                                  Tbins=Tbins,
                                                  drfac=drfac,
-                                                 vcuts=vcuts,
                                                  logfile=logging_folder+logging_name+'.log')
                 
                 t2_f=time.time()
