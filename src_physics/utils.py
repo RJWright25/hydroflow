@@ -136,7 +136,7 @@ def compute_relative_phi(pdata,baryons=True,aperture=30*1e-3):
     # Mask the particles within the aperture and only baryonic particles
     ptypes=pdata['ParticleType'].values
     radii=pdata['Relative_r_comoving'].values
-    masses=pdata['Mass'].values
+    masses=pdata['Masses'].values
     positions=pdata.loc[:,[f'Relative_{x}_physical' for x in 'xyz']].values
     velocities=pdata.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values
 
