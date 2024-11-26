@@ -151,6 +151,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	# Species fractions (if available)
 	specfrac={}
 	mfrac_columns=[col for col in pdata_candidates.columns if 'mfrac' in col]
+	print(mfrac_columns)
 	for mfrac_col in mfrac_columns:
 		specfrac[mfrac_col.split('mfrac_')[0]]=pdata_candidates[mfrac_col].values
 	specfrac['Z']=pdata_candidates['Metallicity'].values
