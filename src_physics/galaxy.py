@@ -118,7 +118,15 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	# Add existing galaxy properties
 	for key in galaxy.keys():
 		galaxy_output[key]=galaxy[key]
-
+		
+	# Compute psuedoevolution velocity
+	omegar=metadata.cosmology.Ogamma(galaxy['Redshift'])
+	omegam=metadata.cosmology.Om(galaxy['Redshift'])
+	Hz=metadata.cosmology.H(galaxy['Redshift']).value
+	afac=1/(1+galaxy['Redshift'])
+	vpseudo=2/3*(constant_G/100)**(1/3)*galaxy['Group_M_Crit200']**(1/3)*(2*omegar+3/2*omegam)*Hz**(1/3)
+	galaxy_output['1p00r200-v_pdoev']=vpseudo #pseudo-evolution velocity cut in km/s
+	
 	# Masks
 	gas=pdata_candidates['ParticleType'].values==0.
 	star=pdata_candidates['ParticleType'].values==4.
@@ -157,14 +165,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	galaxy_output['0p10r200-Lbartot_y']=Lbar[1]
 	galaxy_output['0p10r200-Lbartot_z']=Lbar[2]
 	
-	# Compute psuedoevolution velocity
-	omegar=metadata.cosmology.Ogamma(galaxy['Redshift'])
-	omegam=metadata.cosmology.Om(galaxy['Redshift'])
-	Hz=metadata.cosmology.H(galaxy['Redshift']).value
-	afac=1/(1+galaxy['Redshift'])
-	vpseudo=2/3*(constant_G/100)**(1/3)*galaxy['Group_M_Crit200']**(1/3)*(2*omegar+3/2*omegam)*Hz**(1/3)
-	galaxy_output['1p00r200-v_pdoev']=vpseudo #pseudo-evolution velocity cut in km/s
-	
+
 	# Combine all the shell radii for analysis
 	radial_shells_R200=[fR200*galaxy['Group_R_Crit200'] for fR200 in r200_shells] #numerical values are comoving
 	radial_shells_ckpc=[fckpc/1e3 for fckpc in ckpc_shells] #numerical values are comoving
