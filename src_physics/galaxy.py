@@ -118,7 +118,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	# Add existing galaxy properties
 	for key in galaxy.keys():
 		galaxy_output[key]=galaxy[key]
-		
+
 	# Compute psuedoevolution velocity
 	omegar=metadata.cosmology.Ogamma(galaxy['Redshift'])
 	omegam=metadata.cosmology.Om(galaxy['Redshift'])
@@ -155,6 +155,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 		specfrac[mfrac_col.split('mfrac_')[0]]=pdata_candidates[mfrac_col].values
 	specfrac['Z']=pdata_candidates['Metallicity'].values
 	specfrac['tot']=np.ones_like(gas)
+	print(specfrac.keys())
 
 	# Get relative phi
 	Lbar,phirel=compute_relative_phi(pdata=pdata_candidates,baryons=True,aperture=galaxy['Group_R_Crit200']*0.1)
