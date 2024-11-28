@@ -14,7 +14,11 @@ $`\dot{M}_{k}(r=R)=\frac{1}{\Delta\,r}\times\Sigma_{i\in k}\left(m_{i}\frac{{\ve
 hydroflow/src_sims includes routines for (i) reading particle data and (ii) processing structure finder outputs from various simulations (as per each directory).
 
 Currently supported: 
+* EAGLE snapshots
+* TNG snapshots
+* SIMBA snapshots
 * COLIBRE snapshots
+* BOSCA SOLAS (SWIFT) outputs
 
 ### src_physics
 hydroflow/src_physics includes low-level functions for conversions (utils.py), and a function to perform the analysis of galaxies and surrounding gas flows (galaxy.py)
