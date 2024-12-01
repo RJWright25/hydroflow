@@ -165,7 +165,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	galaxy_output['0p10r200-Lbartot_y']=Lbar[1]
 	galaxy_output['0p10r200-Lbartot_z']=Lbar[2]
 	
-
 	# Combine all the shell radii for analysis
 	radial_shells_R200=[fR200*galaxy['Group_R_Crit200'] for fR200 in r200_shells] #numerical values are comoving
 	radial_shells_ckpc=[fckpc/1e3 for fckpc in ckpc_shells] #numerical values are comoving

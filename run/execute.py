@@ -18,7 +18,7 @@ from datetime import datetime
 sys.path.append('/Users/rwright/GitHub/')
 
 #params
-r200_shells=[0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3]
+r200_shells=[0.0249999,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3]
 ckpc_shells=[1,2,3,4,5,10,20,30,40,50,60,70,80,90,100]
 
 #temperature cuts for phase

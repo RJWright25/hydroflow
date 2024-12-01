@@ -123,6 +123,9 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_x']=np.array(angmom.value[:,0])
             halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_y']=np.array(angmom.value[:,1])
             halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_z']=np.array(angmom.value[:,2])
+            rstar=halodata.exclusive_sphere_30kpc.half_mass_radius_stars;rstar.convert_to_units(dunit)
+
+    
 
             # Give each satellite the group mass, r200 and m200 of the central and distance to central
             print('Matching group data to satellite data...')
