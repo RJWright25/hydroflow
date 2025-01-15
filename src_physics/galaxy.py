@@ -170,7 +170,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	star_r_sorted=np.argsort(star_r)
 	star_r_enc=star_r[star_r_sorted]
 	star_mass_enc=np.cumsum(star_mass[star_r_sorted])
-	star_r_half=star_r_enc[np.argmin(np.abs(star_mass_enc-mass_enc/2))]
+	star_r_half=star_r_enc[np.argmin(np.abs(star_mass_enc-mass_enc/2))] #half-mass radius
 
 	# Add to the galaxy output
 	galaxy_output['0p10r200-star_r_eff']=star_r_half
