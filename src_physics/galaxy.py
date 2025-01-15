@@ -283,6 +283,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 				# Breakdown of mass in this phase by species
 				for spec in specfrac.keys():
 					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-m_{spec}']=np.nansum(mass[Tmask_shell]*specfrac[spec][Tmask_shell])
+					# save mean radial velocity for each species
+					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-vrad_{spec}_mean']=np.nansum(vrad[Tmask_shell]*mass[Tmask_shell]*specfrac[spec][Tmask_shell])/np.nansum(mass[Tmask_shell]*specfrac[spec][Tmask_shell])
 				
 				# If considering a galaxy-scale shell, calculate the SFR and metallicity
 				if ('kpc' in rshell_str or '0p10' in rshell_str):

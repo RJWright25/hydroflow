@@ -296,7 +296,8 @@ def combine_catalogs(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False):
         colsout=[col for col in allcols]
         output_columns=[column for column in colsout]
         subcat_masked.loc[subcat_idxs,output_columns]=snap_outputs.loc[hydroflow_idxs,colsout].values
-
+    
+    print(f'Writing to {outpath} ...')
     create_dir(outpath)
     
     subcat_masked=subcat_masked.sort_values(by=['SnapNum','Mass'],ascending=[False,False],ignore_index=True)
