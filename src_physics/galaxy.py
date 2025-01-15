@@ -84,7 +84,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 
 # Main function to analyse the galaxy and surrounding baryonic reservoirs
 
-def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells=None,Tbins=None,drfac=None,logfile=None):
+def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells=None,rstar_shells=None,Tbins=None,drfac=None,logfile=None):
 
 	"""
 	analyse_galaxy: Main function to analyse the galaxy and baryonic reservoirs. Computes properties within spheres and shells of the galaxy.
@@ -99,6 +99,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 		List of radii at which to calculate properties (multiples of R200).
 	ckpc_shells: list
 		List of radii at which to calculate properties (in ckpc, but will also calculate for pkpc). 
+	rstar_shells: list
+		List of radii at which to calculate properties (multiples of the stellar half-mass radius).
 	Tbins: list
 		Dict of temperature bins to use for gas properties.
 	drfac: float
@@ -143,7 +145,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	sfr=pdata_candidates['StarFormationRate'].values
 
 	# Gas selections by temperature
-	Tmasks={'all':gas}
+	Tmasks={'all':gas,'sf':np.logical_and(gas,sfr>0)}
 	if Tbins is not None:
 		for Tstr,Tbin in Tbins.items():
 			Tmasks[Tstr]=np.logical_and.reduce([gas,temp>Tbin[0],temp<Tbin[1]])
@@ -160,6 +162,19 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	Lbar,phirel=compute_relative_phi(pdata=pdata_candidates,baryons=True,aperture=galaxy['Group_R_Crit200']*0.1)
 	pdata_candidates['Relative_phi']=phirel
 
+	# Get stellar half-mass radius
+	star_mask=np.logical_and(star,pdata_candidates['Relative_r_comoving'].values<0.1*galaxy['Group_R_Crit200'])
+	mass_enc=np.nansum(pdata_candidates.loc[star_mask,'Masses'].values)
+	star_r=pdata_candidates['Relative_r_comoving'].values[star_mask]
+	star_mass=pdata_candidates['Masses'].values[star_mask]
+	star_r_sorted=np.argsort(star_r)
+	star_r_enc=star_r[star_r_sorted]
+	star_mass_enc=np.cumsum(star_mass[star_r_sorted])
+	star_r_half=star_r_enc[np.argmin(np.abs(star_mass_enc-mass_enc/2))]
+
+	# Add to the galaxy output
+	galaxy_output['0p10r200-star_r_eff']=star_r_half
+	
 	# Add to the galaxy output
 	galaxy_output['0p10r200-Lbartot_x']=Lbar[0]
 	galaxy_output['0p10r200-Lbartot_y']=Lbar[1]
@@ -169,11 +184,14 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	radial_shells_R200=[fR200*galaxy['Group_R_Crit200'] for fR200 in r200_shells] #numerical values are comoving
 	radial_shells_ckpc=[fckpc/1e3 for fckpc in ckpc_shells] #numerical values are comoving
 	radial_shells_pkpc=[fpkpc/1e3/afac for fpkpc in ckpc_shells] #numerical values are comoving
+	radial_shells_rstar=[fstar*star_r_half for fstar in rstar_shells] #numerical values are comoving
 	radial_shells_R200_str=[f'{fR200:.2f}'.replace('.','p')+'r200' for fR200 in r200_shells]
 	radial_shells_ckpc_str=[str(int(fckpc)).zfill(3)+'ckpc' for fckpc in ckpc_shells]
 	radial_shells_pkpc_str=[str(int(fpkpc)).zfill(3)+'pkpc' for fpkpc in ckpc_shells]
-	radial_shells=radial_shells_R200+radial_shells_ckpc+radial_shells_pkpc
-	radial_shells_str=radial_shells_R200_str+radial_shells_ckpc_str+radial_shells_pkpc_str
+	radial_shells_rstar_str=[f'{fstar:.2f}'.replace('.','p')+'reff' for fstar in rstar_shells]
+
+	radial_shells=radial_shells_R200+radial_shells_ckpc+radial_shells_pkpc+radial_shells_rstar
+	radial_shells_str=radial_shells_R200_str+radial_shells_ckpc_str+radial_shells_pkpc_str+radial_shells_rstar_str
 
 	# Loop over all the shells
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
