@@ -305,7 +305,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-vrad_{spec}_mean']=np.nansum(vrad[Tmask_shell]*mass[Tmask_shell]*specfrac[spec][Tmask_shell])/np.nansum(mass[Tmask_shell]*specfrac[spec][Tmask_shell])
 				
 				# If considering a galaxy-scale shell, calculate the SFR and metallicity
-				if ('kpc' in rshell_str or '0p10' in rshell_str):
+				if ('kpc' in rshell_str or '0p10' in rshell_str or 'reff' in rshell_str):
 					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_shell])
 					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-Z']=np.nansum(specfrac['Z'][Tmask_shell]*mass[Tmask_shell])/np.nansum(mass[Tmask_shell])
 
