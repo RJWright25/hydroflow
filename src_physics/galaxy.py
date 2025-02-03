@@ -8,7 +8,7 @@ import pandas as pd
 from hydroflow.src_physics.utils import constant_G, compute_relative_phi
 from hydroflow.src_physics.gasflow import calculate_flow_rate
 
-def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None): 
+def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,boxsize=None): 
 	"""
 	
 	retrieve_galaxy_candidates: Retrieve the baryonic candidates for a galaxy within a specified radius.
@@ -51,10 +51,20 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None):
 	pdata_candidates.reset_index(drop=True,inplace=True)
 	numcdt=pdata_candidates.shape[0]
 
+	
+
+
 	# Get derived quantities if there are elements within the radius
 	if numcdt>0:
 		# Compute relative position (comoving) based on catalogue centre
 		positions_relative=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com
+
+		# Check if the relative position is within the maximum radius (and fix for periodic boundary conditions)
+		if boxsize is not None:
+			for idim,dim in enumerate('xyz'):
+				positions_relative[positions_relative[:,idim]>=1*maxrad]-=boxsize
+				positions_relative[positions_relative[:,idim]<=1*maxrad]+=boxsize
+
 		radii_relative=np.linalg.norm(positions_relative,axis=1)
 
 		# Calculate 0p10r200 centre of mass

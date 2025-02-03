@@ -229,7 +229,7 @@ if numgal:
  
             # Get the particle data for this halo
             t1_c=time.time()
-            pdata_candidates=retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=maxrad)
+            pdata_candidates=retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=maxrad,boxsize=boxsize)
             t2_c=time.time()
 
             if pdata_candidates.shape[0]>0:
