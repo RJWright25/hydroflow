@@ -169,7 +169,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	specfrac['tot']=np.ones_like(gas)
 
 	# Get relative phi
-	Lbar,phirel=compute_relative_phi(pdata=pdata_candidates,baryons=True,aperture=galaxy['Group_R_Crit200']*0.1)
+	Lbar,phirel=compute_relative_phi(pdata=pdata_candidates,baryons=True,aperture=0.03)
 	pdata_candidates['Relative_phi']=phirel
 
 	# Get stellar half-mass radius
@@ -200,13 +200,13 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 
 
 	# Add to the galaxy output
-	galaxy_output['0p10r200-star_rhalf']=star_r_half
-	galaxy_output['0p10r200-gas_rhalf']=gas_r_half
+	galaxy_output['030ckpc_sphere-star-r_half']=star_r_half
+	galaxy_output['030ckpc_sphere-gas-r_half']=gas_r_half
 	
 	# Add to the galaxy output
-	galaxy_output['0p10r200-Lbartot_x']=Lbar[0]
-	galaxy_output['0p10r200-Lbartot_y']=Lbar[1]
-	galaxy_output['0p10r200-Lbartot_z']=Lbar[2]
+	galaxy_output['030ckpc_sphere-Lbartot_x']=Lbar[0]
+	galaxy_output['030ckpc_sphere-Lbartot_y']=Lbar[1]
+	galaxy_output['030ckpc_sphere-Lbartot_z']=Lbar[2]
 	
 	# Combine all the shell radii for analysis
 	radial_shells_R200=[fR200*galaxy['Group_R_Crit200'] for fR200 in r200_shells] #numerical values are comoving
