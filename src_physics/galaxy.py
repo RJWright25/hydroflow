@@ -173,17 +173,35 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	pdata_candidates['Relative_phi']=phirel
 
 	# Get stellar half-mass radius
-	star_mask=np.logical_and(star,pdata_candidates['Relative_r_comoving'].values<0.1*galaxy['Group_R_Crit200'])
-	mass_enc=np.nansum(pdata_candidates.loc[star_mask,'Masses'].values)
-	star_r=pdata_candidates['Relative_r_comoving'].values[star_mask]
-	star_mass=pdata_candidates['Masses'].values[star_mask]
-	star_r_sorted=np.argsort(star_r)
-	star_r_enc=star_r[star_r_sorted]
-	star_mass_enc=np.cumsum(star_mass[star_r_sorted])
-	star_r_half=star_r_enc[np.argmin(np.abs(star_mass_enc-mass_enc/2))] #half-mass radius
+	star_mask=np.logical_and(star,pdata_candidates['Relative_r_comoving'].values<0.03)
+	if np.nansum(star_mask):
+		star_mass_enc=np.nansum(pdata_candidates.loc[star_mask,'Masses'].values)
+		star_r=pdata_candidates['Relative_r_comoving'].values[star_mask]
+		star_mass=pdata_candidates['Masses'].values[star_mask]
+		star_r_sorted=np.argsort(star_r)
+		star_r_enc=star_r[star_r_sorted]
+		mass_enc=np.cumsum(star_mass[star_r_sorted])
+		star_r_half=star_r_enc[np.argmin(np.abs(star_mass_enc-mass_enc/2))] #half-mass radius
+	else:
+		star_r_half=np.nan
+
+	# Get gas half-mass radius
+	gas_mask=np.logical_and(gas,pdata_candidates['Relative_r_comoving'].values<0.03)
+	if np.nansum(gas_mask):
+		gas_mass_enc=np.nansum(pdata_candidates.loc[gas_mask,'Masses'].values)
+		gas_r=pdata_candidates['Relative_r_comoving'].values[gas_mask]
+		gas_mass=pdata_candidates['Masses'].values[gas_mask]
+		gas_r_sorted=np.argsort(gas_r)
+		gas_r_enc=gas_r[gas_r_sorted]
+		mass_enc=np.cumsum(gas_mass[gas_r_sorted])
+		gas_r_half=gas_r_enc[np.argmin(np.abs(gas_mass_enc-mass_enc/2))]
+	else:
+		gas_r_half=np.nan
+
 
 	# Add to the galaxy output
-	galaxy_output['0p10r200-star_r_eff']=star_r_half
+	galaxy_output['0p10r200-star_rhalf']=star_r_half
+	galaxy_output['0p10r200-gas_rhalf']=gas_r_half
 	
 	# Add to the galaxy output
 	galaxy_output['0p10r200-Lbartot_x']=Lbar[0]
@@ -210,7 +228,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 		vpseudo_ishell=vpseudo*(rshell/galaxy['Group_R_Crit200'])
 
 		# Skip the shell if it is a multiple of r200 and the galaxy is a satellite
-		if not ('r200' in rshell_str and galaxy['SubGroupNumber']>0):
+		if not ('r200' in rshell_str and galaxy['SubGroupNumber']>0) and rshell>0:
 			
 			#### SPHERE CALCULATIONS (r<rshell) ####
 
