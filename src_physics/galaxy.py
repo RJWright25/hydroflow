@@ -50,20 +50,16 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 	pdata_candidates=pdata_subvol.loc[pidx_candidates,:]
 	pdata_candidates.reset_index(drop=True,inplace=True)
 	numcdt=pdata_candidates.shape[0]
-
-	
-
-
 	# Get derived quantities if there are elements within the radius
 	if numcdt>0:
 		# Compute relative position (comoving) based on catalogue centre
 		positions_relative=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com
 
-		# Check if the relative position is within the maximum radius (and fix for periodic boundary conditions)
-		if boxsize is not None:
-			for idim,dim in enumerate('xyz'):
-				positions_relative[positions_relative[:,idim]>=1*maxrad]-=boxsize
-				positions_relative[positions_relative[:,idim]<=1*maxrad]+=boxsize
+		# # Check if the relative position is within the maximum radius (and fix for periodic boundary conditions)
+		# if boxsize is not None:
+		# 	for idim,dim in enumerate('xyz'):
+		# 		positions_relative[positions_relative[:,idim]>=1*maxrad]-=boxsize
+		# 		positions_relative[positions_relative[:,idim]<=1*maxrad]+=boxsize
 
 		radii_relative=np.linalg.norm(positions_relative,axis=1)
 

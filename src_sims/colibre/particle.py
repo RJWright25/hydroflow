@@ -97,7 +97,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         coordinates=pdata_masked_object.coordinates
         coordinates.convert_to_units('Mpc') #comoving
         for ix,x in enumerate('xyz'):
-                pdata_ptype[f'Coordinates_{x}']=coordinates.value[::subset,ix]
+            pdata_ptype[f'Coordinates_{x}']=coordinates.value[::subset,ix]
         
         logging.info(f"Reading velocities for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         velocities=pdata_masked_object.velocities
@@ -179,6 +179,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
 
     # Generate KDtree
     logging.info(f"Generating KDTree... [pdata time: {time.time()-t0:.2f} s]")
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize+1e-4) #add buffer to avoid weird edge effects
+    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize+1e-8) #add buffer to avoid weird edge effects
+
 
     return pdata,pdata_kdtree
