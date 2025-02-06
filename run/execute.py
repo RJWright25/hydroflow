@@ -33,6 +33,7 @@ vcuts={vcut_str:vcut for vcut_str,vcut in zip(vcuts_str,vcuts_flow)}
 
 #dump fields
 pdata_fields=['Masses',
+              'Relative_r',
               'Coordinates_x',
               'Coordinates_y',
               'Coordinates_z',
