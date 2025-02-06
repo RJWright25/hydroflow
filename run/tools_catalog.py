@@ -208,7 +208,7 @@ def combine_catalogs(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False):
     #gasflow calc string
     calc_str='nvol'+path_gasflow.split('nvol')[-1].split('/')[0]
 
-    if not snaps:
+    if not len(snaps)>0:
         snap_min=int(np.nanmin(subcat[snap_key].values))
         snap_max=int(np.nanmax(subcat[snap_key].values))
         snaps=list(range(snap_min,(snap_max+1)))
