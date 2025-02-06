@@ -55,11 +55,11 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 		# Compute relative position (comoving) based on catalogue centre
 		positions_relative=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com
 
-		# # Check if the relative position is within the maximum radius (and fix for periodic boundary conditions)
-		# if boxsize is not None:
-		# 	for idim,dim in enumerate('xyz'):
-		# 		positions_relative[positions_relative[:,idim]>=1*maxrad]-=boxsize
-		# 		positions_relative[positions_relative[:,idim]<=1*maxrad]+=boxsize
+		# Check if the relative position is within the maximum radius (and fix for periodic boundary conditions)
+		if boxsize is not None:
+			for idim,dim in enumerate('xyz'):
+				positions_relative[positions_relative[:,idim]>=1*maxrad,idim]-=boxsize
+				positions_relative[positions_relative[:,idim]<=1*maxrad,idim]+=boxsize
 
 		radii_relative=np.linalg.norm(positions_relative,axis=1)
 
