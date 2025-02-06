@@ -98,12 +98,13 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         coordinates.convert_to_units('Mpc') #comoving
         for ix,x in enumerate('xyz'):
             pdata_ptype[f'Coordinates_{x}']=coordinates.value[::subset,ix]
+
         
         logging.info(f"Reading velocities for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         velocities=pdata_masked_object.velocities
         velocities.convert_to_units('km/s');velocities.convert_to_physical()
         for ix,x in enumerate('xyz'):
-                pdata_ptype[f'Velocities_{x}']=velocities[::subset,ix].value
+                pdata_ptype[f'Velocities_{x}']=velocities.value[::subset,ix]
 
         logging.info(f"Reading IDs for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         pdata_ptype['ParticleIDs']=pdata_masked_object.particle_ids.value[::subset]

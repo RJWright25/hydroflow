@@ -54,13 +54,6 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 	if numcdt>0:
 		# Compute relative position (comoving) based on catalogue centre
 		positions_relative=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com
-
-		# Check if the relative position is within the maximum radius (and fix for periodic boundary conditions)
-		if boxsize is not None:
-			for idim,dim in enumerate('xyz'):
-				positions_relative[positions_relative[:,idim]>=1*maxrad,idim]-=boxsize
-				positions_relative[positions_relative[:,idim]<=1*maxrad,idim]+=boxsize
-
 		radii_relative=np.linalg.norm(positions_relative,axis=1)
 
 		# Calculate 0p10r200 centre of mass
