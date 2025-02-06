@@ -75,32 +75,40 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         partstrs=['gas','dm','stars']
         partbuffer=[pdata_snap_masked.gas,pdata_snap_masked.dark_matter,pdata_snap_masked.stars]
 
+    pdata={}
     # Loop over particle types
     for iptype,ptype,pdata_masked_object  in zip(parttypes,partstrs,partbuffer):
-            
+        
+        if ptype=='dm':
+            subset=10 # only read 10% of dark matter particles to save memory
+        else:
+            subset=1
+
         logging.info(f"Reading {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         pdata_ptype=pd.DataFrame()
         
         logging.info(f"Reading masses for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         masses=pdata_masked_object.masses
         masses.convert_to_units('Msun')
-        pdata_ptype['Masses']=masses.value
+        pdata_ptype['Masses']=masses.value[::subset]
+        if ptype=='dm':
+            pdata_ptype['Masses']=pdata_ptype['Masses']*subset # correct for subset
 
         logging.info(f"Reading coordinates for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         coordinates=pdata_masked_object.coordinates
         coordinates.convert_to_units('Mpc') #comoving
         for ix,x in enumerate('xyz'):
-                pdata_ptype[f'Coordinates_{x}']=coordinates.value[:,ix]
+                pdata_ptype[f'Coordinates_{x}']=coordinates.value[::subset,ix]
         
         logging.info(f"Reading velocities for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         velocities=pdata_masked_object.velocities
         velocities.convert_to_units('km/s');velocities.convert_to_physical()
         for ix,x in enumerate('xyz'):
-                pdata_ptype[f'Velocities_{x}']=velocities[:,ix].value
+                pdata_ptype[f'Velocities_{x}']=velocities[::subset,ix].value
 
         logging.info(f"Reading IDs for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
-        pdata_ptype['ParticleIDs']=pdata_masked_object.particle_ids.value
-        pdata_ptype['ParticleType']=np.ones(pdata_ptype.shape[0])*iptype    
+        pdata_ptype['ParticleIDs']=pdata_masked_object.particle_ids.value[::subset]
+        pdata_ptype['ParticleType']=iptype*np.ones(pdata_ptype['ParticleIDs'].shape[0]) 
 
         # Read additional gas properties
         if ptype=='gas':
