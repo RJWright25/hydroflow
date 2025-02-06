@@ -75,7 +75,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         partstrs=['gas','dm','stars']
         partbuffer=[pdata_snap_masked.gas,pdata_snap_masked.dark_matter,pdata_snap_masked.stars]
 
-    pdata={}
     # Loop over particle types
     for iptype,ptype,pdata_masked_object  in zip(parttypes,partstrs,partbuffer):
         
