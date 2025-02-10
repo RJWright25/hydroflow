@@ -232,7 +232,7 @@ def combine_catalogs(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False):
     snapdirs=sorted(os.listdir(path_gasflow))
     logging.info(f'Snapdirs: {snapdirs} ... \n')
 
-    snapdirs=[snapdir for snapdir in snapdirs if ('gas' not in snapdir)]
+    snapdirs=[snapdir for snapdir in snapdirs]
     snap_outputs=[]
 
     for snapdir in snapdirs:

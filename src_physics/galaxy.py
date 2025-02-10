@@ -5,7 +5,7 @@
 import numpy as np
 import pandas as pd
 
-from hydroflow.src_physics.utils import constant_G, compute_relative_phi
+from hydroflow.src_physics.utils import constant_G, compute_relative_phi, calc_halfmass_radius
 from hydroflow.src_physics.gasflow import calculate_flow_rate
 
 def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,boxsize=None): 
@@ -162,35 +162,18 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	pdata_candidates['Relative_phi']=phirel
 
 	# Get stellar half-mass radius
-	star_mask=np.logical_and(star,pdata_candidates['Relative_r_comoving'].values<0.03)
+	star_mask=np.logical_and(star,pdata_candidates['Relative_r_comoving'].values<0.01)
 	if np.nansum(star_mask):
-		star_mass_enc=np.nansum(pdata_candidates.loc[star_mask,'Masses'].values)
-		star_r=pdata_candidates['Relative_r_comoving'].values[star_mask]
-		star_mass=pdata_candidates['Masses'].values[star_mask]
-		star_r_sorted=np.argsort(star_r)
-		star_r_enc=star_r[star_r_sorted]
-		mass_enc=np.cumsum(star_mass[star_r_sorted])
-		star_r_half=star_r_enc[np.argmin(np.abs(star_mass_enc-mass_enc/2))] #half-mass radius
-	else:
-		star_r_half=np.nan
-
-	# Get gas half-mass radius
-	gas_mask=np.logical_and(gas,pdata_candidates['Relative_r_comoving'].values<0.03)
+		star_r_half=calc_halfmass_radius(pdata_candidates.loc[star_mask,'Masses'].values,pdata_candidates.loc[star_mask,'Relative_r_comoving'].values)
+	
+	gas_mask=np.logical_and(gas,pdata_candidates['Relative_r_comoving'].values<0.01)
 	if np.nansum(gas_mask):
-		gas_mass_enc=np.nansum(pdata_candidates.loc[gas_mask,'Masses'].values)
-		gas_r=pdata_candidates['Relative_r_comoving'].values[gas_mask]
-		gas_mass=pdata_candidates['Masses'].values[gas_mask]
-		gas_r_sorted=np.argsort(gas_r)
-		gas_r_enc=gas_r[gas_r_sorted]
-		mass_enc=np.cumsum(gas_mass[gas_r_sorted])
-		gas_r_half=gas_r_enc[np.argmin(np.abs(gas_mass_enc-mass_enc/2))]
-	else:
-		gas_r_half=np.nan
+		gas_r_half=calc_halfmass_radius(pdata_candidates.loc[gas_mask,'Masses'].values,pdata_candidates.loc[gas_mask,'Relative_r_comoving'].values)
 
 
 	# Add to the galaxy output
-	galaxy_output['030ckpc_sphere-star-r_half']=star_r_half
-	galaxy_output['030ckpc_sphere-gas-r_half']=gas_r_half
+	galaxy_output['010ckpc_sphere-star-r_half']=star_r_half
+	galaxy_output['010ckpc_sphere-gas-r_half']=gas_r_half
 	
 	# Add to the galaxy output
 	galaxy_output['030ckpc_sphere-Lbartot_x']=Lbar[0]

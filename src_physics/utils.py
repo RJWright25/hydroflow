@@ -371,6 +371,19 @@ def calc_temperature(pdata,XH=0.76,gamma=5/3):
 
 	return T
 
+
+def calc_halfmass_radius(masses,radius):
+    totalmass=np.nansum(masses)
+    halfmass=totalmass/2
+    rsort=np.argsort(radius)
+    msort=np.cumsum(masses[rsort])
+    halfmass_idx=np.searchsorted(msort,halfmass)
+    halfmass_radius=radius[rsort][halfmass_idx]
+
+    return halfmass_radius
+
+
+
 ##### CONSTANTS #####
 
 # Gravitational constant in (km/s)^2*Mpc/Msun
