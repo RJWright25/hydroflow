@@ -167,8 +167,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	if np.nansum(star_mask):
 		star_r_half=calc_halfmass_radius(pdata_candidates.loc[star_mask,'Masses'].values,pdata_candidates.loc[star_mask,'Relative_r_comoving'].values)
 
-	print(f'star_r_half (npart = {np.nansum(star_mask)}): ',star_r_half)
-	print(f'R200: ',galaxy['Group_R_Crit200'])
+	# print(f'star_r_half (npart = {np.nansum(star_mask)}): ',star_r_half)
+	# print(f'R200: ',galaxy['Group_R_Crit200'])
 	
 	# Get gas half-mass radius
 	gas_r_half=np.nan
