@@ -121,11 +121,10 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 		galaxy_output[key]=galaxy[key]
 
 	# Compute psuedoevolution velocity
-	omegar=metadata.cosmology.Ogamma(galaxy['Redshift'])
 	omegam=metadata.cosmology.Om(galaxy['Redshift'])
 	Hz=metadata.cosmology.H(galaxy['Redshift']).value
 	afac=1/(1+galaxy['Redshift'])
-	vpseudo=2/3*(constant_G/100)**(1/3)*galaxy['Group_M_Crit200']**(1/3)*(2*omegar+3/2*omegam)*Hz**(1/3)
+	vpseudo=2/3*(constant_G/100)**(1/3)*galaxy['Group_M_Crit200']**(1/3)*(3/2*omegam)*Hz**(1/3)
 	galaxy_output['1p00r200-v_pdoev']=vpseudo #pseudo-evolution velocity cut in km/s
 	
 	# Masks
@@ -167,8 +166,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	if np.nansum(star_mask):
 		star_r_half=calc_halfmass_radius(pdata_candidates.loc[star_mask,'Masses'].values,pdata_candidates.loc[star_mask,'Relative_r_comoving'].values)
 
-	# print(f'star_r_half (npart = {np.nansum(star_mask)}): ',star_r_half)
-	# print(f'R200: ',galaxy['Group_R_Crit200'])
+	print(f'star_r_half (npart = {np.nansum(star_mask)}): ',star_r_half)
+	print(f'R200: ',galaxy['Group_R_Crit200'])
 	
 	# Get gas half-mass radius
 	gas_r_half=np.nan

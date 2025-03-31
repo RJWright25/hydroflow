@@ -265,6 +265,7 @@ def combine_catalogs(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False):
         snap_outputs.sort_values(by='HydroflowID',inplace=True)
         snap_outputs.reset_index(drop=True,inplace=True)
         print(snap_outputs.shape[0], f' hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs')
+        logging.info(snap_outputs.shape[0], f' hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs\n')
         logging.info(f'Columns: {list(snap_outputs.columns)}: t = {time.time()-t1:.2f}\n')
 
         snap_outputs['HydroflowID']=snap_outputs['HydroflowID'].values.astype(np.int64)
@@ -280,8 +281,9 @@ def combine_catalogs(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False):
 
         valid_idx_hydroflow_in_subcat=valid_idx_hydroflow_in_subcat[np.where(valid)]
         valid_idx_hydroflow_in_hydroflow=valid_idx_hydroflow_in_hydroflow[np.where(valid)]
-
-        print('Verifying hydroflow and subcat outputs ...')
+        
+        logging.info(f'Verifying indices of hydroflow and subcat outputs: t = {time.time()-t1:.2f}\n')
+        print('Verifying indices of hydroflow and subcat outputs ...')
         for index,(ihydro,isubcat) in enumerate(zip(valid_idx_hydroflow_in_hydroflow,valid_idx_hydroflow_in_subcat)):
             if not nodeidx[isubcat]==hydroflow[ihydro]:
                 print(nodeidx[isubcat],hydroflow[ihydro])
@@ -290,14 +292,13 @@ def combine_catalogs(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False):
 
         hydroflow_idxs=valid_idx_hydroflow_in_hydroflow[np.where(valid_idx_hydroflow_in_hydroflow>=0)]
         subcat_idxs=valid_idx_hydroflow_in_subcat[np.where(valid_idx_hydroflow_in_subcat>=0)]
-
+        
+        logging.info(f'Adding data to subcat: t = {time.time()-t1:.2f}\n')
         print(f'Adding data to subcat')
-        allcols=list(snap_outputs.columns)
-        colsout=[col for col in allcols]
-        output_columns=[column for column in colsout]
-        subcat_masked.loc[subcat_idxs,output_columns]=snap_outputs.loc[hydroflow_idxs,colsout].values
+        subcat_masked.loc[subcat_idxs,list(snap_outputs.columns)]=snap_outputs.loc[hydroflow_idxs,list(snap_outputs.columns)].values
     
     print(f'Writing to {outpath} ...')
+    logging.info(f'Writing to {outpath} ...')
     create_dir(outpath)
     
     subcat_masked=subcat_masked.sort_values(by=['SnapNum','Mass'],ascending=[False,False],ignore_index=True)
