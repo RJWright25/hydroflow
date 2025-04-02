@@ -110,9 +110,9 @@ def get_limits(ivol,nslice,boxsize,buffer=0.1):
 
 
 
-def compute_relative_phi(pdata,baryons=True,aperture=30*1e-3):
+def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3):
     """
-    compute_relative_phi: Calculate the angular momentum of a system of particles.
+    compute_relative_theta: Calculate the angular momentum of a system of particles and the angle between the angular momentum and the position vector of each particle.
 
     Input:
     -----------
@@ -121,7 +121,7 @@ def compute_relative_phi(pdata,baryons=True,aperture=30*1e-3):
     baryons: bool
         Flag to only consider baryonic particles.
     aperture: float
-        Aperture radius to mask the particles (in physical kpc).
+        Aperture radius to mask the particles (in physical Mpc). 
     
     Output:
     -----------
@@ -130,12 +130,13 @@ def compute_relative_phi(pdata,baryons=True,aperture=30*1e-3):
 
     deg_theta: np.array
         Array containing the angle between the angular momentum of the system and the position vector of each particle.
+        The output is in degrees and ranges from [0,90] degrees -- 0 degrees corresponds to particles aligned with the angular momentum vector/minor axis.
 
     """
 
     # Mask the particles within the aperture and only baryonic particles
     ptypes=pdata['ParticleType'].values
-    radii=pdata['Relative_r_comoving'].values
+    radii=pdata['Relative_r_physical'].values
     masses=pdata['Masses'].values
     positions=pdata.loc[:,[f'Relative_{x}_physical' for x in 'xyz']].values
     velocities=pdata.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values
@@ -151,7 +152,7 @@ def compute_relative_phi(pdata,baryons=True,aperture=30*1e-3):
 	# Find the angle between the angular momentum of the galaxy and the position vector of each particle
     cos_theta=np.sum(Lbartot*positions,axis=1)/(np.linalg.norm(Lbartot)*np.linalg.norm(positions,axis=1))
     deg_theta=np.arccos(cos_theta)*180/np.pi
-    deg_theta[deg_theta>90]=180-deg_theta[deg_theta>90]
+    deg_theta[deg_theta>90]=180-deg_theta[deg_theta>90] # particles with e.g. theta=180 degrees (opposite minor axis) are re-assigned to 0 degrees (mirrored)
 
     return Lbartot, deg_theta
 
