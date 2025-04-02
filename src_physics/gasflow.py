@@ -5,7 +5,6 @@
 import numpy as np
 import pandas as pd
 import astropy.units as apy_units
-from hydroflow.src_physics.utils import constant_MpcpGyrtokmps
 
 
 def calculate_flow_rate(masses,vrad,dr,vboundary=0):
