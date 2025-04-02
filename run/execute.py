@@ -41,7 +41,7 @@ pdata_fields=['Masses',
               'Relative_vx_pec',
               'Relative_vy_pec',
               'Relative_vz_pec',
-              'Relative_phi',
+              'Relative_theta',
               'Temperature',
               'Density',
               'Metallicity']

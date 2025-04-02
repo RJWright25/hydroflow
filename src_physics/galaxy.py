@@ -158,8 +158,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	specfrac['tot']=np.ones_like(gas)
 
 	# Get relative phi
-	Lbar,phirel=compute_relative_phi(pdata=pdata_candidates,baryons=True,aperture=0.03)
-	pdata_candidates['Relative_phi']=phirel
+	Lbar,thetarel=compute_relative_phi(pdata=pdata_candidates,baryons=True,aperture=0.03)
+	pdata_candidates['Relative_theta']=thetarel
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
