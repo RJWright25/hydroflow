@@ -5,7 +5,7 @@
 import numpy as np
 import pandas as pd
 
-from hydroflow.src_physics.utils import constant_G, compute_relative_phi, calc_halfmass_radius
+from hydroflow.src_physics.utils import constant_G, compute_relative_theta, calc_halfmass_radius
 from hydroflow.src_physics.gasflow import calculate_flow_rate
 
 def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,boxsize=None): 
