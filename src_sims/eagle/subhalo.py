@@ -57,6 +57,7 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 Subhalo.GasSpin_y as subhalodashgas_alldashL_totdashsubfexcl_y, \
                 Subhalo.GasSpin_z as subhalodashgas_alldashL_totdashsubfexcl_z, \
                 Subhalo.MassType_Gas as subhalodashgas_alldashm_totdashsubfexcl, \
+                Subhalo.MassType_Star as subhalodashstardashm_totdashsubfexcl, \
                 Subhalo.StarFormationRate as subhalodashgas_alldashSFRdashsubfexcl, \
                 Aperture.Mass_Star as flag030pkpc_spheredashstardashm_totdashsubfexcl, \
                 Aperture.Mass_Gas as flag030pkpc_spheredashgas_alldashm_totdashsubfexcl, \
