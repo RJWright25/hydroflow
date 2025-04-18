@@ -144,13 +144,13 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
                 logging.info(f"Reading HI... [pdata time: {time.time()-t0:.2f} s]")
                 pdata_ptype['mfrac_HI']=pdata_snap_masked.gas.species_fractions.HI.value
                 logging.info(f"Reading HII... [pdata time: {time.time()-t0:.2f} s]")
-                pdata_ptype['mfrac_HII']=pdata_snap_masked.gas.species_fractions.HII.value
-                logging.info(f"Reading H2... [pdata time: {time.time()-t0:.2f} s]")
+                # pdata_ptype['mfrac_HII']=pdata_snap_masked.gas.species_fractions.HII.value
+                # logging.info(f"Reading H2... [pdata time: {time.time()-t0:.2f} s]")
                 pdata_ptype['mfrac_H2']=pdata_snap_masked.gas.species_fractions.H2.value*2 # multiply by 2 to mass fraction (instead of number density fraction)
                 logging.info(f"Reading Z... [pdata time: {time.time()-t0:.2f} s]")
                 pdata_ptype['Metallicity']=pdata_masked_object.metal_mass_fractions.value
                 logging.info(f"Converting H species fractions to mass fractions... [pdata time: {time.time()-t0:.2f} s]")
-                for spec in ['HI','HII','H2']:
+                for spec in ['HI','H2']:
                     pdata_ptype[f'mfrac_{spec}']=pdata_ptype[f'mfrac_{spec}']*hydrogen_frac
 
         # Read additional star properties
@@ -168,15 +168,15 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
     pdata.reset_index(drop=True,inplace=True)
 
     # Add post-processed partitions into HI, H2, HII from Rahmati (2013) and Blitz & Rosolowsky (2006)
-    logging.info(f"Adding hydrogen partitioning...")
-    gas=pdata['ParticleType'].values==0
-    fHI,fH2,fHII=partition_neutral_gas(pdata,redshift=zval,sfonly=True)
-    logging.info(f"Minima: fHI: {np.nanmin(fHI)}, fHII: {np.nanmin(fHII)}, fH2: {np.nanmin(fH2)}]")
-    logging.info(f"Maxima: fHI: {np.nanmax(fHI)}, fHII: {np.nanmax(fHII)}, fH2: {np.nanmax(fH2)}]")
+    # logging.info(f"Adding hydrogen partitioning...")
+    # gas=pdata['ParticleType'].values==0
+    # fHI,fH2,fHII=partition_neutral_gas(pdata,redshift=zval,sfonly=True)
+    # logging.info(f"Minima: fHI: {np.nanmin(fHI)}, fHII: {np.nanmin(fHII)}, fH2: {np.nanmin(fH2)}]")
+    # logging.info(f"Maxima: fHI: {np.nanmax(fHI)}, fHII: {np.nanmax(fHII)}, fH2: {np.nanmax(fH2)}]")
 
-    pdata.loc[:,['mfrac_HI_BR06','mfrac_H2_BR06']]=np.nan
-    pdata.loc[gas,'mfrac_HI_BR06']=fHI
-    pdata.loc[gas,'mfrac_H2_BR06']=fH2
+    # pdata.loc[:,['mfrac_HI_BR06','mfrac_H2_BR06']]=np.nan
+    # pdata.loc[gas,'mfrac_HI_BR06']=fHI
+    # pdata.loc[gas,'mfrac_H2_BR06']=fH2
 
     # Generate KDtree
     logging.info(f"Generating KDTree... [pdata time: {time.time()-t0:.2f} s]")

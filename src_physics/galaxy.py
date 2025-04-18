@@ -167,9 +167,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	if np.nansum(star_mask):
 		star_r_half=calc_halfmass_radius(pdata_candidates.loc[star_mask,'Masses'].values,pdata_candidates.loc[star_mask,'Relative_r_comoving'].values)
 
-	print(f'star_r_half (npart = {np.nansum(star_mask)}): ',star_r_half)
-	print(f'R200: ',galaxy['Group_R_Crit200'])
-	
 	# Get gas half-mass radius
 	gas_r_half=np.nan
 	gas_mask=np.logical_and(gas,pdata_candidates['Relative_r_comoving'].values<0.01)
@@ -188,16 +185,14 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 	
 	# Combine all the shell radii for analysis
 	radial_shells_R200=[fR200*galaxy['Group_R_Crit200'] for fR200 in r200_shells] #numerical values are comoving
-	radial_shells_ckpc=[fckpc/1e3 for fckpc in ckpc_shells] #numerical values are comoving
 	radial_shells_pkpc=[fpkpc/1e3/afac for fpkpc in ckpc_shells] #numerical values are comoving
 	radial_shells_rstar=[fstar*star_r_half for fstar in rstar_shells] #numerical values are comoving
 	radial_shells_R200_str=[f'{fR200:.2f}'.replace('.','p')+'r200' for fR200 in r200_shells]
-	radial_shells_ckpc_str=[str(int(fckpc)).zfill(3)+'ckpc' for fckpc in ckpc_shells]
 	radial_shells_pkpc_str=[str(int(fpkpc)).zfill(3)+'pkpc' for fpkpc in ckpc_shells]
 	radial_shells_rstar_str=[f'{fstar:.2f}'.replace('.','p')+'reff' for fstar in rstar_shells]
 
-	radial_shells=radial_shells_R200+radial_shells_ckpc+radial_shells_pkpc+radial_shells_rstar
-	radial_shells_str=radial_shells_R200_str+radial_shells_ckpc_str+radial_shells_pkpc_str+radial_shells_rstar_str
+	radial_shells=radial_shells_R200+radial_shells_pkpc+radial_shells_rstar
+	radial_shells_str=radial_shells_R200_str+radial_shells_pkpc_str+radial_shells_rstar_str
 
 	# Loop over all the shells
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
