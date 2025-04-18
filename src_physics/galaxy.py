@@ -292,7 +292,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 				galaxy_output[f'{rshell_str}_shell-star-mdot_tot_inflow_{vkey}_pec']=stars_flow_rates[0]
 				galaxy_output[f'{rshell_str}_shell-star-mdot_tot_outflow_{vkey}_pec']=stars_flow_rates[1]
 			
-
 			### GAS shell properties
 			# Break down the gas mass by phase
 			for Tstr,Tmask in Tmasks.items():
