@@ -276,7 +276,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			galaxy_output[f'{rshell_str}_shell-dm-m_tot']=np.nansum(mass[dm_shell_mask])
 			galaxy_output[f'{rshell_str}_shell-dm-n_tot']=np.nansum(dm_shell_mask)
 			
-			for vboundary, vkey in zip([0, vpseudo_ishell], ['000kmps', 'pdoev']):
+			for vboundary, vkey in zip([vpseudo_ishell], ['pdoev']):
 				dm_flow_rates=calculate_flow_rate(masses=mass[dm_shell_mask],vrad=vrad[dm_shell_mask],dr=dr,vboundary=vboundary)
 				galaxy_output[f'{rshell_str}_shell-dm-mdot_tot_inflow_{vkey}_pec']=dm_flow_rates[0]
 				galaxy_output[f'{rshell_str}_shell-dm-mdot_tot_outflow_{vkey}_pec']=dm_flow_rates[1]
@@ -287,7 +287,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 			galaxy_output[f'{rshell_str}_shell-star-n_tot']=np.nansum(stars_shell_mask)
 			galaxy_output[f'{rshell_str}_shell-star-Z']=np.nansum(specfrac['Z'][stars_shell_mask]*mass[stars_shell_mask])/np.nansum(mass[stars_shell_mask])
 
-			for vboundary, vkey in zip([0, vpseudo_ishell], ['000kmps', 'pdoev']):
+			for vboundary, vkey in zip([vpseudo_ishell], [ 'pdoev']):
 				stars_flow_rates=calculate_flow_rate(masses=mass[stars_shell_mask],vrad=vrad[stars_shell_mask],dr=dr,vboundary=vboundary)
 				galaxy_output[f'{rshell_str}_shell-star-mdot_tot_inflow_{vkey}_pec']=stars_flow_rates[0]
 				galaxy_output[f'{rshell_str}_shell-star-mdot_tot_outflow_{vkey}_pec']=stars_flow_rates[1]
