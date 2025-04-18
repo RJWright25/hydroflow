@@ -156,8 +156,6 @@ def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3):
 
     return Lbartot, deg_theta
 
-
-    
 def rahmati2013_neutral_fraction(nH,T,redshift=0):
     """
      

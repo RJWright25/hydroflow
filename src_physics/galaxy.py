@@ -311,7 +311,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,ckpc_shells
 					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-Z']=np.nansum(specfrac['Z'][Tmask_shell]*mass[Tmask_shell])/np.nansum(mass[Tmask_shell])
 
 				# Calculate the total flow rates for the gas
-				for vboundary, vkey in zip([0, vpseudo_ishell], ['000kmps', 'pdoev']):
+				for vboundary, vkey in zip([vpseudo_ishell], ['pdoev']):
 					gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary)
 					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_pec']=gas_flow_rates[0]
 					galaxy_output[f'{rshell_str}_shell-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_pec']=gas_flow_rates[1]
