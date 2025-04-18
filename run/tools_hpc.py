@@ -24,7 +24,11 @@ def create_dir(path):
     for idir in path.split('/')[:-1]:
         running_dir=running_dir+'/'+idir
         if not os.path.exists(running_dir):
-            os.mkdir(running_dir)
+            try:
+                os.mkdir(running_dir)
+            except:
+                print(f"Directory {running_dir} already exists.")
+                pass
 
 def submit_gasflow_jobarray(repo,arguments,memory,time,partition=None,account=None,array=None,dependency=None):
 
