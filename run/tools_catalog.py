@@ -265,7 +265,7 @@ def combine_catalogs(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False):
         snap_outputs.sort_values(by='HydroflowID',inplace=True)
         snap_outputs.reset_index(drop=True,inplace=True)
         print(snap_outputs.shape[0], f' hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs')
-        logging.info(snap_outputs.shape[0], f' hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs\n')
+        logging.info(f'{snap_outputs.shape[0]} hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs\n')
         logging.info(f'Columns: {list(snap_outputs.columns)}: t = {time.time()-t1:.2f}\n')
 
         snap_outputs['HydroflowID']=snap_outputs['HydroflowID'].values.astype(np.int64)
