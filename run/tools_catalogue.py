@@ -197,7 +197,7 @@ def combine_catalogues(path_subcat, path_gasflow, snaps=None, mcut=10, verbose=F
     snap_outputs = []
 
     for snapdir in snapdirs:
-        if 'snap' not in snapdir:
+        if not os.path.isdir(path_gasflow + snapdir):
             continue
         
         print("Reading gasflow files for snapdir:", path_gasflow+'/'+snapdir)
