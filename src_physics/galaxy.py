@@ -144,7 +144,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 
 	# Shell width for calculations
 	drfacs=[drfac] #fractional width of the shell	
-	drfacs_str=['dr'+f'{drfac:.2f}'.replace('.','p') for drfac in drfacs]
+	drfacs_str=['dr'+f'{idrfac:.2f}'.replace('.','p') for idrfac in drfacs]
 
 	# Masks
 	gas=pdata_candidates['ParticleType'].values==0.
