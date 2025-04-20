@@ -159,8 +159,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 
 	# Find 30ckpc COM and vCOM with baryons
 	mask=(rrel<0.03,np.logical_or(gas,star))
-	com_sphere=np.nansum(mass[mask]*coordinates[mask],axis=0)/np.nansum(mass[mask])
-	vcom_sphere=np.nansum(mass[mask]*velocities[mask],axis=0)/np.nansum(mass[mask])
+	com_sphere=np.nansum(mass[mask]*coordinates[mask,np.newaxis],axis=0)/np.nansum(mass[mask])
+	vcom_sphere=np.nansum(mass[mask]*velocities[mask,np.newaxis],axis=0)/np.nansum(mass[mask])
 	galaxy_output['030ckpc_sphere-com_x']=com_sphere[0]
 	galaxy_output['030ckpc_sphere-com_y']=com_sphere[1]
 	galaxy_output['030ckpc_sphere-com_z']=com_sphere[2]

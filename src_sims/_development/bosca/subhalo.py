@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import h5py
 
-from hydroflow.run.tools_catalog import dump_hdf
+from hydroflow.run.tools_catalogue import dump_hdf
 from hydroflow.run.initialise import load_metadata
 
 def extract_subhaloes(path,mcut=1e11,metadata=None):

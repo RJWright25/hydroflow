@@ -91,11 +91,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         logging.info(f"Reading masses for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         masses=pdata_masked_object.masses
         masses.convert_to_units('Msun')
-        pdata_ptype['Masses']=masses.value[::subset]
-        if ptype=='dm':
-            pdata_ptype['Masses']=pdata_ptype['Masses']*subset # correct for subset
-        elif ptype=='stars':
-            pdata_ptype['Masses']=pdata_ptype['Masses']*subset # correct for subset
+        pdata_ptype['Masses']=masses.value[::subset]*subset
 
         logging.info(f"Reading coordinates for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         coordinates=pdata_masked_object.coordinates
