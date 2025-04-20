@@ -166,14 +166,11 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	
 	# Velocity cuts (if any)
 	vmins=[];vminstrs=list(vcuts.keys())
-	if 'Subhalo_V_max' in galaxy.keys():
-		vmax=galaxy['Subhalo_V_max']
-	else:# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
-		vmax=0.25*(1.33*galaxy['Group_V_Crit200'])
-
+	if 'Subhalo_V_max' in galaxy.keys(): vmax=galaxy['Subhalo_V_max']
+	elif 'Group_V_Crit200' in galaxy.keys(): vmax=1.33*galaxy['Group_V_Crit200']# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
 	for vcut in vcuts.keys():
 		vcut_kmps=vcuts[vcut]
-		if 'Vmax' in vcut_kmps:
+		if type(vcut_kmps)==str and 'Vmax' in vcut_kmps:
 			vcut_kmps=vmax*np.float32(vcut_kmps.split('Vmax')[0])
 		print(f"Velocity cut: {vcut} = {vcut_kmps} km/s")
 		vmins.append(vcut_kmps)
