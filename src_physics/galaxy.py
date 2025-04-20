@@ -57,7 +57,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 		radii_relative=np.linalg.norm(positions_relative,axis=1)
 
 		# Calculate 0p10r200 centre of mass
-		mask=(radii_relative<0.03,np.logical_or(pdata_candidates['ParticleType'].values==0.,pdata_candidates['ParticleType'].values==4.))
+		mask=np.logical_and(radii_relative<0.03,np.logical_or(pdata_candidates['ParticleType'].values==0.,pdata_candidates['ParticleType'].values==4.))
 		if np.nansum(mask):
 			# Calculate the com, and vcom
 			com_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values*pdata_candidates.loc[mask,[f'Coordinates_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
