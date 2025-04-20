@@ -154,6 +154,9 @@ def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3):
     deg_theta=np.arccos(cos_theta)*180/np.pi
     deg_theta[deg_theta>90]=180-deg_theta[deg_theta>90] # particles with e.g. theta=180 degrees (opposite minor axis) are re-assigned to 0 degrees (mirrored)
 
+    # Now make 90 degrees the minor axis
+    deg_theta=90-deg_theta
+
     return Lbartot, deg_theta
 
 def rahmati2013_neutral_fraction(nH,T,redshift=0):

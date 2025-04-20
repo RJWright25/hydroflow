@@ -7,7 +7,7 @@ import pandas as pd
 import astropy.units as apy_units
 
 
-def calculate_flow_rate(masses,vrad,dr,vboundary=0):
+def calculate_flow_rate(masses,vrad,dr,vboundary=0,vmin=[]):
     """
     calculate_flow_rate: Calculate the mass flow rate across a boundary for a set of particles in a shell.
 
@@ -18,7 +18,9 @@ def calculate_flow_rate(masses,vrad,dr,vboundary=0):
     vrad: np.array
         Array of radial velocities (in km/s).
     vboundary: float
-        Radial velocity of the boundary (in km/s).
+        Radial velocity of the boundary (in km/s). Relevant for e.g. pseudo-evolution.
+    vmin: list
+        List of minimum radial velocities (in km/s) for outflow calculations.
     dr: float
         Shell width (in pMpc).
 
@@ -31,7 +33,10 @@ def calculate_flow_rate(masses,vrad,dr,vboundary=0):
     # Calculate the flow rate across the boundary
     vrad-=vboundary
     inflow_mask=vrad<0
-    outflow_mask=vrad>0
+    outflow_masks=[vrad>0]
+    if len(vmin)>0:
+        for i in range(len(vmin)):
+            outflow_masks.append(np.logical_and(outflow_masks[0],vrad>vmin[i]))
 
     # Convert vrad to Mpc/Gyr
     vrad=vrad*apy_units.km/apy_units.s
@@ -40,9 +45,18 @@ def calculate_flow_rate(masses,vrad,dr,vboundary=0):
 
     # Calculate the flow rate
     inflow=np.sum(masses[inflow_mask]*vrad[inflow_mask])/dr
-    outflow=np.sum(masses[outflow_mask]*vrad[outflow_mask])/dr
+    outflow=[np.sum(masses[outflow_masks[0]]*vrad[outflow_masks[0]])/dr]
 
-    return np.array([inflow,outflow])
+    for i in range(1,len(outflow_masks)):
+        outflow.append(np.sum(masses[outflow_masks[i]]*vrad[outflow_masks[i]])/dr)
+    
+    # Make list with inflow, all outflow rates
+    outflow=np.array(outflow)
+    flowrates=np.zeros((len(outflow)+1))
+    flowrates[0]=inflow
+    flowrates[1:]=outflow
+
+    return flowrates
 
 
 
