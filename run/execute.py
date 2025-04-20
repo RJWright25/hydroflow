@@ -90,15 +90,23 @@ elif code == 'swift-bosca':
 else:
     raise ValueError('Invalid simulation code')
 
-# Load metadata
+#metadata
+directory=path.split('cat')[0]
+metadata_path=None
 if 'metadata' in subcat.attrs:
-    metadata_path = subcat.attrs['metadata']
+    metadata_path=subcat.attrs['metadata']
 else:
-    simflist = os.listdir(directory)
-    metadata_path = next((f for f in simflist if '.pkl' in f), None)
-if metadata_path is None:
-    raise ValueError('Metadata file not found')
-metadata = load_metadata(metadata_path)
+    simflist=os.listdir(directory)
+    for metadata_path in simflist:
+        if '.pkl' in metadata_path:
+            metadata_path=metadata_path
+            break
+if not metadata_path is None:
+    metadata=load_metadata(metadata_path)
+    logging.info(f'Metadata file found: {metadata_path} [runtime {time.time()-t1:.3f} sec]')
+else:
+    raise ValueError('Metadata file not found. Exiting.')
+
 
 snap_mask = metadata.snapshots_idx == snap
 snap_pdata_fname = metadata.snapshots_flist[snap_mask][0]
@@ -110,6 +118,7 @@ afac = metadata.snapshots_afac[snap_mask][0]
 output_folder = f'{path}/catalogues/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}_dr{dr_str}/snap{str(snap).zfill(3)}/'
 outcat_fname = output_folder + f'ivol_{str(ivol).zfill(3)}.hdf5'
 create_dir(outcat_fname)
+logging.info(f'Output file: {outcat_fname} [runtime {time.time()-t1:.3f} sec]')
 
 if dump:
     dumpcat_folder = f'{output_folder}/pdata/'
@@ -119,6 +128,7 @@ if dump:
 # Apply subhalo mask
 subcat_limits = get_limits(ivol, nslice, boxsize, buffer=0)
 snap_key, galid_key, mass_key = 'SnapNum', 'GalaxyID', 'Mass'
+logging.info(f'Box limits: x - ({subcat_limits[0]:.1f},{subcat_limits[1]:.1f}); y - ({subcat_limits[2]:.1f},{subcat_limits[3]:.1f}); z - ({subcat_limits[4]:.1f},{subcat_limits[5]:.1f}) [runtime {time.time()-t1:.3f} sec]')
 
 snap_mask = subcat[snap_key].values == snap
 mass_mask = subcat[mass_key].values >= mcut
@@ -128,48 +138,78 @@ zmask = (subcat['CentreOfPotential_z'].values >= subcat_limits[4]) & (subcat['Ce
 
 mask = snap_mask & mass_mask & xmask & ymask & zmask
 subcat_selection = subcat.loc[mask].copy().sort_values(by='SubGroupNumber').reset_index(drop=True)
-
 numgal = subcat_selection.shape[0]
+
+logging.info(f'Mass limit: {np.log10(mcut):.1f} [runtime {time.time()-t1:.3f} sec]')
+logging.info(f'Frac above limit: {np.nanmean(subcat_selection[mass_key].values>=mcut)*100:.1f}% [runtime {time.time()-t1:.3f} sec]')
+
 galaxy_outputs = []
 
 if numgal:
-    pdata_subvol, kdtree_subvol = read_subvol(snap_pdata_fname, ivol, nslice, metadata, logfile=logging_folder + logging_name + '.log')
+    logging.info(f'Will generate outputs for {numgal} galaxies in this subvolume [runtime {time.time()-t1:.3f} sec]')
+
+    # Load in particle data
+    logging.info(f'Loading snap particle data: {snap_pdata_fname} [runtime {time.time()-t1:.3f} sec]')
+    pdata_subvol,kdtree_subvol=read_subvol(snap_pdata_fname,ivol,nslice,metadata,logfile=logging_folder+logging_name+'.log')
+
+    # Sanity checks for particle data
+    logging.info(f'Coordinate minima: x - {pdata_subvol["Coordinates_x"].min():.2f}, y - {pdata_subvol["Coordinates_y"].min():.2f}, z - {pdata_subvol["Coordinates_z"].min():.2f} [runtime {time.time()-t1:.3f} sec]')
+    logging.info(f'Coordinate maxima: x - {pdata_subvol["Coordinates_x"].max():.2f}, y - {pdata_subvol["Coordinates_y"].max():.2f}, z - {pdata_subvol["Coordinates_z"].max():.2f} [runtime {time.time()-t1:.3f} sec]')
+    logging.info(f'Temperature min: {np.nanmin(pdata_subvol["Temperature"]):.2e} K')
+    logging.info(f'Temperature max: {np.nanmax(pdata_subvol["Temperature"]):.2e} K')
+    logging.info(f'Temperature mean: {pdata_subvol["Temperature"].mean():.2e}')
 
     if dump:
         for field in pdata_subvol.columns:
             if 'mfrac' in field:
                 pdata_fields.append(field)
 
+    logging.info(f'')
+    logging.info(f'****** Entering main galaxy loop [runtime {time.time()-t1:.3f} sec] ******')
+    logging.info(f'')
+
     for igal, galaxy in subcat_selection.iterrows():
+        logging.info(f'')
+        logging.info(f"Galaxy {igal+1}/{subcat_selection.shape[0]:.0f}: subhalo mass - {galaxy[mass_key]:.1e}, sgn - {galaxy['SubGroupNumber']} [runtime {time.time()-t1:.3f} sec]")
+
         galaxy_output = {}
         central = galaxy['SubGroupNumber'] == 0
         maxrad = 3.5 * galaxy['Group_R_Crit200'] if central else 150e-3 # 3.5*r200 for centrals, 150kpc for satellites
+        galaxy_output['ivol'] = ivol
+        galaxy_output['HydroflowID'] = int(galaxy[galid_key])
+        galaxy_output['Group_V_Crit200'] = np.sqrt(constant_G * galaxy['Group_M_Crit200'] / (galaxy['Group_R_Crit200'] * afac))
+        
+        # Get the particle data for this halo
+        t1_c=time.time()
+        pdata_candidates=retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=maxrad,boxsize=boxsize)
+        t2_c=time.time()
 
-        pdata_candidates = retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad, boxsize)
+        if pdata_candidates.shape[0]>0:
+            logging.info(f"Candidates: {t2_c-t1_c:.3f} sec (n = {pdata_candidates.shape[0]}, m = {np.nansum(pdata_candidates['Masses'].values):1e})")
 
-        if pdata_candidates.shape[0] > 0:
-            galaxy_output = analyse_galaxy(galaxy, pdata_candidates, metadata, r200_shells, kpc_shells, rstar_shells, Tbins, drfac, logfile=logging_folder + logging_name + '.log')
-            if not galaxy_output:
-                galaxy_output['ivol'] = ivol
-                galaxy_output['HydroflowID'] = int(galaxy[galid_key])
-                galaxy_output['Group_V_Crit200'] = np.sqrt(constant_G * galaxy['Group_M_Crit200'] / (galaxy['Group_R_Crit200'] * afac))
-                galaxy_outputs.append(galaxy_output)
-
-                if dump:
-                    # Dump particle data to a hdf5 group with a subset of metadata
-                    group = str(int(galaxy[galid_key]))
-                    data = pdata_candidates.loc[pdata_candidates['ParticleType'].values == 0, pdata_fields]
-                    columns = list(subcat_selection.keys())
-                    for column in list(galaxy_output.keys()):
-                        if '0p10r200' in column or '1p00r200' in column or '030pkpc' in column:
-                            columns.append(column)
-                    metadata_dump = {key: galaxy_output[key] for key in columns if key in list(galaxy_output.keys())}
-                    dump_hdf_group(dumpcat_fname, group, data, metadata=metadata_dump, verbose=False)
+            #### MAIN GALAXY ANALYSIS ####
+            t1_f=time.time()
+            galaxy_output=analyse_galaxy(galaxy,
+                                                pdata_candidates,
+                                                metadata=metadata,
+                                                r200_shells=r200_shells,
+                                                ckpc_shells=kpc_shells,
+                                                rstar_shells=rstar_shells,
+                                                Tbins=Tbins,
+                                                drfac=drfac,
+                                                logfile=logging_folder+logging_name+'.log')
+            
+            t2_f=time.time()
+            logging.info(f"Galaxy routine took: {t2_f-t1_f:.3f} sec")
+            logging.info(f'Galaxy successfully processed [runtime {time.time()-t1:.3f} sec]')
 
         else:
             logging.info(f'No particles found for galaxy {int(galaxy[galid_key])} in subvolume {ivol}.')
             galaxy_output={}
-            
+
+        # Append to the list of galaxy outputs
+        galaxy_outputs.append(galaxy_output)
+        
 
 # Final output dataframe
 if galaxy_outputs:
