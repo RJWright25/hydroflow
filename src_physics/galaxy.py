@@ -167,12 +167,10 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	
 
 	# Velocity cuts (if any)
-	galaxy_output['Group_V_Crit200']=constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200'])
-	print('Computed v200 = ',galaxy_output['Group_V_Crit200'])
-	print('Computed Vmax = ',galaxy['Subhalo_V_max'])
+	galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']))
 	vmins=[];vminstrs=list(vcuts.keys())
 	if 'Subhalo_V_max' in galaxy.keys(): vmax=galaxy['Subhalo_V_max']
-	elif 'Group_V_Crit200' in galaxy.keys(): vmax=1.33*galaxy['Group_V_Crit200']# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
+	elif 'Group_V_Crit200' in galaxy.keys(): vmax=1.3*galaxy['Group_V_Crit200']# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
 	for vcut in vcuts.keys():
 		vcut_kmps=vcuts[vcut]
 		if type(vcut_kmps)==str and 'Vmax' in vcut_kmps:
