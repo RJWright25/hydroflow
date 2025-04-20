@@ -170,7 +170,9 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 
 	# Calculate the relative position of particles in this sphere using the centre of mass
 	positions=coordinates-com_sphere
-	radii=np.linalg.norm(positions,axis=1)
+	rrel=np.linalg.norm(positions,axis=1)
+	# Re-assign the relative position to the new baryon centre of mass 
+	pdata_candidates['Relative_r_comoving']= rrel
 
 	# Calculate the relative velocity of particles in this sphere using the centre of mass
 	rhat = positions / np.stack(3 * [radii], axis=1)
@@ -187,12 +189,12 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 			Tmasks[Tstr]=np.logical_and.reduce([gas,temp>Tbin[0],temp<Tbin[1]])
 
 	# Species fractions (if available)
-	specfrac={}
+	specmass={}
 	mfrac_columns=[col for col in pdata_candidates.columns if 'mfrac' in col]
 	for mfrac_col in mfrac_columns:
-		specfrac[mfrac_col.split('mfrac_')[1]]=pdata_candidates[mfrac_col].values
-	specfrac['Z']=pdata_candidates['Metallicity'].values
-	specfrac['tot']=np.ones_like(gas)
+		specmass[mfrac_col.split('mfrac_')[1]]=pdata_candidates[mfrac_col].values*mass
+	specmass['Z']=pdata_candidates['Metallicity'].values*mass
+	specmass['tot']=np.ones_like(specmass['Z'])*mass
 
 	# Get relative phi
 	Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,baryons=True,aperture=0.03)
@@ -278,7 +280,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 			### STARS
 			galaxy_output[f'{rshell_str}_sphere-star-m_tot']=np.nansum(mass[np.logical_and(mask_sphere,star)])
 			galaxy_output[f'{rshell_str}_sphere-star-n_tot']=np.nansum(np.logical_and(mask_sphere,star))
-			galaxy_output[f'{rshell_str}_sphere-star-Z']=np.nansum(specfrac['Z'][np.logical_and(mask_sphere,star)]*mass[np.logical_and(mask_sphere,star)])/np.nansum(mass[np.logical_and(mask_sphere,star)])
+			galaxy_output[f'{rshell_str}_sphere-star-Z']=np.nansum(specmass['Z'][np.logical_and(mask_sphere,star)])/np.nansum(mass[np.logical_and(mask_sphere,star)])
 
 			### GAS
 			# Break down the gas mass by phase
@@ -287,13 +289,13 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 				galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-n_tot']=np.nansum(Tmask_sphere)
 
 				# Breakdown of mass in this phase by species
-				for spec in specfrac.keys():
-					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-m_{spec}']=np.nansum(mass[Tmask_sphere]*specfrac[spec][Tmask_sphere])
+				for spec in specmass.keys():
+					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-m_{spec}']=np.nansum(specmass[spec][Tmask_sphere])
 
 				# If considering a galaxy-scale shell, calculate the SFR and metallicity
 				if ('kpc' in rshell_str or '0p10' in rshell_str or 'reff' in rshell_str):
 					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_sphere])
-					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-Z']=np.nansum(specfrac['Z'][Tmask_sphere]*mass[Tmask_sphere])/np.nansum(mass[Tmask_sphere])
+					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_sphere])/np.nansum(mass[Tmask_sphere])
 							
 			#### SHELL CALCULATIONS (r between r-dr/2 and r+dr/2) ####
 
@@ -331,7 +333,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 				stars_shell_mask=np.logical_and(mask_shell,star)
 				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-m_tot']=np.nansum(mass[stars_shell_mask])
 				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-n_tot']=np.nansum(stars_shell_mask)
-				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-Z']=np.nansum(specfrac['Z'][stars_shell_mask]*mass[stars_shell_mask])/np.nansum(mass[stars_shell_mask])
+				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-Z']=np.nansum(specmass['Z'][stars_shell_mask])/np.nansum(mass[stars_shell_mask])
 
 				for vboundary, vkey in zip(vsboundary, vsboundary_str):
 					stars_flow_rates=calculate_flow_rate(masses=mass[stars_shell_mask],vrad=vrad[stars_shell_mask],dr=dr,vboundary=vboundary,vmin=vmins)
@@ -352,15 +354,15 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 						galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-n_tot']=np.nansum(Tmask_shell)
 
 						# Breakdown of mass in this phase by species
-						for spec in specfrac.keys():
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-m_{spec}']=np.nansum(mass[Tmask_shell]*specfrac[spec][Tmask_shell])
+						for spec in specmass.keys():
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-m_{spec}']=np.nansum(specmass[spec][Tmask_shell])
 							# save mean radial velocity for each species
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-vrad_{spec}_mean']=np.nansum(vrad[Tmask_shell]*mass[Tmask_shell]*specfrac[spec][Tmask_shell])/np.nansum(mass[Tmask_shell]*specfrac[spec][Tmask_shell])
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-vrad_{spec}_mean']=np.nansum(vrad[Tmask_shell]*specmass[spec][Tmask_shell])/np.nansum(specmass[spec][Tmask_shell])
 						
 						# If considering a galaxy-scale shell, calculate the SFR and metallicity
 						if ('kpc' in rshell_str or '0p10' in rshell_str or 'reff' in rshell_str):
 							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_shell])
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-Z']=np.nansum(specfrac['Z'][Tmask_shell]*mass[Tmask_shell])/np.nansum(mass[Tmask_shell])
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_shell])/np.nansum(mass[Tmask_shell])
 
 						# Calculate the total flow rates for the gas
 						for vboundary, vkey in zip(vsboundary, vsboundary_str):
