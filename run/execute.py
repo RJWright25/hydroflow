@@ -147,7 +147,7 @@ if numgal:
     for igal, galaxy in subcat_selection.iterrows():
         galaxy_output = {}
         central = galaxy['SubGroupNumber'] == 0
-        maxrad = 3.5 * galaxy['Group_R_Crit200'] if central else 150e-3
+        maxrad = 3.5 * galaxy['Group_R_Crit200'] if central else 150e-3 # 3.5*r200 for centrals, 150kpc for satellites
 
         pdata_candidates = retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad, boxsize)
 
