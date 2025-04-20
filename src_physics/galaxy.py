@@ -280,7 +280,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 
 			# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
 			for drfac,drfac_str in zip(drfacs,drfacs_str):
-				rshell_str=rshell_str.replace('r200',drfac_str)
+				rshell_str=rshell_str
 				radii=np.abs(rrel-rshell)
 				r_hi=rshell+(drfac*rshell)/2
 				r_lo=rshell-(drfac*rshell)/2
