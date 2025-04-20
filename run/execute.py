@@ -208,8 +208,16 @@ if numgal:
             galaxy_output={}
 
         # Append to the list of galaxy outputs
+        logging.info(f'Appending galaxy to output [runtime {time.time()-t1:.3f} sec]')
         galaxy_outputs.append(galaxy_output)
-        
+    
+    logging.info(f'')
+    logging.info(f'Finished with loop - concatenating output results [runtime {time.time()-t1:.3f} sec]')
+    logging.info(f'')
+
+else:
+    logging.info(f'No galaxies found in this subvolume. Exiting.')
+    galaxy_outputs = []
 
 # Final output dataframe
 if galaxy_outputs:
@@ -218,7 +226,10 @@ if galaxy_outputs:
         if key not in galaxy_outputs.columns:
             galaxy_outputs[key] = subcat_selection[key].values
 else:
-    galaxy_outputs = pd.DataFrame([])
+    logging.info(f'No galaxies in this subvolume, empty output [runtime {time.time()-t1:.3f} sec]')
+    logging.info(f'')
+    galaxy_outputs=pd.DataFrame([])
+
 
 # Save
 dump_hdf(outcat_fname, galaxy_outputs)
