@@ -265,9 +265,9 @@ def combine_catalogues(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False
 
 
     if snap_max-snap_min==0:
-        outpath=path_gasflow+f'/gasflow_snap{int(snap_max)}_{calc_str}.hdf5'
+        outpath=path_gasflow+f'/gasflow_snap{str(int(snap_max).zfill(3))}_{calc_str}.hdf5'
     else:
-        outpath=path_gasflow+f'/gasflow_snap{int(snap_min)}to{int(snap_max)}_{calc_str}.hdf5'
+        outpath=path_gasflow+f'/gasflow_snap{str(int(snap_min).zfill(3))}to{str(int(snap_max).zfill(3))}_{calc_str}.hdf5'
 
 
     logging.info(f'Reading hydroflow outputs ... (t={time.time()-t1}) \n')
@@ -285,16 +285,13 @@ def combine_catalogues(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False
         snap=snapdir.split('snap')[-1]
         snap=int(snap[:3])
         snapdir_path=path_gasflow+snapdir
-
-
-        if snap in snaps:
+        
+        if snap in snaps and os.path.isdir(snapdir_path):
             isnap_files=sorted(os.listdir(snapdir_path))
             isnap_files=[snapdir_path+'/'+isnap_file for isnap_file in isnap_files if 'ivol' in isnap_file]
 
-
         else:
             continue
-
 
         if len(isnap_files)>0:
             logging.info(f'Loading gasflow files for snap {snap} ({len(isnap_files)}): t = {time.time()-t1:.2f}\n')
