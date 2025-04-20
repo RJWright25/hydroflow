@@ -69,7 +69,6 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 		# Renormalise the coordinates and velocities to the new centre of mass
 		pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']]=(pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com_0p10r200)
 		pdata_candidates['Relative_r_comoving']=np.linalg.norm(pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values,axis=1)
-		pdata_candidates['Relative_r_physical']=pdata_candidates['Relative_r_comoving']*afac
 
 		# Calculate the relative velocity
 		pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']]=pdata_candidates.loc[:,[f'Velocities_{x}' for x in 'xyz']].values-vcom_0p10r200
@@ -79,7 +78,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 		pdata_candidates['Relative_vrad_pec'] = np.sum(pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values * rhat, axis=1)
 
 		# Compute relative theta
-		Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,baryons=True,aperture=0.03)
+		Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,afac=1,baryons=True,aperture=0.03)
 		pdata_candidates['Relative_theta']=thetarel
 
 		return pdata_candidates

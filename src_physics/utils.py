@@ -110,7 +110,7 @@ def get_limits(ivol,nslice,boxsize,buffer=0.1):
 
 
 
-def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3):
+def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3,afac=1):
     """
     compute_relative_theta: Calculate the angular momentum of a system of particles and the angle between the angular momentum and the position vector of each particle.
 
@@ -121,7 +121,7 @@ def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3):
     baryons: bool
         Flag to only consider baryonic particles.
     aperture: float
-        Aperture radius to mask the particles (in physical Mpc). 
+        Aperture radius to mask the particles (in comoving Mpc). 
     
     Output:
     -----------
@@ -136,9 +136,9 @@ def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3):
 
     # Mask the particles within the aperture and only baryonic particles
     ptypes=pdata['ParticleType'].values
-    radii=pdata['Relative_r_physical'].values
     masses=pdata['Masses'].values
-    positions=pdata.loc[:,[f'Relative_{x}_physical' for x in 'xyz']].values
+    radii=pdata['Relative_r_comoving'].values
+    positions=pdata.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values*afac
     velocities=pdata.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values
 
     if baryons:
