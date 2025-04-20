@@ -58,13 +58,12 @@ from hydroflow.src_physics.galaxy import analyse_galaxy, retrieve_galaxy_candida
 namecat = pathcat.split('/')[-1][:-5]
 run = path.split('/')[-1]
 sim = run.split('_')[0]
-dr_str = f"{drfac:.2f}".replace('.', 'p')
 
 create_dir('./jobs/gasflow')
 create_dir('./catalogues/gasflow')
 
 # Logging setup
-logging_folder = f'{path}/jobs/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}_dr{dr_str}/snap{str(snap).zfill(3)}/'
+logging_folder = f'{path}/jobs/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}/snap{str(snap).zfill(3)}/'
 logging_name = f"s{str(snap).zfill(3)}_n{str(int(nslice**3)).zfill(3)}_ivol{str(ivol).zfill(3)}"
 create_dir(logging_folder)
 os.remove(f'{logging_folder}{logging_name}.log') if os.path.exists(f'{logging_folder}{logging_name}.log') else None
