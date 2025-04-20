@@ -171,7 +171,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 	for vcut in vcuts.keys():
 		vcut_kmps=vcuts[vcut]
-		if 'Vmax' in vcut:
+		if 'Vmax' in vcut_kmps:
 			vcut_kmps=vmax*np.float32(vcut_kmps.split('Vmax')[0])
 		print(f"Velocity cut: {vcut} = {vcut_kmps} km/s")
 		vmins.append(vcut_kmps)
