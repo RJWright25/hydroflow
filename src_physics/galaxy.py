@@ -39,6 +39,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 
 	# Define the centre of mass and scale factor
 	com=np.array([galaxy[f'CentreOfPotential_{x}'] for x in 'xyz'])
+	afac=1/(1+galaxy['Redshift'])
 
 	# Define the maximum radius to search for candidates if not provided
 	if maxrad is None:
@@ -54,9 +55,9 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 	if numcdt>0:
 		# Compute relative position (comoving) based on catalogue centre
 		positions_relative=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com
-		radii_relative=np.linalg.norm(positions_relative,axis=1)
+		radii_relative=np.linalg.norm(positions_relative,axis=1)*afac #physical Mpc
 
-		# Calculate 0p10r200 centre of mass
+		# Calculate 30pkpc baryonic centre of mass
 		mask=np.logical_and(radii_relative<0.03,np.logical_or(pdata_candidates['ParticleType'].values==0.,pdata_candidates['ParticleType'].values==4.))
 		if np.nansum(mask):
 			# Calculate the com, and vcom

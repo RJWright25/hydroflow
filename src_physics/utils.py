@@ -121,7 +121,7 @@ def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3,afac=1):
     baryons: bool
         Flag to only consider baryonic particles.
     aperture: float
-        Aperture radius to mask the particles (in comoving Mpc). 
+        Aperture radius to mask the particles (in physical Mpc). 
     
     Output:
     -----------
@@ -137,7 +137,7 @@ def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3,afac=1):
     # Mask the particles within the aperture and only baryonic particles
     ptypes=pdata['ParticleType'].values
     masses=pdata['Masses'].values
-    radii=pdata['Relative_r_comoving'].values
+    radii=pdata['Relative_r_comoving'].values*afac
     positions=pdata.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values*afac
     velocities=pdata.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values
 
