@@ -149,21 +149,21 @@ if numgal:
 
         if pdata_candidates.shape[0] > 0:
             result = analyse_galaxy(galaxy, pdata_candidates, metadata, r200_shells, kpc_shells, rstar_shells, Tbins, drfac, logfile=logging_folder + logging_name + '.log')
-            if not result.empty:
+            if not result:
                 result['ivol'] = ivol
                 result['HydroflowID'] = int(galaxy[galid_key])
                 result['Group_V_Crit200'] = np.sqrt(constant_G * galaxy['Group_M_Crit200'] / (galaxy['Group_R_Crit200'] * afac))
-                galaxy_outputs.append(result.to_dict(orient='records')[0])
+                galaxy_outputs.append(result)
 
                 if dump:
                     # Dump particle data to a hdf5 group with a subset of metadata
                     group = str(int(galaxy[galid_key]))
                     data = pdata_candidates.loc[pdata_candidates['ParticleType'].values == 0, pdata_fields]
-                    columns = list(subcat_selection.columns)
-                    for column in result.columns:
+                    columns = list(subcat_selection.keys())
+                    for column in list(result.keys()):
                         if '0p10r200' in column or '1p00r200' in column or '030pkpc' in column:
                             columns.append(column)
-                    metadata_dump = {key: result[key] for key in columns if key in result.columns}
+                    metadata_dump = {key: result[key] for key in columns if key in list(result.keys())}
                     dump_hdf_group(dumpcat_fname, group, data, metadata=metadata_dump, verbose=False)
 
 # Final output dataframe
