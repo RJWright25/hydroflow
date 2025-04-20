@@ -148,23 +148,28 @@ if numgal:
         pdata_candidates = retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad, boxsize)
 
         if pdata_candidates.shape[0] > 0:
-            result = analyse_galaxy(galaxy, pdata_candidates, metadata, r200_shells, kpc_shells, rstar_shells, Tbins, drfac, logfile=logging_folder + logging_name + '.log')
-            if not result:
-                result['ivol'] = ivol
-                result['HydroflowID'] = int(galaxy[galid_key])
-                result['Group_V_Crit200'] = np.sqrt(constant_G * galaxy['Group_M_Crit200'] / (galaxy['Group_R_Crit200'] * afac))
-                galaxy_outputs.append(result)
+            galaxy_output = analyse_galaxy(galaxy, pdata_candidates, metadata, r200_shells, kpc_shells, rstar_shells, Tbins, drfac, logfile=logging_folder + logging_name + '.log')
+            if not galaxy_output:
+                galaxy_output['ivol'] = ivol
+                galaxy_output['HydroflowID'] = int(galaxy[galid_key])
+                galaxy_output['Group_V_Crit200'] = np.sqrt(constant_G * galaxy['Group_M_Crit200'] / (galaxy['Group_R_Crit200'] * afac))
+                galaxy_outputs.append(galaxy_output)
 
                 if dump:
                     # Dump particle data to a hdf5 group with a subset of metadata
                     group = str(int(galaxy[galid_key]))
                     data = pdata_candidates.loc[pdata_candidates['ParticleType'].values == 0, pdata_fields]
                     columns = list(subcat_selection.keys())
-                    for column in list(result.keys()):
+                    for column in list(galaxy_output.keys()):
                         if '0p10r200' in column or '1p00r200' in column or '030pkpc' in column:
                             columns.append(column)
-                    metadata_dump = {key: result[key] for key in columns if key in list(result.keys())}
+                    metadata_dump = {key: galaxy_output[key] for key in columns if key in list(galaxy_output.keys())}
                     dump_hdf_group(dumpcat_fname, group, data, metadata=metadata_dump, verbose=False)
+
+        else:
+            logging.info(f'No particles found for galaxy {int(galaxy[galid_key])} in subvolume {ivol}.')
+            galaxy_output={}
+            
 
 # Final output dataframe
 if galaxy_outputs:
