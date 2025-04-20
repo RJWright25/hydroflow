@@ -43,8 +43,8 @@ path = pathcat.split('cat')[0]
 nslice, ivol, snap = args.nslice, args.ivol, args.snap
 dump = bool(args.dump)
 mcut = 10**(args.mcut)
-drfac = args.dr
 
+# Set up paths
 directory = pathcat.split('cat')[0]
 sys.path.append(f"{repo.split('hydroflow')[0]}")
 
