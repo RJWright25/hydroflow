@@ -39,7 +39,6 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 
 	# Define the centre of mass and scale factor
 	com=np.array([galaxy[f'CentreOfPotential_{x}'] for x in 'xyz'])
-	afac=1/(1+galaxy['Redshift'])
 
 	# Define the maximum radius to search for candidates if not provided
 	if maxrad is None:
@@ -59,10 +58,10 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 
 		# Calculate 0p10r200 centre of mass
 		mask=(radii_relative<0.03,np.logical_or(pdata_candidates['ParticleType'].values==0.,pdata_candidates['ParticleType'].values==4.))
-		if np.nansum(mask)>0:
+		if np.nansum(mask):
 			# Calculate the com, and vcom
-			com_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Coordinates_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
-			vcom_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Velocities_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
+			com_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values*pdata_candidates.loc[mask,[f'Coordinates_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
+			vcom_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values*pdata_candidates.loc[mask,[f'Velocities_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
 		else:
 			raise ValueError("No baryonic particles found within 30ckpc of the galaxy centre.")
 		
