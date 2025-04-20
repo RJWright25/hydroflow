@@ -219,7 +219,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
 
 		# Pseudo-evolution velocity cut (updated for each shell)
-		vpseudo_ishell=vpseudo*(rshell/galaxy['Group_R_Crit200'])
+		vsboundary=[vpseudo*(rshell/galaxy['Group_R_Crit200'])]
 
 		# Skip the shell if it is a multiple of r200 and the galaxy is a satellite
 		if not ('r200' in rshell_str and galaxy['SubGroupNumber']>0) and rshell>0:
