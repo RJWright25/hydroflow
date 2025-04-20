@@ -50,6 +50,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 	pdata_candidates=pdata_subvol.loc[pidx_candidates,:]
 	pdata_candidates.reset_index(drop=True,inplace=True)
 	numcdt=pdata_candidates.shape[0]
+
 	# Get derived quantities if there are elements within the radius
 	if numcdt>0:
 		# Compute relative position (comoving) based on catalogue centre
@@ -57,17 +58,17 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 		radii_relative=np.linalg.norm(positions_relative,axis=1)
 
 		# Calculate 0p10r200 centre of mass
-		mask=(radii_relative<0.1*galaxy['Group_R_Crit200'])
+		mask=(radii_relative<0.03,np.logical_or(pdata_candidates['ParticleType'].values==0.,pdata_candidates['ParticleType'].values==4.))
+		if np.nansum(mask)>0:
+			# Calculate the com, and vcom
+			com_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Coordinates_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
+			vcom_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Velocities_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
+		else:
+			raise ValueError("No baryonic particles found within 30ckpc of the galaxy centre.")
 		
-		# Calculate the com, and vcom
-		com_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Coordinates_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
-		vcom_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Velocities_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
-	
-		# Renormalise 	
+		# Renormalise the coordinates and velocities to the new centre of mass
 		pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']]=(pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com_0p10r200)
-		pdata_candidates.loc[:,[f'Relative_{x}_physical' for x in 'xyz']]=(pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com_0p10r200)*afac
 		pdata_candidates['Relative_r_comoving']=np.linalg.norm(pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values,axis=1)
-		pdata_candidates['Relative_r_physical']=pdata_candidates['Relative_r_comoving']*afac
 
 		# Calculate the relative velocity
 		pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']]=pdata_candidates.loc[:,[f'Velocities_{x}' for x in 'xyz']].values-vcom_0p10r200
@@ -75,6 +76,10 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 		# Calculate the relative radial velocity
 		rhat = pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values / np.stack(3 * [pdata_candidates['Relative_r_comoving']], axis=1)
 		pdata_candidates['Relative_vrad_pec'] = np.sum(pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values * rhat, axis=1)
+
+		# Compute relative theta
+		Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,baryons=True,aperture=0.03)
+		pdata_candidates['Relative_theta']=thetarel
 
 		return pdata_candidates
 	else:
@@ -154,32 +159,11 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	# Fields
 	mass=pdata_candidates['Masses'].values
 	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the halo catalogue centre
-	coordinates=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values #comoving coordinates
-	velocities=pdata_candidates.loc[:,[f'Velocities_{x}' for x in 'xyz']].values #peculiar velocity in km/s
-
-	# Find 30ckpc COM and vCOM with baryons
-	mask=np.logical_and(rrel<0.03,np.logical_or(gas,star))
-	com_sphere=np.nansum(mass[mask,np.newaxis]*coordinates[mask],axis=0)/np.nansum(mass[mask])
-	vcom_sphere=np.nansum(mass[mask,np.newaxis]*velocities[mask],axis=0)/np.nansum(mass[mask])
-	galaxy_output['030ckpc_sphere-com_x']=com_sphere[0]
-	galaxy_output['030ckpc_sphere-com_y']=com_sphere[1]
-	galaxy_output['030ckpc_sphere-com_z']=com_sphere[2]
-	galaxy_output['030ckpc_sphere-vcom_x']=vcom_sphere[0]
-	galaxy_output['030ckpc_sphere-vcom_y']=vcom_sphere[1]
-	galaxy_output['030ckpc_sphere-vcom_z']=vcom_sphere[2]
-
-	# Calculate the relative position of particles in this sphere using the centre of mass
-	positions=coordinates-com_sphere
-	rrel=np.linalg.norm(positions,axis=1)
-
-	# Calculate the relative velocity of particles in this sphere using the centre of mass
-	rhat = positions / np.stack(3 * [rrel], axis=1)
-	vrad = np.sum((velocities-vcom_sphere) * rhat, axis=1)
-
-	
-	# Re-assign the relative position/radial velocity to the new baryon centre of mass 
-	pdata_candidates['Relative_r_comoving']= rrel
-	pdata_candidates['Relative_vrad_pec']=vrad
+	coordinates=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values #absolute comoving coordinates
+	velocities=pdata_candidates.loc[:,[f'Velocities_{x}' for x in 'xyz']].values #absolute peculiar velocity in km/s 
+	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the centre as per the candidate function
+	vrad=pdata_candidates['Relative_vrad_pec'].values #peculiar radil velocity in km/s relative to the centre as per the candidate function
+	thetarel=pdata_candidates['Relative_theta'].values #relative theta in degrees
 
 	# Gas properties
 	temp=pdata_candidates['Temperature'].values
@@ -199,12 +183,10 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	specmass['Z']=pdata_candidates['Metallicity'].values*mass
 	specmass['tot']=np.ones_like(specmass['Z'])*mass
 
-	# Get relative phi
-	Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,baryons=True,aperture=0.03)
-	pdata_candidates['Relative_theta']=thetarel
+	# Get relative theta masks
 	thetamasks={}
 	for thetarel_str,thetarel_bin in thetarel_bins.items():
-		thetamasks[thetarel_str]=np.logical_and.reduce([gas,pdata_candidates['Relative_theta'].values>thetarel_bin[0],pdata_candidates['Relative_theta'].values<thetarel_bin[1]])
+		thetamasks[thetarel_str]=np.logical_and.reduce([gas,thetarel>thetarel_bin[0],thetarel<thetarel_bin[1]])
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
@@ -218,15 +200,10 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	if np.nansum(gas_mask):
 		gas_r_half=calc_halfmass_radius(pdata_candidates.loc[gas_mask,'Masses'].values,pdata_candidates.loc[gas_mask,'Relative_r_comoving'].values)
 
-
 	# Add to the galaxy output
 	galaxy_output['010ckpc_sphere-star-r_half']=star_r_half
 	galaxy_output['010ckpc_sphere-gas-r_half']=gas_r_half
-	
-	# Add to the galaxy output
-	galaxy_output['030ckpc_sphere-Lbartot_x']=Lbar[0]
-	galaxy_output['030ckpc_sphere-Lbartot_y']=Lbar[1]
-	galaxy_output['030ckpc_sphere-Lbartot_z']=Lbar[2]
+	galaxy_output.loc[:,[f'030ckpc_sphere-Lbartot_{x}' for x in 'xyz']]=compute_relative_theta(pdata=pdata_candidates,baryons=True,aperture=0.03)[0]
 	
 	# Combine all the shell radii for analysis
 	radial_shells_R200=[fR200*galaxy['Group_R_Crit200'] for fR200 in r200_shells] #numerical values are comoving
@@ -255,27 +232,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 			
 			# Add the sphere volume in pkpc^3
 			galaxy_output[f'{rshell_str}_sphere-vol']=4/3*np.pi*(rshell*afac*1e3)**3
-
-			# Calculate the centre of mass position in the given sphere
-			com_sphere=np.nansum(mass[mask_sphere,np.newaxis]*coordinates[mask_sphere],axis=0)/np.nansum(mass[mask_sphere])
-			galaxy_output[f'{rshell_str}_sphere-com_x']=com_sphere[0]
-			galaxy_output[f'{rshell_str}_sphere-com_y']=com_sphere[1]
-			galaxy_output[f'{rshell_str}_sphere-com_z']=com_sphere[2]
-
-			# Calculate the centre of mass velocity in the given sphere
-			vcom_sphere=np.nansum(mass[mask_sphere,np.newaxis]*velocities[mask_sphere],axis=0)/np.nansum(mass[mask_sphere])
-			galaxy_output[f'{rshell_str}_sphere-vcom_x']=vcom_sphere[0]
-			galaxy_output[f'{rshell_str}_sphere-vcom_y']=vcom_sphere[1]
-			galaxy_output[f'{rshell_str}_sphere-vcom_z']=vcom_sphere[2]
-
-			# # Calculate the relative position of particles in this sphere using the new centre of mass
-			# positions=coordinates-com_sphere
-			# radii=np.linalg.norm(positions,axis=1)
-
-			# # Calculate the relative velocity of particles in this sphere using the new centre of mass
-			# rhat = positions / np.stack(3 * [radii], axis=1)
-			# vrad = np.sum((velocities-vcom_sphere) * rhat, axis=1)			
-
+		
 			### DARK MATTER
 			galaxy_output[f'{rshell_str}_sphere-dm-m_tot']=np.nansum(mass[np.logical_and(mask_sphere,dm)])
 			galaxy_output[f'{rshell_str}_sphere-dm-n_tot']=np.nansum(np.logical_and(mask_sphere,dm))
@@ -377,8 +334,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 									galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_{vmins_str[i]}']=gas_flow_rates[2+i]
 
 							# Calculate the flow rates for the gas by species
-							for spec in specfrac.keys():
-								gas_flow_rates_species=calculate_flow_rate(masses=mass[Tmask_shell]*specfrac[spec][Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
+							for spec in specmass.keys():
+								gas_flow_rates_species=calculate_flow_rate(masses=specmass[spec][Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
 								galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_{vminzero_str}']=gas_flow_rates_species[0]
 								galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminzero_str}']=gas_flow_rates_species[1]
 								if len(vmins):
