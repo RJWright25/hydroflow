@@ -161,7 +161,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         elif ptype=='stars':
             # Metallicity
             logging.info(f"Reading Z... [pdata time: {time.time()-t0:.2f} s]")
-            pdata_ptype['Metallicity']=pdata_masked_object.metal_mass_fractions.value
+            pdata_ptype['Metallicity']=pdata_masked_object.metal_mass_fractions.value[::subset]
 
         logging.info(f"Appending {ptype} particles to pdata... [pdata time: {time.time()-t0:.2f} s]")
         pdata.append(pdata_ptype)
