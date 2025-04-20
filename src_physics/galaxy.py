@@ -82,10 +82,12 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 			# Calculate the com, and vcom
 			com_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Coordinates_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
 			vcom_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Velocities_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
+			baryons=True
 		else:
 			mask=np.logical_and(radii_relative<0.03,pdata_candidates['ParticleType'].values==1.)
 			com_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Coordinates_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
 			vcom_0p10r200=np.nansum(pdata_candidates.loc[mask,'Masses'].values[:,np.newaxis]*pdata_candidates.loc[mask,[f'Velocities_{x}' for x in 'xyz']].values,axis=0)/np.nansum(pdata_candidates.loc[mask,'Masses'].values)
+			baryons=False
 		
 		# Renormalise the coordinates and velocities to the new centre of mass
 		pdata_candidates.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']]=(pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com_0p10r200)
@@ -99,7 +101,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 		pdata_candidates['Relative_vrad_pec'] = np.sum(pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values * rhat, axis=1)
 
 		# Compute relative theta
-		Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,afac=1/(1+galaxy['Redshift']),baryons=True,aperture=0.03)
+		Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,afac=1/(1+galaxy['Redshift']),baryons=baryons,aperture=0.03)
 		pdata_candidates['Relative_theta']=thetarel
 
 		return pdata_candidates
@@ -226,9 +228,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	# Add to the galaxy output
 	galaxy_output['010pkpc_sphere-star-r_half']=star_r_half
 	galaxy_output['010pkpc_sphere-gas-r_half']=gas_r_half
-	Lbar=compute_relative_theta(pdata=pdata_candidates,baryons=True,aperture=0.03,afac=1/(galaxy['Redshift']))[0]
-	for idim,dim in enumerate(['x','y','z']):
-		galaxy_output[f'030pkpc_sphere-Lbar_{dim}']=Lbar[idim]
 
 	# Combine all the shell radii for analysis
 	radial_shells_R200=[fR200*galaxy['Group_R_Crit200'] for fR200 in r200_shells] #numerical values are comoving
