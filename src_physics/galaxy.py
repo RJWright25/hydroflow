@@ -53,9 +53,29 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 
 	# Get derived quantities if there are elements within the radius
 	if numcdt>0:
+
+		# Check if this halo is near the edge of the box
+		safe=True
+		if boxsize:
+			for idim in range(3):
+				if com[idim]-maxrad<0 or com[idim]+maxrad>boxsize:
+					safe=False
+					break
+
+		if not safe:
+			print("Warning: Halo is near the edge of the box. Adjusting coordinates...")
+			for idim,dim in enumerate(['x','y','z']):
+				if com[idim]-maxrad<0:
+					mask_otherside=pdata_candidates[f'Coordinates_{dim}'].values>boxsize/2
+					pdata_candidates[f'Coordinates_{dim}'][mask_otherside]-=boxsize
+				elif com[idim]+maxrad>boxsize:
+					mask_otherside=pdata_candidates[f'Coordinates_{dim}'].values<boxsize/2
+					pdata_candidates[f'Coordinates_{dim}'][mask_otherside]+=boxsize
+
 		# Compute relative position (comoving) based on catalogue centre
 		positions_relative=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com
 		radii_relative=np.linalg.norm(positions_relative,axis=1)*afac #physical Mpc
+
 
 		# Calculate 30pkpc baryonic centre of mass
 		mask=np.logical_and(radii_relative<0.03,np.logical_or(pdata_candidates['ParticleType'].values==0.,pdata_candidates['ParticleType'].values==4.))
@@ -80,6 +100,9 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 		# Compute relative theta
 		Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,afac=1/(1+galaxy['Redshift']),baryons=True,aperture=0.03)
 		pdata_candidates['Relative_theta']=thetarel
+
+
+
 
 		return pdata_candidates
 	else:
