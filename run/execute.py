@@ -8,7 +8,9 @@ import logging
 import argparse
 import pandas as pd
 import numpy as np
+import warnings
 from datetime import datetime
+warnings.filterwarnings('ignore')
 
 # Argument parser
 parser=argparse.ArgumentParser()
