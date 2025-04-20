@@ -168,10 +168,12 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		vmax=galaxy['Subhalo_V_max']
 	else:# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
 		vmax=0.25*(1.33*galaxy['Group_V_Crit200'])
+
 	for vcut in vcuts.keys():
 		vcut_kmps=vcuts[vcut]
 		if 'Vmax' in vcut:
 			vcut_kmps=vmax*np.float32(vcut_kmps.split('Vmax')[0])
+		print(f"Velocity cut: {vcut} = {vcut_kmps} km/s")
 		vmins.append(vcut_kmps)
 
 	# Shell width for calculations
