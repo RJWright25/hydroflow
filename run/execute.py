@@ -49,6 +49,13 @@ if pfile is not None and os.path.exists(pfile):
     for par in pars:
         if hasattr(params,par):
             exec(f"{par}=params.{par}")
+    #write used parameters to log
+    logging.info(f"Parameters loaded from {pfile}:")
+    for par in pars:
+        if hasattr(params,par):
+            logging.info(f"{par} = {eval(par)}")
+        else:
+            logging.info(f"{par} not found in {pfile}")
 
 # Set up paths
 directory = pathcat.split('cat')[0]
