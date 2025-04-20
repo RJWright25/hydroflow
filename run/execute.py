@@ -175,10 +175,7 @@ if numgal:
         galaxy_output = {}
         central = galaxy['SubGroupNumber'] == 0
         maxrad = 3.5 * galaxy['Group_R_Crit200'] if central else 150e-3 # 3.5*r200 for centrals, 150kpc for satellites
-        galaxy_output['ivol'] = ivol
-        galaxy_output['HydroflowID'] = int(galaxy[galid_key])
-        galaxy_output['Group_V_Crit200'] = np.sqrt(constant_G * galaxy['Group_M_Crit200'] / (galaxy['Group_R_Crit200'] * afac))
-        
+
         # Get the particle data for this halo
         t1_c=time.time()
         pdata_candidates=retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=maxrad,boxsize=boxsize)
@@ -207,6 +204,11 @@ if numgal:
             logging.info(f'No particles found for galaxy {int(galaxy[galid_key])} in subvolume {ivol}.')
             galaxy_output={}
 
+        # Add extra properties
+        galaxy_output['ivol'] = ivol
+        galaxy_output['HydroflowID'] = int(galaxy[galid_key])
+        galaxy_output['Group_V_Crit200'] = np.sqrt(constant_G * galaxy['Group_M_Crit200'] / (galaxy['Group_R_Crit200'] * afac))
+        
         # Append to the list of galaxy outputs
         logging.info(f'Appending galaxy to output [runtime {time.time()-t1:.3f} sec]')
         galaxy_outputs.append(galaxy_output)
