@@ -232,6 +232,12 @@ else:
 
 
 # Save
+logging.info(f'Saving output file [runtime {time.time()-t1:.3f} sec]')
+logging.info(f'')
 dump_hdf(outcat_fname, galaxy_outputs)
-logging.info('Done.')
+logging.info(f'Done saving output file [runtime {time.time()-t1:.3f} sec]')
+logging.info(f'')
+
+
+
 logging.info(f"************{datetime.now()}************")

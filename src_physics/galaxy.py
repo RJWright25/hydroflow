@@ -135,7 +135,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	# Velocity cuts (if any)
 	vmins=[0.25*galaxy['Group_V_max']] #minimum velocity cut in km/s
 	vmins_str=['vcut0p25vmax']
-	vminzero_str='vcutnone'
+	vminzero_str='vcut0p00vmax'
 
 	# Azimuthal angle for calculations
 	thetarel_bins={'coplanar':[0,30],

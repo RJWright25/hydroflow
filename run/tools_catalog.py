@@ -169,6 +169,7 @@ def combine_catalogs(path_subcat, path_gasflow, snaps=None, mcut=10, verbose=Fal
     idx_key = 'GalaxyID'
     mass_key = 'Mass'
     calc_str = 'nvol' + path_gasflow.split('nvol')[-1].split('/')[0]
+    path_gasflow+='/'
 
     if not len(snaps) > 0:
         snap_min = int(np.nanmin(subcat[snap_key].values))
@@ -185,9 +186,9 @@ def combine_catalogs(path_subcat, path_gasflow, snaps=None, mcut=10, verbose=Fal
     subcat_masked.reset_index(drop=True, inplace=True)
 
     if snap_max - snap_min == 0:
-        outpath = path_gasflow + f'/gasflow_snap{int(snap_max)}_{calc_str}.hdf5'
+        outpath = path_gasflow + f'/gasflow_snap{str(int(snap_max)).zfill(3)}_{calc_str}.hdf5'
     else:
-        outpath = path_gasflow + f'/gasflow_snap{int(snap_min)}to{int(snap_max)}_{calc_str}.hdf5'
+        outpath = path_gasflow + f'/gasflow_snap{str(int(snap_min)).zfill(3)}to{str(int(snap_max)).zfill(3)}_{calc_str}.hdf5'
 
     logging.info(f'Reading hydroflow outputs ... (t={time.time()-t1}) \n')
     snapdirs = sorted(os.listdir(path_gasflow))
@@ -196,6 +197,7 @@ def combine_catalogs(path_subcat, path_gasflow, snaps=None, mcut=10, verbose=Fal
     snap_outputs = []
 
     for snapdir in snapdirs:
+        print("Reading gasflow files for snapdir:", path_gasflow+'/'+snapdir)
         snap = snapdir.split('snap')[-1]
         snap = int(snap[:3])
         snapdir_path = path_gasflow + snapdir
