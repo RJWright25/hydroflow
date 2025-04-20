@@ -8,22 +8,13 @@ import logging
 import argparse
 import pandas as pd
 import numpy as np
-import warnings
 from datetime import datetime
 
-warnings.filterwarnings("ignore")
-
-# Parameters
-r200_shells=[0.05,0.1,0.2,0.25,0.3,0.5,0.75,1,1.5,2,2.5,3] # Shells as fraction of r200
-rstar_shells=[0.5,1,2,4] # Shells as fraction of stellar half mass radius
-kpc_shells=[1,2,5,10,15,20,25,30,50,75,100] # Shells in pkpc 
-Tbins={'cold':[0,1e3],'cool':[1e3,1e5],'warm':[1e5,1e7],'hot':[1e7,1e15]} # Temperature bins for inflow/outflow calculations
-theta_bins={'minax':[30,90],'majax':[0,30],'full':[0,90]} # Angular bins for inflow/outflow calculations
-vcuts={'vc0p25vmx':'0.25Vmax','050kmps':50,'100kmps':100,'250kmps':250} # Additional radial velocity cuts for outflows -- if 'Vmax' in string, used as multiplier of Vmax
-drfacs=[0.1]
-
-# Particle data fields to dump
-pdata_fields=['Masses','Relative_r_comoving','Coordinates_x','Coordinates_y','Coordinates_z','Relative_vrad_pec','Relative_vx_pec','Relative_vy_pec','Relative_vz_pec','Relative_theta','Temperature','Density','Metallicity']
+from hydroflow.run.initialise import load_metadata
+from hydroflow.run.tools_hpc import create_dir,import_variables
+from hydroflow.run.tools_catalogue import dump_hdf_group, dump_hdf, read_hdf
+from hydroflow.src_physics.utils import get_limits, constant_G
+from hydroflow.src_physics.galaxy import analyse_galaxy, retrieve_galaxy_candidates
 
 # Argument parser
 parser=argparse.ArgumentParser()
@@ -35,6 +26,7 @@ parser.add_argument('--ivol', type=int)
 parser.add_argument('--snap', type=int)
 parser.add_argument('--mcut', type=float)
 parser.add_argument('--dump', type=int)
+parser.add_argument('--pars', type=str)
 args=parser.parse_args()
 
 # Load arguments
@@ -44,15 +36,24 @@ nslice, ivol, snap = args.nslice, args.ivol, args.snap
 dump = bool(args.dump)
 mcut = 10**(args.mcut)
 
+# Initialise variables
+r200_shells, rstar_shells, kpc_shells = None, None, None
+Tbins, theta_bins, vcuts, drfacs = None, None, None, None
+pdata_fields = []
+
+# Load parameters from file if given
+pfile=args.pars
+if pfile is not None and os.path.exists(pfile):
+    params=import_variables(pfile)
+    pars=['r200_shells','rstar_shells','kpc_shells','Tbins','theta_bins','vcuts','drfacs','pdata_fields']
+    for par in pars:
+        if hasattr(params,par):
+            exec(f"{par}=params.{par}")
+
 # Set up paths
 directory = pathcat.split('cat')[0]
 sys.path.append(f"{repo.split('hydroflow')[0]}")
 
-from hydroflow.run.initialise import load_metadata
-from hydroflow.run.tools_hpc import create_dir
-from hydroflow.run.tools_catalogue import dump_hdf_group, dump_hdf, read_hdf
-from hydroflow.src_physics.utils import get_limits, constant_G
-from hydroflow.src_physics.galaxy import analyse_galaxy, retrieve_galaxy_candidates
 
 # Load subhalo catalogue
 namecat = pathcat.split('/')[-1][:-5]

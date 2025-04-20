@@ -5,6 +5,30 @@
 
 import os
 
+import importlib.util
+
+def import_variables(filepath):
+    """
+    import_variables: Load variables from a Python file.
+    Input:
+    -----------
+    filepath: str
+        Path to the Python file.
+    Output:
+    -----------
+    module: module
+        Loaded module.
+    """
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File {filepath} does not exist.")
+    if not filepath.endswith('.py'):
+        raise ValueError(f"File {filepath} is not a Python file.")
+
+    spec = importlib.util.spec_from_file_location("x_params", filepath)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 def create_dir(path):
     """
     create_dir: Create a directory if it does not exist.
