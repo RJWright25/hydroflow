@@ -67,12 +67,14 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 			for idim,dim in enumerate(['x','y','z']):
 				if com[idim]-maxrad<0:
 					mask_otherside=pdata_candidates[f'Coordinates_{dim}'].values>boxsize/2
+					print(f'Max {dim} = {np.nanmax(pdata_candidates[f'Coordinates_{dim}'].values)}')
 					pdata_candidates[f'Coordinates_{dim}'][mask_otherside]-=boxsize
 					print(f"Adjusting {dim} coordinates by -boxsize -- {np.nansum(mask_otherside)/len(mask_otherside)*100:.3f} % of particles affected in dim {dim}")
+					print(f'Max {dim} = {np.nanmax(pdata_candidates[f'Coordinates_{dim}'].values)}')
 				elif com[idim]+maxrad>boxsize:
 					mask_otherside=pdata_candidates[f'Coordinates_{dim}'].values<boxsize/2
 					pdata_candidates[f'Coordinates_{dim}'][mask_otherside]+=boxsize
-					print(f"Adjusting {dim} coordinates by -boxsize -- {np.nansum(mask_otherside)/len(mask_otherside)*100:.3f} % of particles affected in dim {dim}")
+					# print(f"Adjusting {dim} coordinates by -boxsize -- {np.nansum(mask_otherside)/len(mask_otherside)*100:.3f} % of particles affected in dim {dim}")
 
 		# Compute relative position (comoving) based on catalogue centre
 		positions_relative=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com
