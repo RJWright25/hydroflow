@@ -115,7 +115,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				   rstar_shells=[1,2,4],
 				   Tbins={'cold':[0,1e3],'cool':[1e3,1e5],'warm':[1e5,1e7],'hot':[1e7,1e15]},
 				   theta_bins={'full':[0,90],'minax':[60,90],'majax':[0,30]},
-				   vcuts={'vc0p25vmx':0.25},
+				   vcuts={'vc0p25vmx':'0.25Vmax','100kmps':100,'250kmps':250},
 				   drfacs=[0.1],
 				   logfile=None):
 
@@ -163,12 +163,16 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	galaxy_output['1p00r200-vpdoev']=vpseudo #pseudo-evolution velocity cut in km/s
 	
 	# Velocity cuts (if any)
+	vmins=[];vminstrs=list(vcuts.keys())
 	if 'Subhalo_V_max' in galaxy.keys():
 		vmax=galaxy['Subhalo_V_max']
 	else:# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
 		vmax=0.25*(1.33*galaxy['Group_V_Crit200'])
-	vmins=[vmax*vcut for vcut in vcuts.values()]
-	vminstrs=list(vcuts.keys())
+	for vcut in vcuts.keys():
+		vcut_kmps=vcuts[vcut]
+		if 'Vmax' in vcut:
+			vcut_kmps*=vmax
+		vmins.append(vcut_kmps)
 
 	# Shell width for calculations
 	drfacs_pc=[idrfac*100 for idrfac in drfacs] #convert to pc
@@ -179,14 +183,12 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	star=pdata_candidates['ParticleType'].values==4.
 	dm=pdata_candidates['ParticleType'].values==1.
 
-	# Fields
+	# Pre-load the particle data
 	mass=pdata_candidates['Masses'].values
 	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the halo catalogue centre
 	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the centre as per the candidate function
 	vrad=pdata_candidates['Relative_vrad_pec'].values #peculiar radil velocity in km/s relative to the centre as per the candidate function
 	thetarel=pdata_candidates['Relative_theta'].values #relative theta in degrees
-
-	# Gas properties
 	temp=pdata_candidates['Temperature'].values
 	sfr=pdata_candidates['StarFormationRate'].values
 
@@ -309,8 +311,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-n_tot']=np.nansum(dm_shell_mask)
 				for vboundary, vkey in zip(vsboundary, vsboundary_str):
 					dm_flow_rates=calculate_flow_rate(masses=mass[dm_shell_mask],vrad=vrad[dm_shell_mask],dr=dr,vboundary=vbdef,vmin=[])
-					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-mdot_tot_inflow_{vkey}_000kmps']=dm_flow_rates[0]
-					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-mdot_tot_outflow_{vkey}_000kmps']=dm_flow_rates[1]
+					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-mdot_tot_inflow_{vkey}_vc000kmps']=dm_flow_rates[0]
+					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-mdot_tot_outflow_{vkey}_vc000kmps']=dm_flow_rates[1]
 
 				### STARS shell properties
 				stars_shell_mask=np.logical_and(mask_shell,star)
@@ -319,8 +321,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-Z']=np.nansum(specmass['Z'][stars_shell_mask])/np.nansum(mass[stars_shell_mask])
 				for vboundary, vkey in zip(vsboundary, vsboundary_str):
 					stars_flow_rates=calculate_flow_rate(masses=mass[stars_shell_mask],vrad=vrad[stars_shell_mask],dr=dr,vboundary=vboundary,vmin=[])
-					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-mdot_tot_inflow_{vkey}_000kmps']=stars_flow_rates[0]
-					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-mdot_tot_outflow_{vkey}_000kmps']=stars_flow_rates[1]
+					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-mdot_tot_inflow_{vkey}_vc000kmps']=stars_flow_rates[0]
+					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-mdot_tot_outflow_{vkey}_vc000kmps']=stars_flow_rates[1]
 				
 				### GAS shell properties
 				# Break down by theta
@@ -345,23 +347,23 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 						# Calculate the total flow rates for the gas
 						for vboundary, vkey in zip(vsboundary, vsboundary_str):
 							gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_000kmps']=gas_flow_rates[0]
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_000kmps']=gas_flow_rates[1]
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_vc000kmps']=gas_flow_rates[0]
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_vc000kmps']=gas_flow_rates[1]
 							for iv,vminstr in enumerate(vminstrs):
 								galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_{vminstr}']=gas_flow_rates[2+iv]
 
 							# Calculate the flow rates for the gas by species
 							for spec in specmass.keys():
 								gas_flow_rates_species=calculate_flow_rate(masses=specmass[spec][Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
-								galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_000kmps']=gas_flow_rates_species[0]
-								galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_000kmps']=gas_flow_rates_species[1]
+								galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps']=gas_flow_rates_species[0]
+								galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps']=gas_flow_rates_species[1]
 								for iv,vminstr in enumerate(vminstrs):
 									galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]
 
 			else:
 				pass
 
-	#write to log
+	# Return the galaxy output dictionary
 	return galaxy_output
 
 

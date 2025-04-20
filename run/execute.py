@@ -19,7 +19,7 @@ rstar_shells=[0.5,1,2,4] # Shells as fraction of stellar half mass radius
 kpc_shells=[1,2,5,10,15,20,25,30,50,75,100] # Shells in pkpc 
 Tbins={'cold':[0,1e3],'cool':[1e3,1e5],'warm':[1e5,1e7],'hot':[1e7,1e15]} # Temperature bins for inflow/outflow calculations
 theta_bins={'minax':[30,90],'majax':[0,30],'full':[0,90]} # Angular bins for inflow/outflow calculations
-vcuts_vmax={'vc0p25vmax':0.25} # Additional radial velocity cuts for outflows in terms of subhalo vmax (0 included by default)
+vcuts={'vc0p25vmx':'0.25Vmax','vc100kmps':100,'vc250kmps':250} # Additional radial velocity cuts for outflows -- if 'Vmax' in string, used as multiplier of Vmax
 drfacs=[0.1]
 
 # Particle data fields to dump
@@ -200,7 +200,7 @@ if numgal:
                                                 rstar_shells=rstar_shells,
                                                 Tbins=Tbins,
                                                 theta_bins=theta_bins,
-                                                vcuts=vcuts_vmax,
+                                                vcuts=vcuts,
                                                 drfacs=drfacs,
                                                 logfile=logging_folder+logging_name+'.log')
                                                 
