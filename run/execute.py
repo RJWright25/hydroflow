@@ -10,12 +10,6 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-from hydroflow.run.initialise import load_metadata
-from hydroflow.run.tools_hpc import create_dir,import_variables
-from hydroflow.run.tools_catalogue import dump_hdf_group, dump_hdf, read_hdf
-from hydroflow.src_physics.utils import get_limits, constant_G
-from hydroflow.src_physics.galaxy import analyse_galaxy, retrieve_galaxy_candidates
-
 # Argument parser
 parser=argparse.ArgumentParser()
 parser.add_argument('--repo', type=str)
@@ -35,6 +29,17 @@ path = pathcat.split('cat')[0]
 nslice, ivol, snap = args.nslice, args.ivol, args.snap
 dump = bool(args.dump)
 mcut = 10**(args.mcut)
+
+# Set up paths
+directory = pathcat.split('cat')[0]
+sys.path.append(f"{repo.split('hydroflow')[0]}")
+
+# Import the relevant routines
+from hydroflow.run.initialise import load_metadata
+from hydroflow.run.tools_hpc import create_dir,import_variables
+from hydroflow.run.tools_catalogue import dump_hdf_group, dump_hdf, read_hdf
+from hydroflow.src_physics.utils import get_limits, constant_G
+from hydroflow.src_physics.galaxy import analyse_galaxy, retrieve_galaxy_candidates
 
 # Initialise variables
 r200_shells, rstar_shells, kpc_shells = None, None, None
@@ -57,9 +62,6 @@ if pfile is not None and os.path.exists(pfile):
         else:
             logging.info(f"{par} not found in {pfile}")
 
-# Set up paths
-directory = pathcat.split('cat')[0]
-sys.path.append(f"{repo.split('hydroflow')[0]}")
 
 
 # Load subhalo catalogue
