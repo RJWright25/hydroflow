@@ -190,21 +190,23 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
-	star_mask=np.logical_and(star,pdata_candidates['Relative_r_comoving'].values<0.01)
+	star_mask=np.logical_and(star,pdata_candidates['Relative_r_comoving'].values*afac<0.01)
 	if np.nansum(star_mask):
 		star_r_half=calc_halfmass_radius(pdata_candidates.loc[star_mask,'Masses'].values,pdata_candidates.loc[star_mask,'Relative_r_comoving'].values)
 
 	# Get gas half-mass radius
 	gas_r_half=np.nan
-	gas_mask=np.logical_and(gas,pdata_candidates['Relative_r_comoving'].values<0.01)
+	gas_mask=np.logical_and(gas,pdata_candidates['Relative_r_comoving'].values*afac<0.01)
 	if np.nansum(gas_mask):
 		gas_r_half=calc_halfmass_radius(pdata_candidates.loc[gas_mask,'Masses'].values,pdata_candidates.loc[gas_mask,'Relative_r_comoving'].values)
 
 	# Add to the galaxy output
-	galaxy_output['010ckpc_sphere-star-r_half']=star_r_half
-	galaxy_output['010ckpc_sphere-gas-r_half']=gas_r_half
-	galaxy_output.loc[:,[f'030ckpc_sphere-Lbartot_{x}' for x in 'xyz']]=compute_relative_theta(pdata=pdata_candidates,baryons=True,aperture=0.03)[0]
-	
+	galaxy_output['010pkpc_sphere-star-r_half']=star_r_half
+	galaxy_output['010pkpc_sphere-gas-r_half']=gas_r_half
+	Lbar=compute_relative_theta(pdata=pdata_candidates,baryons=True,aperture=0.03,afac=1/(galaxy['Redshift']))[0]
+	for idim,dim in enumerate(['x','y','z']):
+		galaxy_output[f'030pkpc_sphere-Lbar_{dim}']=Lbar[dim]
+
 	# Combine all the shell radii for analysis
 	radial_shells_R200=[fR200*galaxy['Group_R_Crit200'] for fR200 in r200_shells] #numerical values are comoving
 	radial_shells_pkpc=[fpkpc/1e3/afac for fpkpc in kpc_shells] #numerical values are comoving

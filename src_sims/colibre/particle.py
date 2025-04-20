@@ -81,7 +81,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         if ptype=='dm':
             subset=20 # only read 5% of dark matter particles to save memory
         elif ptype=='stars':
-            subset=4 # only read 25% of star particles to save memory
+            subset=2 # only read 50% of star particles to save memory
         else:
             subset=1
 
@@ -166,6 +166,10 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
     pdata=pd.concat(pdata)
     pdata.sort_values('ParticleIDs',inplace=True)
     pdata.reset_index(drop=True,inplace=True)
+
+    # Print fraction of particles that are gas
+    gas=pdata['ParticleType'].values==0
+    logging.info(f"Fraction of particles that are gas: {np.sum(gas)/pdata.shape[0]*100:.2f}%")
 
     # Add post-processed partitions into HI, H2, HII from Rahmati (2013) and Blitz & Rosolowsky (2006)
     # logging.info(f"Adding hydrogen partitioning...")
