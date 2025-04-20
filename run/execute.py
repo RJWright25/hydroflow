@@ -193,7 +193,7 @@ if numgal:
                                                 pdata_candidates,
                                                 metadata=metadata,
                                                 r200_shells=r200_shells,
-                                                ckpc_shells=kpc_shells,
+                                                kpc_shells=kpc_shells,
                                                 rstar_shells=rstar_shells,
                                                 Tbins=Tbins,
                                                 drfac=drfac,
