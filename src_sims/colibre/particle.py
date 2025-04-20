@@ -80,6 +80,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         
         if ptype=='dm':
             subset=20 # only read 5% of dark matter particles to save memory
+        elif ptype=='stars':
+            subset=4 # only read 25% of star particles to save memory
         else:
             subset=1
 
@@ -91,6 +93,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         masses.convert_to_units('Msun')
         pdata_ptype['Masses']=masses.value[::subset]
         if ptype=='dm':
+            pdata_ptype['Masses']=pdata_ptype['Masses']*subset # correct for subset
+        elif ptype=='stars':
             pdata_ptype['Masses']=pdata_ptype['Masses']*subset # correct for subset
 
         logging.info(f"Reading coordinates for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
