@@ -172,9 +172,19 @@ if numgal:
         logging.info(f'')
         logging.info(f"Galaxy {igal+1}/{subcat_selection.shape[0]:.0f}: subhalo mass - {galaxy[mass_key]:.1e}, sgn - {galaxy['SubGroupNumber']} [runtime {time.time()-t1:.3f} sec]")
 
+        # Initialise galaxy output
         galaxy_output = {}
         central = galaxy['SubGroupNumber'] == 0
         maxrad = 3.5 * galaxy['Group_R_Crit200'] if central else 150e-3 # 3.5*r200 for centrals, 150kpc for satellites
+        
+        # Check if the galaxy is on the edge of the box
+        com=np.array([galaxy[f'CentreOfPotential_{x}'] for x in 'xyz'])
+        galaxy_output['Edge']=0
+        for idim in range(3):
+            if com[idim]-maxrad<0 or com[idim]+maxrad>metadata.boxsize:
+                galaxy_output['Edge']=1
+                logging.info(f'Galaxy {int(galaxy[galid_key])} is on the edge of the box -- COM {com}. Setting Edge=1 [runtime {time.time()-t1:.3f} sec]')
+                break
 
         # Get the particle data for this halo
         t1_c=time.time()
@@ -207,7 +217,7 @@ if numgal:
         # Add extra properties
         galaxy_output['ivol'] = ivol
         galaxy_output['HydroflowID'] = int(galaxy[galid_key])
-        galaxy_output['Group_V_Crit200'] = np.sqrt(constant_G * galaxy['Group_M_Crit200'] / (galaxy['Group_R_Crit200'] * afac))
+
         
         # Append to the list of galaxy outputs
         logging.info(f'Appending galaxy to output [runtime {time.time()-t1:.3f} sec]')

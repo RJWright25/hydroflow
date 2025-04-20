@@ -61,16 +61,18 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 				if com[idim]-maxrad<0 or com[idim]+maxrad>boxsize:
 					safe=False
 					break
-
+		# If the halo is near the edge of the box, adjust the coordinates
 		if not safe:
 			print("Warning: Halo is near the edge of the box. Adjusting coordinates...")
 			for idim,dim in enumerate(['x','y','z']):
 				if com[idim]-maxrad<0:
 					mask_otherside=pdata_candidates[f'Coordinates_{dim}'].values>boxsize/2
 					pdata_candidates[f'Coordinates_{dim}'][mask_otherside]-=boxsize
+					print(f"Adjusting {dim} coordinates by -boxsize -- {np.nansum(mask_otherside)/len(mask_otherside)*100:.3f} % of particles affected in dim {dim}")
 				elif com[idim]+maxrad>boxsize:
 					mask_otherside=pdata_candidates[f'Coordinates_{dim}'].values<boxsize/2
 					pdata_candidates[f'Coordinates_{dim}'][mask_otherside]+=boxsize
+					print(f"Adjusting {dim} coordinates by -boxsize -- {np.nansum(mask_otherside)/len(mask_otherside)*100:.3f} % of particles affected in dim {dim}")
 
 		# Compute relative position (comoving) based on catalogue centre
 		positions_relative=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values-com
@@ -151,12 +153,19 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	Hz=metadata.cosmology.H(galaxy['Redshift']).value
 	afac=1/(1+galaxy['Redshift'])
 	vpseudo=2/3*(constant_G/100)**(1/3)*galaxy['Group_M_Crit200']**(1/3)*(2*omegar+3/2*omegam)*Hz**(1/3)
-	galaxy_output['1p00r200-v_pdoev']=vpseudo #pseudo-evolution velocity cut in km/s
+	galaxy_output['1p00r200-vpdoev']=vpseudo #pseudo-evolution velocity cut in km/s
 	
 	# Velocity cuts (if any)
-	vmins=[0.25*galaxy['Subhalo_V_max']] #minimum velocity cut in km/s
-	vmins_str=['vcut0p25vmax']
-	vminzero_str='vcut0p00vmax'
+	galaxy_output['Group_V_Crit200'] = np.sqrt(constant_G * galaxy['Group_M_Crit200'] / (galaxy['Group_R_Crit200'] * afac))
+
+	# Use the maximum circular velocity if available 
+	if 'Subhalo_V_max' in galaxy.keys():
+		vmins=[0.25*galaxy['Subhalo_V_max']]
+	else:# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
+		vmins=[0.25*(1.33*galaxy['Group_V_Crit200'])] 
+
+	vmins_str=['vc0p25vmax']
+	vminzero_str='vc0p00vmax'
 
 	# Azimuthal angle for calculations
 	thetarel_bins={'minorax':[30,90],
@@ -165,7 +174,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 
 	# Shell width for calculations
 	drfacs=[drfac] #fractional width of the shell -- list in case we want to add more
-	drfacs_str=[f'{idrfac:.2f}'.replace('.','p') for idrfac in drfacs]
+	drfacs_pc=[idrfac*100 for idrfac in drfacs] #convert to pc
+	drfacs_str=[str(f'{idrfac:.0f}'.replace('.','p')).zfill(2)+'pc' for idrfac in drfacs_pc]
 
 	# Masks
 	gas=pdata_candidates['ParticleType'].values==0.
@@ -237,7 +247,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 
 		# Pseudo-evolution velocity cut (updated for each shell)
 		vsboundary=[vpseudo*(rshell/galaxy['Group_R_Crit200'])]
-		vsboundary_str=['pdoev']
+		vsboundary_str=['vbpdoev']
 
 		# If the shell is a satellite, use static boundary velocity
 		if galaxy['SubGroupNumber']>0:
