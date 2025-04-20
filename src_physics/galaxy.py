@@ -153,12 +153,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	vpseudo=2/3*(constant_G/100)**(1/3)*galaxy['Group_M_Crit200']**(1/3)*(2*omegar+3/2*omegam)*Hz**(1/3)
 	galaxy_output['1p00r200-v_pdoev']=vpseudo #pseudo-evolution velocity cut in km/s
 	
-	# Vboundary
-	vsboundary=[vpseudo] #minimum velocity cut in km/s
-	vsboundary_str=['pdoev']
-
 	# Velocity cuts (if any)
-	vmins=[0.25*galaxy['Group_V_max']] #minimum velocity cut in km/s
+	vmins=[0.25*galaxy['Subhalo_V_max']] #minimum velocity cut in km/s
 	vmins_str=['vcut0p25vmax']
 	vminzero_str='vcut0p00vmax'
 
@@ -168,7 +164,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 				   'full':[0,90]} #degrees
 
 	# Shell width for calculations
-	drfacs=[drfac] #fractional width of the shell	
+	drfacs=[drfac] #fractional width of the shell -- list in case we want to add more
 	drfacs_str=[f'{idrfac:.2f}'.replace('.','p') for idrfac in drfacs]
 
 	# Masks
@@ -179,8 +175,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	# Fields
 	mass=pdata_candidates['Masses'].values
 	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the halo catalogue centre
-	coordinates=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values #absolute comoving coordinates
-	velocities=pdata_candidates.loc[:,[f'Velocities_{x}' for x in 'xyz']].values #absolute peculiar velocity in km/s 
 	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the centre as per the candidate function
 	vrad=pdata_candidates['Relative_vrad_pec'].values #peculiar radil velocity in km/s relative to the centre as per the candidate function
 	thetarel=pdata_candidates['Relative_theta'].values #relative theta in degrees
@@ -243,6 +237,11 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 
 		# Pseudo-evolution velocity cut (updated for each shell)
 		vsboundary=[vpseudo*(rshell/galaxy['Group_R_Crit200'])]
+		vsboundary_str=['pdoev']
+
+		# If the shell is a satellite, use static boundary velocity
+		if galaxy['SubGroupNumber']>0:
+			vsboundary=[0] 
 
 		# Skip the shell if it is a multiple of r200 and the galaxy is a satellite
 		if not ('r200' in rshell_str and galaxy['SubGroupNumber']>0) and rshell>0:

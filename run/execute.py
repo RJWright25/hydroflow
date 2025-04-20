@@ -16,9 +16,9 @@ warnings.filterwarnings("ignore")
 sys.path.append('/Users/rwright/GitHub/')
 
 # Parameters
-r200_shells=[0.05,0.1,0.15,0.2,0.25,0.3,0.5,0.75,1,1.5,2,2.5,3]
-rstar_shells=[0.5,1,1.5,2,4]
-kpc_shells=[1,2,5,10,15,20,25,30,40,50,75,100]
+r200_shells=[0.05,0.1,0.2,0.25,0.3,0.5,0.75,1,1.5,2,2.5,3]
+rstar_shells=[0.5,1,2,4]
+kpc_shells=[1,2,5,10,15,20,25,30,50,75,100]
 Tcuts_str=['cold','cool','warm','hot']
 Tcuts=[0,1e3,1e5,1e7,1e15]
 Tbins={Tcuts_str[i]:[Tcuts[i],Tcuts[i+1]] for i in range(len(Tcuts_str))}
