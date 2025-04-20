@@ -112,7 +112,7 @@ hval = metadata.hval
 afac = metadata.snapshots_afac[snap_mask][0]
 
 # Output paths
-output_folder = f'{path}/catalogues/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}_dr{dr_str}/snap{str(snap).zfill(3)}/'
+output_folder = f'{path}/catalogues/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}/snap{str(snap).zfill(3)}/'
 outcat_fname = output_folder + f'ivol_{str(ivol).zfill(3)}.hdf5'
 create_dir(outcat_fname)
 logging.info(f'Output file: {outcat_fname} [runtime {time.time()-t1:.3f} sec]')
