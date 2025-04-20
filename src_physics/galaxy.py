@@ -157,8 +157,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	coordinates=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values #comoving coordinates
 	velocities=pdata_candidates.loc[:,[f'Velocities_{x}' for x in 'xyz']].values #peculiar velocity in km/s
 
-	# Find 30kpc COM and vCOM
-	mask=(rrel<0.03)
+	# Find 30ckpc COM and vCOM with baryons
+	mask=(rrel<0.03,np.logical_or(gas,star))
 	com_sphere=np.nansum(mass[mask,np.newaxis]*coordinates[mask],axis=0)/np.nansum(mass[mask])
 	vcom_sphere=np.nansum(mass[mask,np.newaxis]*velocities[mask],axis=0)/np.nansum(mass[mask])
 	galaxy_output['030ckpc_sphere-com_x']=com_sphere[0]
