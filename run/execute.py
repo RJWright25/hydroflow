@@ -52,7 +52,7 @@ sys.path.append(f"{repo.split('hydroflow')[0]}")
 
 from hydroflow.run.initialise import load_metadata
 from hydroflow.run.tools_hpc import create_dir
-from hydroflow.run.tools_catalog import dump_hdf_group, dump_hdf, read_hdf
+from hydroflow.run.tools_catalogue import dump_hdf_group, dump_hdf, read_hdf
 from hydroflow.src_physics.utils import get_limits, constant_G
 from hydroflow.src_physics.galaxy import analyse_galaxy, retrieve_galaxy_candidates
 
