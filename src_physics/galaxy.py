@@ -164,7 +164,11 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	vpseudo=2/3*(constant_G/100)**(1/3)*galaxy['Group_M_Crit200']**(1/3)*(2*omegar+3/2*omegam)*Hz**(1/3)
 	galaxy_output['1p00r200-vpdoev']=vpseudo #pseudo-evolution velocity cut in km/s
 	
+
 	# Velocity cuts (if any)
+	galaxy_output['Group_V_Crit200']=constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200'])
+	print('Computed v200 = ',galaxy_output['Group_V_Crit200'])
+	print('Computed Vmax = ',galaxy['Subhalo_V_max'])
 	vmins=[];vminstrs=list(vcuts.keys())
 	if 'Subhalo_V_max' in galaxy.keys(): vmax=galaxy['Subhalo_V_max']
 	elif 'Group_V_Crit200' in galaxy.keys(): vmax=1.33*galaxy['Group_V_Crit200']# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
