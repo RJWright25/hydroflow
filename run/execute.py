@@ -13,15 +13,14 @@ from datetime import datetime
 
 warnings.filterwarnings("ignore")
 
-sys.path.append('/Users/rwright/GitHub/')
-
 # Parameters
-r200_shells=[0.05,0.1,0.2,0.25,0.3,0.5,0.75,1,1.5,2,2.5,3]
-rstar_shells=[0.5,1,2,4]
-kpc_shells=[1,2,5,10,15,20,25,30,50,75,100]
-Tcuts_str=['cold','cool','warm','hot']
-Tcuts=[0,1e3,1e5,1e7,1e15]
-Tbins={Tcuts_str[i]:[Tcuts[i],Tcuts[i+1]] for i in range(len(Tcuts_str))}
+r200_shells=[0.05,0.1,0.2,0.25,0.3,0.5,0.75,1,1.5,2,2.5,3] # Shells as fraction of r200
+rstar_shells=[0.5,1,2,4] # Shells as fraction of stellar half mass radius
+kpc_shells=[1,2,5,10,15,20,25,30,50,75,100] # Shells in pkpc 
+Tbins={'cold':[0,1e3],'cool':[1e3,1e5],'warm':[1e5,1e7],'hot':[1e7,1e15]} # Temperature bins for inflow/outflow calculations
+theta_bins={'minax':[30,90],'majax':[0,30],'full':[0,90]} # Angular bins for inflow/outflow calculations
+vcuts_vmax={'vc0p25vmax':0.25} # Additional radial velocity cuts for outflows in terms of subhalo vmax (0 included by default)
+drfacs=[0.1]
 
 # Particle data fields to dump
 pdata_fields=['Masses','Relative_r_comoving','Coordinates_x','Coordinates_y','Coordinates_z','Relative_vrad_pec','Relative_vx_pec','Relative_vy_pec','Relative_vz_pec','Relative_theta','Temperature','Density','Metallicity']
@@ -36,7 +35,6 @@ parser.add_argument('--ivol', type=int)
 parser.add_argument('--snap', type=int)
 parser.add_argument('--mcut', type=float)
 parser.add_argument('--dump', type=int)
-parser.add_argument('--dr', type=float)
 args=parser.parse_args()
 
 # Load arguments
@@ -196,15 +194,17 @@ if numgal:
 
             #### MAIN GALAXY ANALYSIS ####
             t1_f=time.time()
-            galaxy_output=analyse_galaxy(galaxy,
-                                                pdata_candidates,
+            galaxy_output=analyse_galaxy(galaxy,pdata_candidates,
                                                 metadata=metadata,
                                                 r200_shells=r200_shells,
                                                 kpc_shells=kpc_shells,
                                                 rstar_shells=rstar_shells,
                                                 Tbins=Tbins,
-                                                drfac=drfac,
+                                                theta_bins=theta_bins,
+                                                vcuts=vcuts_vmax,
+                                                drfacs=drfacs,
                                                 logfile=logging_folder+logging_name+'.log')
+                                                
             
             t2_f=time.time()
             logging.info(f"Galaxy routine took: {t2_f-t1_f:.3f} sec")

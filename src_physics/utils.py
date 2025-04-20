@@ -109,7 +109,6 @@ def get_limits(ivol,nslice,boxsize,buffer=0.1):
 	return xmin,xmax,ymin,ymax,zmin,zmax
 
 
-
 def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3,afac=1):
     """
     compute_relative_theta: Calculate the angular momentum of a system of particles and the angle between the angular momentum and the position vector of each particle.
