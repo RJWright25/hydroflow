@@ -138,8 +138,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	vminzero_str='vcut0p00vmax'
 
 	# Azimuthal angle for calculations
-	thetarel_bins={'coplanar':[0,30],
-				   'minorax':[60,90],
+	thetarel_bins={'minorax':[30,90],
+				   'majorax':[0,30],
 				   'full':[0,90]} #degrees
 
 	# Shell width for calculations
@@ -156,6 +156,25 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the halo catalogue centre
 	coordinates=pdata_candidates.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values #comoving coordinates
 	velocities=pdata_candidates.loc[:,[f'Velocities_{x}' for x in 'xyz']].values #peculiar velocity in km/s
+
+	# Find 30kpc COM and vCOM
+	mask=(rrel<0.03)
+	com_sphere=np.nansum(mass[mask,np.newaxis]*coordinates[mask],axis=0)/np.nansum(mass[mask])
+	vcom_sphere=np.nansum(mass[mask,np.newaxis]*velocities[mask],axis=0)/np.nansum(mass[mask])
+	galaxy_output['030ckpc_sphere-com_x']=com_sphere[0]
+	galaxy_output['030ckpc_sphere-com_y']=com_sphere[1]
+	galaxy_output['030ckpc_sphere-com_z']=com_sphere[2]
+	galaxy_output['030ckpc_sphere-vcom_x']=vcom_sphere[0]
+	galaxy_output['030ckpc_sphere-vcom_y']=vcom_sphere[1]
+	galaxy_output['030ckpc_sphere-vcom_z']=vcom_sphere[2]
+
+	# Calculate the relative position of particles in this sphere using the centre of mass
+	positions=coordinates-com_sphere
+	radii=np.linalg.norm(positions,axis=1)
+
+	# Calculate the relative velocity of particles in this sphere using the centre of mass
+	rhat = positions / np.stack(3 * [radii], axis=1)
+	vrad = np.sum((velocities-vcom_sphere) * rhat, axis=1)		
 
 	# Gas properties
 	temp=pdata_candidates['Temperature'].values
@@ -176,7 +195,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	specfrac['tot']=np.ones_like(gas)
 
 	# Get relative phi
-	Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,baryons=True,aperture=0.01)
+	Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,baryons=True,aperture=0.03)
 	pdata_candidates['Relative_theta']=thetarel
 	thetamasks={}
 	for thetarel_str,thetarel_bin in thetarel_bins.items():
@@ -244,13 +263,13 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 			galaxy_output[f'{rshell_str}_sphere-vcom_y']=vcom_sphere[1]
 			galaxy_output[f'{rshell_str}_sphere-vcom_z']=vcom_sphere[2]
 
-			# Calculate the relative position of particles in this sphere using the new centre of mass
-			positions=coordinates-com_sphere
-			radii=np.linalg.norm(positions,axis=1)
+			# # Calculate the relative position of particles in this sphere using the new centre of mass
+			# positions=coordinates-com_sphere
+			# radii=np.linalg.norm(positions,axis=1)
 
-			# Calculate the relative velocity of particles in this sphere using the new centre of mass
-			rhat = positions / np.stack(3 * [radii], axis=1)
-			vrad = np.sum((velocities-vcom_sphere) * rhat, axis=1)			
+			# # Calculate the relative velocity of particles in this sphere using the new centre of mass
+			# rhat = positions / np.stack(3 * [radii], axis=1)
+			# vrad = np.sum((velocities-vcom_sphere) * rhat, axis=1)			
 
 			### DARK MATTER
 			galaxy_output[f'{rshell_str}_sphere-dm-m_tot']=np.nansum(mass[np.logical_and(mask_sphere,dm)])
@@ -334,7 +353,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 
 						# Breakdown of mass in this phase by species
 						for spec in specfrac.keys():
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-m_{spec}_']=np.nansum(mass[Tmask_shell]*specfrac[spec][Tmask_shell])
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-m_{spec}']=np.nansum(mass[Tmask_shell]*specfrac[spec][Tmask_shell])
 							# save mean radial velocity for each species
 							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-vrad_{spec}_mean']=np.nansum(vrad[Tmask_shell]*mass[Tmask_shell]*specfrac[spec][Tmask_shell])/np.nansum(mass[Tmask_shell]*specfrac[spec][Tmask_shell])
 						

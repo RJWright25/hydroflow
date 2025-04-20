@@ -267,7 +267,7 @@ def combine_catalogues(path_subcat,path_gasflow,snaps=None,mcut=10,verbose=False
     if snap_max-snap_min==0:
         outpath=path_gasflow+f'/gasflow_snap{str(int(snap_max)).zfill(3)}_{calc_str}.hdf5'
     else:
-        outpath=path_gasflow+f'/gasflow_snap{str(int(snap_min)).zfill(3)}to{str(int(snap_max)).zfill(3)}_{calc_str}.hdf5'
+        outpath=path_gasflow+f'/gasflow_snap{str(int(snap_min)).zfill(3)}to{str(int(snap_max)).zfill(3))}_{calc_str}.hdf5'
 
 
     logging.info(f'Reading hydroflow outputs ... (t={time.time()-t1}) \n')
