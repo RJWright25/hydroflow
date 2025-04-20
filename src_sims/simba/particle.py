@@ -69,7 +69,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     # Loop over particle types
     for iptype,ptype in enumerate(ptype_fields):
         logging.info(f"Reading ptype {ptype}...")
-        subset=ptype_subset[ptype]
         
         if npart_ifile[ptype]:
             # Generate a mask for the particles in the subvolume
