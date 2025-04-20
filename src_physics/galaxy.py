@@ -39,7 +39,6 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 
 	# Define the centre of mass and scale factor
 	com=np.array([galaxy[f'CentreOfPotential_{x}'] for x in 'xyz'])
-	afac=1/(1+galaxy['Redshift'])
 
 	# Define the maximum radius to search for candidates if not provided
 	if maxrad is None:
@@ -78,7 +77,7 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 		pdata_candidates['Relative_vrad_pec'] = np.sum(pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values * rhat, axis=1)
 
 		# Compute relative theta
-		Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,afac=1,baryons=True,aperture=0.03)
+		Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,afac=1/(1+galaxy['Redshift']),baryons=True,aperture=0.03)
 		pdata_candidates['Relative_theta']=thetarel
 
 		return pdata_candidates
