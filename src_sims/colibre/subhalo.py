@@ -89,6 +89,9 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
             r200=halodata.spherical_overdensity_200_crit.soradius;r200.convert_to_units(dunit)
             halodata_out['Group_R_Crit200']=np.array(r200.value) #comoving
 
+            vmax=halodata.bound_subhalo.maximum_circular_velocity;vmax.convert_to_units('km/s')
+            halodata_out['Group_V_max']=np.array(vmax.value)
+
             # Centre of mass -- use the central galaxy 30kpc inclusive sphere
             cop_halo=halodata.exclusive_sphere_30kpc.centre_of_mass
             cop_halo.convert_to_units('Mpc')

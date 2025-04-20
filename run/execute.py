@@ -16,18 +16,14 @@ warnings.filterwarnings("ignore")
 sys.path.append('/Users/rwright/GitHub/')
 
 # Parameters
-r200_shells=[0.0249999,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3]
+r200_shells=[0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3]
 rstar_shells=[0.5,1,1.5,2,4]
-kpc_shells=[1,2,5,10,15,20,30,40,50,60,70,80,90,100]
-
+kpc_shells=[1,2,5,10,15,20,25,30,40,50,75,100]
 Tcuts_str=['cold','cool','warm','hot']
 Tcuts=[0,1e3,1e5,1e7,1e15]
 Tbins={Tcuts_str[i]:[Tcuts[i],Tcuts[i+1]] for i in range(len(Tcuts_str))}
 
-vcuts_flow=[0]
-vcuts_str=[str(int(vcut)).zfill(3)+'kmps' for vcut in vcuts_flow]
-vcuts={vcut_str:vcut for vcut_str,vcut in zip(vcuts_str,vcuts_flow)}
-
+# Particle data fields to dump
 pdata_fields=['Masses','Relative_r_comoving','Coordinates_x','Coordinates_y','Coordinates_z','Relative_vrad_pec','Relative_vx_pec','Relative_vy_pec','Relative_vz_pec','Relative_theta','Temperature','Density','Metallicity']
 
 # Argument parser
