@@ -5,7 +5,7 @@ import pandas as pd
 import eagleSqlTools as sql 
 
 from hydroflow.run.initialise import load_metadata
-from hydroflow.run.tools_catalog import dump_hdf
+from hydroflow.run.tools_catalogue import dump_hdf
 
 def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcut=1e11,metadata=None):
     """

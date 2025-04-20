@@ -143,8 +143,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
                 hydrogen_frac=pdata_snap_masked.gas.element_mass_fractions.hydrogen.value
                 logging.info(f"Reading HI... [pdata time: {time.time()-t0:.2f} s]")
                 pdata_ptype['mfrac_HI']=pdata_snap_masked.gas.species_fractions.HI.value
-                # logging.info(f"Reading HII... [pdata time: {time.time()-t0:.2f} s]")
-                # pdata_ptype['mfrac_HII']=pdata_snap_masked.gas.species_fractions.HII.value
                 logging.info(f"Reading H2... [pdata time: {time.time()-t0:.2f} s]")
                 pdata_ptype['mfrac_H2']=pdata_snap_masked.gas.species_fractions.H2.value*2 # multiply by 2 to mass fraction (instead of number density fraction)
                 logging.info(f"Reading Z... [pdata time: {time.time()-t0:.2f} s]")
