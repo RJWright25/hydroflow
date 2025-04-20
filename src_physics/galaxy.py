@@ -101,9 +101,6 @@ def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,box
 		Lbar,thetarel=compute_relative_theta(pdata=pdata_candidates,afac=1/(1+galaxy['Redshift']),baryons=True,aperture=0.03)
 		pdata_candidates['Relative_theta']=thetarel
 
-
-
-
 		return pdata_candidates
 	else:
 		return pd.DataFrame()
@@ -228,7 +225,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	galaxy_output['010pkpc_sphere-gas-r_half']=gas_r_half
 	Lbar=compute_relative_theta(pdata=pdata_candidates,baryons=True,aperture=0.03,afac=1/(galaxy['Redshift']))[0]
 	for idim,dim in enumerate(['x','y','z']):
-		galaxy_output[f'030pkpc_sphere-Lbar_{dim}']=Lbar[dim]
+		galaxy_output[f'030pkpc_sphere-Lbar_{dim}']=Lbar[idim]
 
 	# Combine all the shell radii for analysis
 	radial_shells_R200=[fR200*galaxy['Group_R_Crit200'] for fR200 in r200_shells] #numerical values are comoving
