@@ -171,12 +171,15 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,r200_shells=None,kpc_shells=
 	# Calculate the relative position of particles in this sphere using the centre of mass
 	positions=coordinates-com_sphere
 	rrel=np.linalg.norm(positions,axis=1)
-	# Re-assign the relative position to the new baryon centre of mass 
-	pdata_candidates['Relative_r_comoving']= rrel
 
 	# Calculate the relative velocity of particles in this sphere using the centre of mass
-	rhat = positions / np.stack(3 * [radii], axis=1)
-	vrad = np.sum((velocities-vcom_sphere) * rhat, axis=1)		
+	rhat = positions / np.stack(3 * [rrel], axis=1)
+	vrad = np.sum((velocities-vcom_sphere) * rhat, axis=1)
+
+	
+	# Re-assign the relative position/radial velocity to the new baryon centre of mass 
+	pdata_candidates['Relative_r_comoving']= rrel
+	pdata_candidates['Relative_vrad_pec']=vrad
 
 	# Gas properties
 	temp=pdata_candidates['Temperature'].values
