@@ -41,6 +41,23 @@ from hydroflow.run.tools_catalogue import dump_hdf_group, dump_hdf, read_hdf
 from hydroflow.src_physics.utils import get_limits, constant_G
 from hydroflow.src_physics.galaxy import analyse_galaxy, retrieve_galaxy_candidates
 
+# Load subhalo catalogue
+namecat = pathcat.split('/')[-1][:-5]
+run = path.split('/')[-1]
+sim = run.split('_')[0]
+
+create_dir('./jobs/gasflow')
+create_dir('./catalogues/gasflow')
+
+# Logging setup
+logging_folder = f'{path}/jobs/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}/snap{str(snap).zfill(3)}/'
+logging_name = f"s{str(snap).zfill(3)}_n{str(int(nslice**3)).zfill(3)}_ivol{str(ivol).zfill(3)}"
+create_dir(logging_folder)
+os.remove(f'{logging_folder}{logging_name}.log') if os.path.exists(f'{logging_folder}{logging_name}.log') else None
+logging.basicConfig(filename=f'{logging_folder}{logging_name}.log', level=logging.INFO)
+logging.info(f"************{datetime.now()}************")
+logging.info(f'Running {code} simulation with {namecat} catalogue [runtime {time.time():.3f} sec]')
+
 # Initialise variables
 r200_shells, rstar_shells, kpc_shells = None, None, None
 Tbins, theta_bins, vcuts, drfacs = None, None, None, None
@@ -63,24 +80,7 @@ if pfile is not None and os.path.exists(pfile):
             logging.info(f"{par} not found in {pfile}")
 
 
-
-# Load subhalo catalogue
-namecat = pathcat.split('/')[-1][:-5]
-run = path.split('/')[-1]
-sim = run.split('_')[0]
-
-create_dir('./jobs/gasflow')
-create_dir('./catalogues/gasflow')
-
-# Logging setup
-logging_folder = f'{path}/jobs/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}/snap{str(snap).zfill(3)}/'
-logging_name = f"s{str(snap).zfill(3)}_n{str(int(nslice**3)).zfill(3)}_ivol{str(ivol).zfill(3)}"
-create_dir(logging_folder)
-os.remove(f'{logging_folder}{logging_name}.log') if os.path.exists(f'{logging_folder}{logging_name}.log') else None
-logging.basicConfig(filename=f'{logging_folder}{logging_name}.log', level=logging.INFO)
-
 t1 = time.time()
-logging.info(f"************{datetime.now()}************")
 logging.info(f'Loading subhalo catalogue: {pathcat} ...')
 subcat = read_hdf(pathcat)
 
