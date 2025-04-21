@@ -117,7 +117,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				   rstar_shells=[1,2,4],
 				   Tbins={'cold':[0,1e3],'cool':[1e3,1e5],'warm':[1e5,1e7],'hot':[1e7,1e15]},
 				   theta_bins={'full':[0,90],'minax':[60,90],'majax':[0,30]},
-				   vcuts={'vc0p25vmx':'0.25Vmax','050kmps':50,'100kmps':100,'250kmps':250},
+				   vcuts={'vc0p25vmx':'0.25Vmax','vc050kmps':50,'vc100kmps':100,'vc250kmps':250},
 				   drfacs=[0.1],
 				   logfile=None):
 
