@@ -210,7 +210,7 @@ def read_hdf(fname,columns=None,verbose=False):
 
 def combine_catalogues(path_subcat, path_gasflow, snaps=None, mcut=10, verbose=False):
     t1 = time.time()
-    log_path = 'jobs/combine_catalogs.log'
+    log_path = 'jobs/combine_catalogues.log'
 
     if os.path.exists(log_path):
         os.remove(log_path)
