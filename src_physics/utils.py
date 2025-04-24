@@ -109,9 +109,9 @@ def get_limits(ivol,nslice,boxsize,buffer=0.1):
 	return xmin,xmax,ymin,ymax,zmin,zmax
 
 
-def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3,afac=1):
+def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1):
     """
-    compute_relative_theta: Calculate the angular momentum of a system of particles and the angle between the angular momentum and the position vector of each particle.
+    compute_cylindrical_ztheta: Calculate the angular momentum of a system of particles and the angle between the angular momentum and the position vector of each particle.
 
     Input:
     -----------
@@ -124,12 +124,16 @@ def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3,afac=1):
     
     Output:
     -----------
-    Lbartot: np.array
+    Lbar: np.array
         Array containing the angular momentum of the system.
 
-    deg_theta: np.array
+    theta: np.array
         Array containing the angle between the angular momentum of the system and the position vector of each particle.
         The output is in degrees and ranges from [0,90] degrees -- 0 degrees corresponds to particles aligned with the angular momentum vector/minor axis.
+
+    z : np.array
+        Array containing the z-coordinate of the particles relative to the disk plane.
+        The output is in physical Mpc and can be positive or negative.
 
     """
 
@@ -146,17 +150,24 @@ def compute_relative_theta(pdata,baryons=True,aperture=30*1e-3,afac=1):
         mask=(radii<aperture)
 
 	# Define the angular momentum of the galaxy with baryonic elements within aperture
-    Lbartot=np.nansum(np.cross(positions[mask],masses[mask][:,np.newaxis]*velocities[mask]),axis=0) 
+    Lbar=np.nansum(np.cross(positions[mask],masses[mask][:,np.newaxis]*velocities[mask]),axis=0)
+    Lbarhat=Lbar/np.linalg.norm(Lbar)
 
 	# Find the angle between the angular momentum of the galaxy and the position vector of each particle
-    cos_theta=np.sum(Lbartot*positions,axis=1)/(np.linalg.norm(Lbartot)*np.linalg.norm(positions,axis=1))
-    deg_theta=np.arccos(cos_theta)*180/np.pi
-    deg_theta[deg_theta>90]=180-deg_theta[deg_theta>90] # particles with e.g. theta=180 degrees (opposite minor axis) are re-assigned to 0 degrees (mirrored)
+    costheta=np.sum(Lbar*positions,axis=1)/(np.linalg.norm(Lbar)*np.linalg.norm(positions,axis=1))
+    theta=np.arccos(costheta)
+    zvec=positions*Lbarhat
+    zheight=np.linalg.norm(zvec,axis=1)
+    zheight=zheight/afac #convert back to comoving units
+
+    # Now convert theta to the angle between the angular momentum and the disc axis
+    theta=theta*180/np.pi
+    theta[theta>90]=180-theta[theta>90] # particles with e.g. theta=180 degrees (opposite minor axis) are re-assigned to 0 degrees (mirrored)
 
     # Now make 90 degrees the minor axis
-    deg_theta=90-deg_theta
+    theta=90-theta
 
-    return Lbartot, deg_theta
+    return Lbar, theta, zheight
 
 def rahmati2013_neutral_fraction(nH,T,redshift=0):
     """
