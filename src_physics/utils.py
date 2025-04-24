@@ -154,17 +154,16 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1):
     Lbarhat=Lbar/np.linalg.norm(Lbar)
 
 	# Find the angle between the angular momentum of the galaxy and the position vector of each particle
-    costheta=np.sum(Lbar*positions,axis=1)/(np.linalg.norm(Lbar)*np.linalg.norm(positions,axis=1))
-    theta=np.arccos(costheta)
+    cos_theta=np.sum(Lbar*positions,axis=1)/(np.linalg.norm(Lbar)*np.linalg.norm(positions,axis=1))
+    deg_theta=np.arccos(cos_theta)*180/np.pi
+    deg_theta[deg_theta>90]=180-deg_theta[deg_theta>90] # particles with e.g. theta=180 degrees (opposite minor axis) are re-assigned to 0 degrees (mirrored)
+    
+    # Now make 90 degrees the minor axis
+    theta=90-deg_theta
+
+    # Find the z-coordinate of the particles relative to the disk plane
     zheight=np.dot(positions,Lbarhat)
     zheight=zheight/afac #convert back to comoving units
-
-    # Now convert theta to the angle between the angular momentum and the disc axis
-    theta=theta*180/np.pi
-    theta[theta>90]=180-theta[theta>90] # particles with e.g. theta=180 degrees (opposite minor axis) are re-assigned to 0 degrees (mirrored)
-
-    # Now make 90 degrees the minor axis
-    theta=90-theta
 
     return Lbar, theta, zheight
 
