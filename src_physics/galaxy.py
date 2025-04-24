@@ -166,12 +166,14 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	for idim,dim in enumerate(['x','y','z']):
 		galaxy_output[f'030pkpc_sphere-combar_{dim}']=pdata_candidates.loc[0,f'Coordinates_{dim}']
 
-	# Compute relative theta
+	# Compute relative zheight and theta
 	Lbar,theta,zheight=compute_cylindrical_ztheta(pdata=pdata_candidates,afac=afac,baryons=True,aperture=0.03)
 	pdata_candidates['Relative_theta']=theta
 	pdata_candidates['Relative_zheight']=zheight
 	for idim,dim in enumerate(['x','y','z']):
 		galaxy_output[f'030pkpc_sphere-Lbar{dim}']=Lbar[idim]
+	vradz=np.dot(vxyz,Lbar/np.linalg.norm(Lbar)) # Get z radial velocity vector
+	vradz[zheight<0]*=-1 # Flip sign of z radial velocity for particles below the plane
 
 	# Velocity cuts (if any)
 	galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']))
@@ -384,8 +386,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				rshell_str=rshell_str
 				rhi=rshell+(drfac*rshell)/2
 				rlo=rshell-(drfac*rshell)/2
-				vradz=np.linalg.norm(vxyz*Lbar/np.linalg.norm(Lbar),axis=1) # Get magnitude of z radial velocity in galaxy frame
-				vradz[zheight<0]*=-1 # Flip sign of z radial velocity for particles below the plane
 
 				# Mask for the slab in comoving coordinates
 				mask_shell=np.logical_and(np.abs(zheight)>=rlo,np.abs(zheight)<rhi)
