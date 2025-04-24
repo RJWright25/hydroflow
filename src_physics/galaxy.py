@@ -181,10 +181,12 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	drfacs_pc=[idrfac*100 for idrfac in drfacs] #convert to pc
 	drfacs_str=['p'+str(f'{idrfac:.0f}').zfill(2) for idrfac in drfacs_pc]
 
-	# Masks
-	gas=pdata_candidates['ParticleType'].values==0.
-	star=pdata_candidates['ParticleType'].values==4.
-	dm=pdata_candidates['ParticleType'].values==1.
+	# Compute relative zheight and theta
+	Lbar,theta,zheight=compute_cylindrical_ztheta(pdata=pdata_candidates,afac=afac,baryons=True,aperture=0.03)
+	pdata_candidates['Relative_theta']=theta
+	pdata_candidates['Relative_zheight']=zheight
+	for idim,dim in enumerate(['x','y','z']):
+		galaxy_output[f'030pkpc_sphere-Lbar{dim}']=Lbar[idim]
 
 	# Pre-load the particle data
 	mass=pdata_candidates['Masses'].values
@@ -194,15 +196,13 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	temp=pdata_candidates['Temperature'].values
 	sfr=pdata_candidates['StarFormationRate'].values
 	vxyz=pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values #relative velocity in km/s
-
-	# Compute relative zheight and theta
-	Lbar,theta,zheight=compute_cylindrical_ztheta(pdata=pdata_candidates,afac=afac,baryons=True,aperture=0.03)
-	pdata_candidates['Relative_theta']=theta
-	pdata_candidates['Relative_zheight']=zheight
-	for idim,dim in enumerate(['x','y','z']):
-		galaxy_output[f'030pkpc_sphere-Lbar{dim}']=Lbar[idim]
 	vradz=np.dot(vxyz,Lbar/np.linalg.norm(Lbar)) # Get z radial velocity vector
 	vradz[zheight<0]*=-1 # Flip sign of z radial velocity for particles below the plane
+
+	# Masks
+	gas=pdata_candidates['ParticleType'].values==0.
+	star=pdata_candidates['ParticleType'].values==4.
+	dm=pdata_candidates['ParticleType'].values==1.
 
 	# Gas selections by temperature (adding sf, all)
 	Tmasks={'all':gas,'sf':np.logical_and(gas,sfr>0)}
