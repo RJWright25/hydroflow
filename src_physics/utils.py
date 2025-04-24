@@ -158,6 +158,7 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1):
     theta=np.arccos(costheta)
     zvec=positions*Lbarhat
     zheight=np.linalg.norm(zvec,axis=1)
+    zheight[theta>np.pi/2]=-zheight[theta>np.pi/2] # particles with theta>90 degrees are re-assigned to negative zheight
     zheight=zheight/afac #convert back to comoving units
 
     # Now convert theta to the angle between the angular momentum and the disc axis
