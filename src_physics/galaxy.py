@@ -414,8 +414,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 						
 						if 'all' in Tstr:
 							print(rshell_str)
-							print(f'Gas outflow rates regular: {galaxy_output[f"{rshell_str}_shell{drfac_str}_minax-gas_"+Tstr+"-mdot_tot_outflow_vbdef_vc000kmps"]} Msun/yr')
-							print(f'Gas outflow rates z slab: {galaxy_output[f"{rshell_str}_zslab{drfac_str}-gas_"+Tstr+"-mdot_tot_outflow_"+vkey+"_vc000kmps"]} Msun/yr')
+							print(f'Gas outflow rates regular: {galaxy_output[f"{rshell_str}_shell{drfac_str}_minax-gas_"+Tstr+"-mdot_tot_outflow_vbdef_vc000kmps"]:.2e} Msun/yr')
+							print(f'Gas outflow rates z slab: {galaxy_output[f"{rshell_str}_zslab{drfac_str}-gas_"+Tstr+"-mdot_tot_outflow_"+vkey+"_vc000kmps"]:.2e} Msun/yr')
 
 						# Calculate the flow rates for the gas by species
 						for spec in specmass.keys():
