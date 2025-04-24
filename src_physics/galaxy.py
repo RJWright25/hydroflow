@@ -163,17 +163,15 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	galaxy_output['1p00r200-vpdoev']=vpseudo #pseudo-evolution velocity cut in km/s
 	
 	# Save used com from the position of the closest particle
-	galaxy_output['030pkpc_sphere-combar_x']=pdata_candidates.loc[0,'Coordinates_x']
-	galaxy_output['030pkpc_sphere-combar_y']=pdata_candidates.loc[0,'Coordinates_y']
-	galaxy_output['030pkpc_sphere-combar_z']=pdata_candidates.loc[0,'Coordinates_z']
+	for idim,dim in enumerate(['x','y','z']):
+		galaxy_output[f'030pkpc_sphere-combar_{dim}']=pdata_candidates.loc[0,f'Coordinates_{dim}']
 
 	# Compute relative theta
 	Lbar,theta,zheight=compute_cylindrical_ztheta(pdata=pdata_candidates,afac=afac,baryons=True,aperture=0.03)
 	pdata_candidates['Relative_theta']=theta
 	pdata_candidates['Relative_zheight']=zheight
-	galaxy_output['030pkpc_sphere-Lbar_x']=Lbar[0]
-	galaxy_output['030pkpc_sphere-Lbar_y']=Lbar[1]
-	galaxy_output['030pkpc_sphere-Lbar_z']=Lbar[2]
+	for idim,dim in enumerate(['x','y','z']):
+		galaxy_output[f'030pkpc_sphere-Lbar{dim}']=Lbar[idim]
 
 	# Velocity cuts (if any)
 	galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']))
@@ -228,16 +226,20 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	star_mask=np.logical_and(star,rrel*afac<0.01)
 	if np.nansum(star_mask):
 		star_r_half=calc_halfmass_radius(mass[star_mask],rrel[star_mask])
+		star_rz_half=calc_halfmass_radius(mass[star_mask],np.abs(zheight[star_mask]))
 
 	# Get gas half-mass radius
 	gas_r_half=np.nan
 	gas_mask=np.logical_and(gas,rrel*afac<0.01)
 	if np.nansum(gas_mask):
 		gas_r_half=calc_halfmass_radius(mass[gas_mask],rrel[gas_mask])
+		gas_rz_half=calc_halfmass_radius(mass[gas_mask],np.abs(zheight[gas_mask]))
 
 	# Add to the galaxy output
 	galaxy_output['010pkpc_sphere-star-r_half']=star_r_half
+	galaxy_output['010pkpc_sphere-star-rz_half']=star_rz_half
 	galaxy_output['010pkpc_sphere-gas-r_half']=gas_r_half
+	galaxy_output['010pkpc_sphere-gas-rz_half']=gas_rz_half
 
 	# Combine all the shell radii for analysis
 	radial_shells_R200=[fR200*galaxy['Group_R_Crit200'] for fR200 in r200_shells] #numerical values are comoving
@@ -251,6 +253,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 	# Loop over all the shells
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
+		flag_innershell=(('kpc' in rshell_str and rshell*afac*1e3<=31) or '0p10' in rshell_str or 'reff' in rshell_str)
 
 		# Pseudo-evolution velocity cut (updated for each shell)
 		if 'r200' in rshell_str and galaxy['SubGroupNumber']==0:
@@ -292,7 +295,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-m_{spec}']=np.nansum(specmass[spec][Tmask_sphere])
 
 				# If considering a galaxy-scale shell, calculate the SFR and metallicity
-				if (('kpc' in rshell_str and rshell*afac*1e3<=31) or '0p10' in rshell_str or 'reff' in rshell_str):
+				if flag_innershell:
 					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_sphere])
 					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_sphere])/np.nansum(mass[Tmask_sphere])
 							
@@ -347,7 +350,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 						galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-n_tot']=np.nansum(Tmask_shell)
 						
 						# If considering a galaxy-scale shell, calculate the SFR and metallicity
-						if (('kpc' in rshell_str and rshell*afac*1e3<=31) or '0p10' in rshell_str or 'reff' in rshell_str):
+						if flag_innershell:
 							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_shell])
 							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_shell])/np.nansum(mass[Tmask_shell])
 
@@ -377,7 +380,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
 		for drfac,drfac_str in zip(drfacs,drfacs_str):
 			# Only do for kpc, rstar and 0.1r200 shells
-			if (('kpc' in rshell_str and rshell*afac*1e3<=31) or '0p10' in rshell_str or 'reff' in rshell_str):
+			if flag_innershell:
 				rshell_str=rshell_str
 				rhi=rshell+(drfac*rshell)/2
 				rlo=rshell-(drfac*rshell)/2
