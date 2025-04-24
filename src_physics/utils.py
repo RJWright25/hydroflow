@@ -145,7 +145,7 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1):
     velocities=pdata.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values
 
     if baryons:
-        mask=(ptypes==0) & (radii<aperture)
+        mask=np.logical_or(ptypes==0,ptypes==4) & (radii<aperture)
     else:
         mask=(radii<aperture)
 
