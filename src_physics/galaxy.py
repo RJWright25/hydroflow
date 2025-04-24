@@ -190,7 +190,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 	# Pre-load the particle data
 	mass=pdata_candidates['Masses'].values
-	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the halo catalogue centre
+	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the halo centre
 	vrad=pdata_candidates['Relative_vrad_pec'].values #peculiar radil velocity in km/s relative to the centre as per the candidate function
 	theta=pdata_candidates['Relative_theta'].values #relative theta in degrees
 	temp=pdata_candidates['Temperature'].values
@@ -256,7 +256,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 	# Loop over all the shells
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
-		flag_innershell=(('kpc' in rshell_str and rshell*afac*1e3<=31) or '0p10' in rshell_str or 'reff' in rshell_str)
+		flag_innershell=(('kpc' in rshell_str) and (rshell*afac*1e3<=31)) or ('0p10r200' in rshell_str) or ('reff' in rshell_str)
 
 		# Pseudo-evolution velocity cut (updated for each shell)
 		if 'r200' in rshell_str and galaxy['SubGroupNumber']==0:
@@ -381,16 +381,16 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	#### CYLINDRICAL SLAB CALCULATIONS (abs[z] between r-dr/2 and r+dr/2) ####
 	# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
+		# Only do for kpc, rstar and 0.10r200 shells
+		flag_innershell=(('kpc' in rshell_str) and (rshell*afac*1e3<=31)) or ('0p10r200' in rshell_str) or ('reff' in rshell_str)
 		for drfac,drfac_str in zip(drfacs,drfacs_str):
-			# Only do for kpc, rstar and 0.1r200 shells
 			if flag_innershell:
 				rshell_str=rshell_str
 				rhi=rshell+(drfac*rshell)/2
 				rlo=rshell-(drfac*rshell)/2
-				print(rshell_str,rlo,rhi)
 
 				# Mask for the slab in comoving coordinates
-				mask_shell=np.logical_and.reduce([zheight>=rlo,zheight<rhi,rrel_inplane<0.1*galaxy['Group_R_Crit200']])
+				mask_shell=np.logical_and.reduce([np.abs(zheight)>=rlo,np.abs(zheight)<rhi,rrel_inplane*afac<0.03])
 
 				# Now convert the shell values to physical units for the calculations
 				rhi=rhi*afac
@@ -406,18 +406,18 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 					# Calculate the total flow rates for the gas
 					for vboundary, vkey in zip([0], ['vbstatic']):
 						gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vradz[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
-						galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_vc000kmps']=gas_flow_rates[0]*2
-						galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_vc000kmps']=gas_flow_rates[1]*2
+						galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_vc000kmps']=gas_flow_rates[0]
+						galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_vc000kmps']=gas_flow_rates[1]
 						for iv,vminstr in enumerate(vminstrs):
-							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_{vminstr}']=gas_flow_rates[2+iv]*2
+							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_{vminstr}']=gas_flow_rates[2+iv]
 
 						# Calculate the flow rates for the gas by species
 						for spec in specmass.keys():
 							gas_flow_rates_species=calculate_flow_rate(masses=specmass[spec][Tmask_shell],vrad=vradz[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
-							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps']=gas_flow_rates_species[0]*2
-							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps']=gas_flow_rates_species[1]*2
+							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps']=gas_flow_rates_species[0]
+							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps']=gas_flow_rates_species[1]
 							for iv,vminstr in enumerate(vminstrs):
-								galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]*2
+								galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]
 
 
 		else:
