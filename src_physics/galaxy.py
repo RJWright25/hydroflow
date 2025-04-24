@@ -388,7 +388,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				rlo=rshell-(drfac*rshell)/2
 
 				# Mask for the slab in comoving coordinates
-				mask_shell=np.logical_and(np.abs(zheight)>=rlo,np.abs(zheight)<rhi)
+				mask_shell=np.logical_and.reduce([np.abs(zheight)>=rlo,np.abs(zheight)<rhi,rrel<2*star_r_half])
 
 				# Now convert the shell values to physical units for the calculations
 				rhi=rhi*afac
