@@ -198,6 +198,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	vxyz=pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values #relative velocity in km/s
 	vradz=np.dot(vxyz,Lbar/np.linalg.norm(Lbar)) # Get z radial velocity vector
 	vradz[zheight<0]*=-1 # Flip sign of z radial velocity for particles below the plane
+	rrel_inplane=np.sqrt(rrel**2-zheight**2) # Get the in-plane radius
 
 	# Masks
 	gas=pdata_candidates['ParticleType'].values==0.
@@ -386,9 +387,10 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				rshell_str=rshell_str
 				rhi=rshell+(drfac*rshell)/2
 				rlo=rshell-(drfac*rshell)/2
+				print(rshell_str,rlo,rhi)
 
 				# Mask for the slab in comoving coordinates
-				mask_shell=np.logical_and.reduce([np.abs(zheight)>=rlo,np.abs(zheight)<rhi,rrel<2*star_r_half])
+				mask_shell=np.logical_and.reduce([zheight>=rlo,zheight<rhi,rrel_inplane<0.1*galaxy['Group_R_Crit200']])
 
 				# Now convert the shell values to physical units for the calculations
 				rhi=rhi*afac
@@ -404,18 +406,18 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 					# Calculate the total flow rates for the gas
 					for vboundary, vkey in zip([0], ['vbstatic']):
 						gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vradz[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
-						galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_vc000kmps']=gas_flow_rates[0]
-						galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_vc000kmps']=gas_flow_rates[1]
+						galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_vc000kmps']=gas_flow_rates[0]*2
+						galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_vc000kmps']=gas_flow_rates[1]*2
 						for iv,vminstr in enumerate(vminstrs):
-							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_{vminstr}']=gas_flow_rates[2+iv]
+							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_{vminstr}']=gas_flow_rates[2+iv]*2
 
 						# Calculate the flow rates for the gas by species
 						for spec in specmass.keys():
 							gas_flow_rates_species=calculate_flow_rate(masses=specmass[spec][Tmask_shell],vrad=vradz[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
-							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps']=gas_flow_rates_species[0]
-							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps']=gas_flow_rates_species[1]
+							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps']=gas_flow_rates_species[0]*2
+							galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps']=gas_flow_rates_species[1]*2
 							for iv,vminstr in enumerate(vminstrs):
-								galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]
+								galaxy_output[f'{rshell_str}_zslab{drfac_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]*2
 
 
 		else:
