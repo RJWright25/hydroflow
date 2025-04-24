@@ -166,15 +166,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	for idim,dim in enumerate(['x','y','z']):
 		galaxy_output[f'030pkpc_sphere-combar_{dim}']=pdata_candidates.loc[0,f'Coordinates_{dim}']
 
-	# Compute relative zheight and theta
-	Lbar,theta,zheight=compute_cylindrical_ztheta(pdata=pdata_candidates,afac=afac,baryons=True,aperture=0.03)
-	pdata_candidates['Relative_theta']=theta
-	pdata_candidates['Relative_zheight']=zheight
-	for idim,dim in enumerate(['x','y','z']):
-		galaxy_output[f'030pkpc_sphere-Lbar{dim}']=Lbar[idim]
-	vradz=np.dot(vxyz,Lbar/np.linalg.norm(Lbar)) # Get z radial velocity vector
-	vradz[zheight<0]*=-1 # Flip sign of z radial velocity for particles below the plane
-
 	# Velocity cuts (if any)
 	galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']))
 	vmins=[];vminstrs=list(vcuts.keys())
@@ -203,6 +194,15 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	temp=pdata_candidates['Temperature'].values
 	sfr=pdata_candidates['StarFormationRate'].values
 	vxyz=pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values #relative velocity in km/s
+
+	# Compute relative zheight and theta
+	Lbar,theta,zheight=compute_cylindrical_ztheta(pdata=pdata_candidates,afac=afac,baryons=True,aperture=0.03)
+	pdata_candidates['Relative_theta']=theta
+	pdata_candidates['Relative_zheight']=zheight
+	for idim,dim in enumerate(['x','y','z']):
+		galaxy_output[f'030pkpc_sphere-Lbar{dim}']=Lbar[idim]
+	vradz=np.dot(vxyz,Lbar/np.linalg.norm(Lbar)) # Get z radial velocity vector
+	vradz[zheight<0]*=-1 # Flip sign of z radial velocity for particles below the plane
 
 	# Gas selections by temperature (adding sf, all)
 	Tmasks={'all':gas,'sf':np.logical_and(gas,sfr>0)}
