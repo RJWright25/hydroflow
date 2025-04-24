@@ -356,23 +356,56 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 								for iv,vminstr in enumerate(vminstrs):
 									galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]
 
-	#### CYLINDRICAL SLAB CALCULATIONS (z between r-dr/2 and r+dr/2) ####
-	# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
-	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
-		for drfac,drfac_str in zip(drfacs,drfacs_str):
-			if ('kpc' in rshell_str or '0p10' in rshell_str or 'reff' in rshell_str):
-				# Only do for kpc, rstar and 0.1r200 shells
-				rshell_str=rshell_str
-				radii=np.abs(rrel-rshell)
-				r_hi=rshell+(drfac*rshell)/2
-				r_lo=rshell-(drfac*rshell)/2
-				mask_shell=np.logical_and(radii>=r_lo,radii<r_hi)
+	# #### CYLINDRICAL SLAB CALCULATIONS (z between r-dr/2 and r+dr/2) ####
+	# # Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
+	# for rshell,rshell_str in zip(radial_shells,radial_shells_str):
+	# 	for drfac,drfac_str in zip(drfacs,drfacs_str):
+	# 		if ('kpc' in rshell_str or '0p10' in rshell_str or 'reff' in rshell_str):
+	# 			# Only do for kpc, rstar and 0.1r200 shells
+	# 			rshell_str=rshell_str;thetarel_str='full'
+	# 			r_hi=rshell+(drfac*rshell)/2
+	# 			r_lo=rshell-(drfac*rshell)/2
+	# 			zheight=rrel*np.sin(np.radians(thetarel))
 
-				# Now convert the shell values to physical units for the calculations
-				r_hi=r_hi*afac
-				r_lo=r_lo*afac
-				dr=r_hi-r_lo
 
+	# 			mask_shell=np.logical_and(zheight>=r_lo,zheight<r_hi)
+
+	# 			# Now convert the shell values to physical units for the calculations
+	# 			r_hi=r_hi*afac
+	# 			r_lo=r_lo*afac
+	# 			dr=r_hi-r_lo
+
+	# 			### GAS shell properties
+	# 			# Break down the gas mass by phase
+	# 			for Tstr,Tmask in Tmasks.items():
+	# 				Tmask_shell=np.logical_and.reduce([mask_shell_theta,gas,Tmask])
+	# 				galaxy_output[f'{rshell_str}_zslab{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-n_tot']=np.nansum(Tmask_shell)
+					
+	# 				# If considering a galaxy-scale shell, calculate the SFR and metallicity
+	# 				if ('kpc' in rshell_str or '0p10' in rshell_str or 'reff' in rshell_str):
+	# 					galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_shell])
+	# 					galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_shell])/np.nansum(mass[Tmask_shell])
+
+	# 				# Breakdown of mass in this phase by species
+	# 				for spec in specmass.keys():
+	# 					galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-m_{spec}']=np.nansum(specmass[spec][Tmask_shell])
+	# 					galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-vrad_{spec}_mean']=np.nansum(vrad[Tmask_shell]*specmass[spec][Tmask_shell])/np.nansum(specmass[spec][Tmask_shell])
+					
+	# 				# Calculate the total flow rates for the gas
+	# 				for vboundary, vkey in zip(vsboundary, vsboundary_str):
+	# 					gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
+	# 					galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_vc000kmps']=gas_flow_rates[0]
+	# 					galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_vc000kmps']=gas_flow_rates[1]
+	# 					for iv,vminstr in enumerate(vminstrs):
+	# 						galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_{vminstr}']=gas_flow_rates[2+iv]
+
+	# 					# Calculate the flow rates for the gas by species
+	# 					for spec in specmass.keys():
+	# 						gas_flow_rates_species=calculate_flow_rate(masses=specmass[spec][Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
+	# 						galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps']=gas_flow_rates_species[0]
+	# 						galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps']=gas_flow_rates_species[1]
+	# 						for iv,vminstr in enumerate(vminstrs):
+	# 							galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]
 
 
 		else:
