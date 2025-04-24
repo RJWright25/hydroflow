@@ -254,7 +254,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		if not ('r200' in rshell_str and galaxy['SubGroupNumber']>0) and rshell>0:
 			
 			#### SPHERE CALCULATIONS (r<rshell) ####
-
 			# Mask for the sphere in comoving coordinates
 			mask_sphere=rrel<=rshell
 			
@@ -285,15 +284,13 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_sphere])
 					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_sphere])/np.nansum(mass[Tmask_sphere])
 							
-			#### SHELL CALCULATIONS (r between r-dr/2 and r+dr/2) ####
-
+			#### SPHERICAL SHELL CALCULATIONS (r between r-dr/2 and r+dr/2) ####
 			# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
 			for drfac,drfac_str in zip(drfacs,drfacs_str):
 				rshell_str=rshell_str
-				radii=np.abs(rrel-rshell)
 				r_hi=rshell+(drfac*rshell)/2
 				r_lo=rshell-(drfac*rshell)/2
-				mask_shell=np.logical_and(radii>=r_lo,radii<r_hi)
+				mask_shell=np.logical_and(rrel>=r_lo,rrel<r_hi)
 
 				# Now convert the shell values to physical units for the calculations
 				r_hi=r_hi*afac
@@ -359,8 +356,27 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 								for iv,vminstr in enumerate(vminstrs):
 									galaxy_output[f'{rshell_str}_shell{drfac_str}_{thetarel_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]
 
-			else:
-				pass
+	#### CYLINDRICAL SLAB CALCULATIONS (z between r-dr/2 and r+dr/2) ####
+	# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
+	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
+		for drfac,drfac_str in zip(drfacs,drfacs_str):
+			if ('kpc' in rshell_str or '0p10' in rshell_str or 'reff' in rshell_str):
+				# Only do for kpc, rstar and 0.1r200 shells
+				rshell_str=rshell_str
+				radii=np.abs(rrel-rshell)
+				r_hi=rshell+(drfac*rshell)/2
+				r_lo=rshell-(drfac*rshell)/2
+				mask_shell=np.logical_and(radii>=r_lo,radii<r_hi)
+
+				# Now convert the shell values to physical units for the calculations
+				r_hi=r_hi*afac
+				r_lo=r_lo*afac
+				dr=r_hi-r_lo
+
+
+
+		else:
+			pass
 
 	# Return the galaxy output dictionary
 	return galaxy_output
