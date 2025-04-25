@@ -249,7 +249,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	zslab_radii_vals=[];zslab_radii_strs=list(zslab_radii.keys())
 	for zslab_radius in zslab_radii.values():
 		if type(zslab_radius)==str and 'r_half' in zslab_radius:
-			zslab_radius=galaxy['010pkpc_sphere-star-r_half']*np.float32(zslab_radius.split('r_half')[0])
+			zslab_radius=galaxy_output['010pkpc_sphere-star-r_half']*np.float32(zslab_radius.split('r_half')[0])
 		elif type(zslab_radius)==str and 'pkpc' in zslab_radius:
 			zslab_radius=np.float32(zslab_radius.split('pkpc')[0])/afac #convert to comoving kpc
 		zslab_radii_vals.append(zslab_radius)
