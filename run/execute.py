@@ -236,7 +236,7 @@ if numgal:
             data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
             columns=list(subcat_selection.columns)
             for column in list(galaxy_output.keys()):
-                if '0p10r200' in column or '1p00r200' in column or '030pkpc' in column:
+                if '0p10r200' in column or '1p00r200' in column or '030pkpc' in column or 'half' in column:
                     columns.append(column)
             metadata_dump={key:galaxy_output[key] for key in columns}
             dump_hdf_group(dumpcat_fname,group,data,metadata=metadata_dump,verbose=False)
