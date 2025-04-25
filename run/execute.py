@@ -61,7 +61,7 @@ logging.info(f"************{datetime.now()}************")
 logging.info(f'Running {code} simulation with {namecat} catalogue [runtime {time.time():.3f} sec]')
 
 # Initialise variables
-r200_shells, rstar_shells, kpc_shells = None, None, None
+r200_shells, rstar_shells, kpc_shells, zslab_radii= None, None, None, None
 Tbins, theta_bins, vcuts, drfacs = None, None, None, None
 pdata_fields = []
 
@@ -69,7 +69,7 @@ pdata_fields = []
 pfile=args.pars
 if pfile is not None and os.path.exists(pfile):
     params=import_variables(pfile)
-    pars=['r200_shells','rstar_shells','kpc_shells','Tbins','theta_bins','vcuts','drfacs','pdata_fields']
+    pars=['r200_shells','rstar_shells','kpc_shells','zslab_radii','Tbins','theta_bins','vcuts','drfacs','pdata_fields']
     for par in pars:
         if hasattr(params,par):
             exec(f"{par}=params.{par}")
@@ -210,6 +210,7 @@ if numgal:
                                                 r200_shells=r200_shells,
                                                 kpc_shells=kpc_shells,
                                                 rstar_shells=rstar_shells,
+                                                zslab_radii=zslab_radii,
                                                 Tbins=Tbins,
                                                 theta_bins=theta_bins,
                                                 vcuts=vcuts,
