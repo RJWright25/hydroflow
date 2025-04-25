@@ -227,6 +227,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
+	star_rz_half=np.nan
 	star_mask=np.logical_and(star,rrel*afac<0.01)
 	if np.nansum(star_mask):
 		star_r_half=calc_halfmass_radius(mass[star_mask],rrel[star_mask])
@@ -234,6 +235,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 	# Get gas half-mass radius
 	gas_r_half=np.nan
+	gas_rz_half=np.nan
 	gas_mask=np.logical_and(gas,rrel*afac<0.01)
 	if np.nansum(gas_mask):
 		gas_r_half=calc_halfmass_radius(mass[gas_mask],rrel[gas_mask])
