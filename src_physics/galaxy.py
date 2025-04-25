@@ -113,7 +113,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				   r200_shells=[0.1,0.3,1],
 				   kpc_shells=[10,30,100],
 				   rstar_shells=[1,2,4],
-				   zslab_radii={'rmx2reff':'2r_half','rmx10pkpc':10},
+				   zslab_radii={'rmx4reff':'4r_half','rmx10pkpc':10},
 				   Tbins={'cold':[0,1e3],'cool':[1e3,1e5],'warm':[1e5,1e7],'hot':[1e7,1e15]},
 				   theta_bins={'full':[0,90],'minax':[60,90],'majax':[0,30]},
 				   vcuts={'vc0p25vmx':'0.25Vmax','vc050kmps':50,'vc100kmps':100,'vc250kmps':250},
@@ -250,8 +250,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	for zslab_radius in zslab_radii.values():
 		if type(zslab_radius)==str and 'r_half' in zslab_radius:
 			zslab_radius=galaxy_output['010pkpc_sphere-star-r_half']*np.float32(zslab_radius.split('r_half')[0])
-		elif type(zslab_radius)==str and 'pkpc' in zslab_radius:
-			zslab_radius=np.float32(zslab_radius.split('pkpc')[0])/afac #convert to comoving kpc
+		else:
+			zslab_radius=zslab_radius/1e3/afac #convert to comoving Mpc
 		zslab_radii_vals.append(zslab_radius)
 
 	# Combine all the shell radii for analysis
