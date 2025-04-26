@@ -222,6 +222,18 @@ if numgal:
             logging.info(f"Galaxy routine took: {t2_f-t1_f:.3f} sec")
             logging.info(f'Galaxy successfully processed [runtime {time.time()-t1:.3f} sec]')
 
+            # Dump particle data if requested
+            if dump:
+                logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
+                group=str(int(galaxy[galid_key]))
+                data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
+                columns=list(subcat_selection.columns)
+                for column in list(galaxy_output.keys()):
+                    if '0p10r200' in column or '1p00r200' in column or '030pkpc' in column or 'half' in column:
+                        columns.append(column)
+                metadata_dump={key:galaxy_output[key] for key in columns}
+                dump_hdf_group(dumpcat_fname,group,data,metadata=metadata_dump,verbose=False)
+
         else:
             logging.info(f'No particles found for galaxy {int(galaxy[galid_key])} in subvolume {ivol}.')
             galaxy_output={}
@@ -230,17 +242,6 @@ if numgal:
         galaxy_output['ivol'] = ivol
         galaxy_output['HydroflowID'] = int(galaxy[galid_key])
 
-        # Dump particle data if requested
-        if dump:
-            logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
-            group=str(int(galaxy[galid_key]))
-            data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
-            columns=list(subcat_selection.columns)
-            for column in list(galaxy_output.keys()):
-                if '0p10r200' in column or '1p00r200' in column or '030pkpc' in column or 'half' in column:
-                    columns.append(column)
-            metadata_dump={key:galaxy_output[key] for key in columns}
-            dump_hdf_group(dumpcat_fname,group,data,metadata=metadata_dump,verbose=False)
 
 
 
