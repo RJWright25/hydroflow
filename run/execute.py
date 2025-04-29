@@ -80,7 +80,8 @@ if pfile is not None and os.path.exists(pfile):
             logging.info(f"{par} = {eval(par)}")
         else:
             logging.info(f"{par} not found in {pfile}")
-
+else:
+    from hydroflow.run.defaults import *
 
 t1 = time.time()
 logging.info(f'Loading subhalo catalogue: {pathcat} ...')

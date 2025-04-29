@@ -253,7 +253,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		if type(zslab_radius)==str and 'r_half' in zslab_radius:
 			zslab_radius=galaxy_output['010pkpc_sphere-star-r_half']*np.float32(zslab_radius.split('r_half')[0])
 		else:
-			zslab_radius=zslab_radius/1e3/afac #convert to comoving Mpc
+			zslab_radius=zslab_radius/1e3/afac #convert from pkpc to comoving Mpc
 		zslab_radii_vals.append(zslab_radius)
 
 	# Combine all the shell radii for analysis
@@ -266,7 +266,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	radial_shells=radial_shells_R200+radial_shells_pkpc+radial_shells_rstar
 	radial_shells_str=radial_shells_R200_str+radial_shells_pkpc_str+radial_shells_rstar_str
 
-	# Loop over all the shells
+	# Loop over all the spherical shells
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
 		flag_innershell=(('kpc' in rshell_str) and (rshell*afac*1e3<=31)) or ('0p10r200' in rshell_str) or ('reff' in rshell_str)
 
