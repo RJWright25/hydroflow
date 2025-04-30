@@ -113,16 +113,17 @@ def dump_hdf(fname,data,verbose=False):
         os.remove(fname)
     
     columns=list(data.columns)
-
-
     outfile=h5py.File(fname,"w")
-
 
     for icol,column in enumerate(columns):
         if verbose:
-            print(f'Dumping {column} ... {icol+1}/{len(columns)}')
+            if len(columns)>2000:
+                if icol%1000==0:
+                    print(f'Dumping {column} ... {icol+1}/{len(columns)}')
+            else:
+                if icol%100==0:
+                    print(f'Dumping {column} ... {icol+1}/{len(columns)}')
         outfile.create_dataset(name=column,data=data[column].values)
-
 
     outfile.close()
 
