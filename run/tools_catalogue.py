@@ -222,6 +222,9 @@ def combine_catalogues(path_gasflow, snaps=None, mcut=10, verbose=False):
 
     if os.path.exists(log_path):
         os.remove(log_path)
+
+    print(f"Logging to {log_path}")
+    
     logging.basicConfig(filename=log_path, level=logging.INFO)
 
     calc_str = 'nvol' + path_gasflow.split('nvol')[-1].split('/')[0]
