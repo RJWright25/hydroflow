@@ -208,12 +208,11 @@ def read_hdf(fname,columns=None,verbose=False):
     return outdf
 
 
-def combine_catalogues(path_gasflow, snaps=None, mcut=10, verbose=False):
-    t1 = time.time()
-    logging.info(f"Started combine catalogues at {time.ctime(t1)}")
+def combine_catalogues(path_hydroflow, snaps=None, mcut=10, verbose=False):
 
-    if 'catalogues'  in path_gasflow:
-        path_run=path_gasflow.split('catalogues')[0]
+    # Configure logging
+    if 'catalogues'  in path_hydroflow:
+        path_run=path_hydroflow.split('catalogues')[0]
         log_path = path_run+'/jobs/combine_catalogues.log'
         if not os.path.exists(path_run+'jobs'):
             os.makedirs(path_run+'jobs')
@@ -226,16 +225,19 @@ def combine_catalogues(path_gasflow, snaps=None, mcut=10, verbose=False):
     print(f"Logging to {log_path}")
     
     logging.basicConfig(filename=log_path, level=logging.INFO)
+    t1 = time.time()
+    logging.info(f"Started combine catalogues at {time.ctime(t1)}")
 
-    calc_str = 'nvol' + path_gasflow.split('nvol')[-1].split('/')[0]
+
+    calc_str = 'nvol' + path_hydroflow.split('nvol')[-1].split('/')[0]
     snap_set = set(snaps)
     snap_range = (min(snaps), max(snaps))
     snap_str = f"{snap_range[0]:03d}" if snap_range[0] == snap_range[1] else f"{snap_range[0]:03d}to{snap_range[1]:03d}"
-    outpath = os.path.join(path_gasflow, f"gasflow_snap{snap_str}_{calc_str}.hdf5")
+    outpath = os.path.join(path_hydroflow, f"gasflow_snap{snap_str}_{calc_str}.hdf5")
 
     logging.info(f"Reading hydroflow outputs... (t = {time.time() - t1:.2f}s) ")
 
-    snapdirs = sorted([d for d in os.listdir(path_gasflow) if d.startswith("snap")])
+    snapdirs = sorted([d for d in os.listdir(path_hydroflow) if d.startswith("snap")])
     logging.info(f"Snapdirs: {snapdirs}")
 
     # Iterate through desired snapshots and read the available hydroflow outputs
@@ -248,7 +250,7 @@ def combine_catalogues(path_gasflow, snaps=None, mcut=10, verbose=False):
         if snap not in snap_set:
             continue
 
-        snapdir_path = os.path.join(path_gasflow, snapdir)
+        snapdir_path = os.path.join(path_hydroflow, snapdir)
         if not os.path.isdir(snapdir_path):
             continue
 
