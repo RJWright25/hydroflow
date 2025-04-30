@@ -208,11 +208,12 @@ def read_hdf(fname,columns=None,verbose=False):
     return outdf
 
 
-def combine_catalogues(path_subcat, path_gasflow, snaps=None, mcut=10, verbose=False):
+def combine_catalogues(path_gasflow, snaps=None, mcut=10, verbose=False):
     t1 = time.time()
+    logging.info(f"Started combine catalogues at {time.ctime(t1)}")
 
-    if 'catalogues'  in path_subcat:
-        path_run=path_subcat.split('catalogues')[0]
+    if 'catalogues'  in path_gasflow:
+        path_run=path_gasflow.split('catalogues')[0]
         log_path = path_run+'/jobs/combine_catalogues.log'
         if not os.path.exists(path_run+'jobs'):
             os.makedirs(path_run+'jobs')
@@ -223,37 +224,19 @@ def combine_catalogues(path_subcat, path_gasflow, snaps=None, mcut=10, verbose=F
         os.remove(log_path)
     logging.basicConfig(filename=log_path, level=logging.INFO)
 
-    print('Reading subhalo catalogue and masking...')
-    logging.info(f"Started processing at {time.ctime(t1)}")
-
-    subcat = read_hdf(path_subcat)
-    snap_key, idx_key, mass_key = 'SnapNum', 'GalaxyID', 'Mass'
-
     calc_str = 'nvol' + path_gasflow.split('nvol')[-1].split('/')[0]
-
-    if not snaps:
-        snaps = list(range(int(np.nanmin(subcat[snap_key])), int(np.nanmax(subcat[snap_key])) + 1))
     snap_set = set(snaps)
-
-    mask = subcat[snap_key].isin(snap_set) & (subcat[mass_key] >= 10 ** mcut)
-    subcat_masked = subcat.loc[mask].copy()
-    subcat_masked.sort_values(by=idx_key, inplace=True)
-    subcat_masked.reset_index(drop=True, inplace=True)
-    del subcat
-
     snap_range = (min(snaps), max(snaps))
     snap_str = f"{snap_range[0]:03d}" if snap_range[0] == snap_range[1] else f"{snap_range[0]:03d}to{snap_range[1]:03d}"
     outpath = os.path.join(path_gasflow, f"gasflow_snap{snap_str}_{calc_str}.hdf5")
 
-    print('Reading hydroflow outputs ...')
-    logging.info(f"Reading hydroflow outputs... Time: {time.time() - t1:.2f}s")
+    logging.info(f"Reading hydroflow outputs... (t = {time.time() - t1:.2f}s) ")
 
     snapdirs = sorted([d for d in os.listdir(path_gasflow) if d.startswith("snap")])
-    print(f'Snapdirs: {snapdirs}')
     logging.info(f"Snapdirs: {snapdirs}")
 
+    # Iterate through desired snapshots and read the available hydroflow outputs
     snap_outputs = []
-
     for snapdir in snapdirs:
         try:
             snap = int(snapdir.split("snap")[-1][:3])
@@ -270,57 +253,31 @@ def combine_catalogues(path_subcat, path_gasflow, snaps=None, mcut=10, verbose=F
         if not isnap_files:
             continue
 
-        print(snapdir)
-        print(isnap_files)
-        logging.info(f"Loading {len(isnap_files)} files for snap {snap}")
+        logging.info(f"Loading {len(isnap_files)} files for snap {snap} (t = {time.time() - t1:.2f}s)")
+        logging.info(f"Files: {isnap_files}")
+
         isnap_outputs = [read_hdf(f) for f in isnap_files]
+
+        logging.info(f"Loaded {len(isnap_outputs)} files for snap {snap} - concatenating... (t = {time.time() - t1:.2f}s)")
         snap_outputs.append(pd.concat(isnap_outputs, ignore_index=True))
 
     if not snap_outputs:
-        print('No hydroflow outputs found.')
+        print('No hydroflow outputs found for the specified snapshots')
         logging.info("No hydroflow outputs found.")
-        return subcat_masked
+        return snap_outputs
 
+    logging.info(f"Concatenating data from {len(snap_outputs)} snapshots... (t = {time.time() - t1:.2f}s)")
     snap_outputs = pd.concat(snap_outputs, ignore_index=True)
     snap_outputs.sort_values(by='HydroflowID', inplace=True)
     snap_outputs.reset_index(drop=True, inplace=True)
     snap_outputs['HydroflowID'] = snap_outputs['HydroflowID'].astype(np.int64)
 
-    print(f'{snap_outputs.shape[0]} hydroflow outputs and {subcat_masked.shape[0]} masked subcat outputs')
-    logging.info(f"{len(snap_outputs)} hydroflow rows; columns = {len(snap_outputs.columns)}")
-
-    print('Matching hydroflow and subcat outputs ...')
-    logging.info("Matching hydroflow and subcat outputs...")
-
-    # Match by GalaxyID <-> HydroflowID
-    common_ids = np.intersect1d(subcat_masked['GalaxyID'].values, snap_outputs['HydroflowID'].values)
-
-    hydroflow_matched = snap_outputs[snap_outputs['HydroflowID'].isin(common_ids)].copy()
-    hydroflow_matched.set_index('HydroflowID', inplace=True)
-    subcat_masked.set_index('GalaxyID', inplace=True)
-
-    print('Adding data to subcat')
-    logging.info("Adding data to subcat...")
-
-    # Combine matched rows using concat to preserve all columns, then drop-and-replace
-    subcat_rows = subcat_masked.loc[hydroflow_matched.index]
-    combined_rows = pd.concat([subcat_rows, hydroflow_matched], axis=1)
-    combined_rows = combined_rows.loc[:, ~combined_rows.columns.duplicated(keep='last')]
-
-    # Drop old rows and append updated ones
-    subcat_masked = subcat_masked.drop(index=combined_rows.index, errors='ignore')
-    subcat_masked = pd.concat([subcat_masked, combined_rows], axis=0)
-
-    # De-fragment and restore index
-    subcat_masked = subcat_masked.copy()
-    subcat_masked.reset_index(inplace=True)
-
-    print(f'Writing to {outpath} ...')
+    print(f'Writing to {outpath} ... (t = {time.time() - t1:.2f}s)')
     logging.info(f"Writing to {outpath}")
     create_dir(outpath)
 
-    subcat_masked.sort_values(by=['SnapNum', 'Mass'], ascending=[False, False], inplace=True, ignore_index=True)
-    subcat_masked.reset_index(drop=True, inplace=True)
-    dump_hdf(outpath, data=subcat_masked, verbose=verbose)
+    snap_outputs.sort_values(by=['SnapNum', 'Mass'], ascending=[False, False], inplace=True, ignore_index=True)
+    snap_outputs.reset_index(drop=True, inplace=True)
+    dump_hdf(outpath, data=snap_outputs, verbose=verbose)
 
-    return subcat_masked
+    return snap_outputs
