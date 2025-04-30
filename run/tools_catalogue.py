@@ -264,7 +264,15 @@ def combine_catalogues(path_hydroflow, snaps=None, mcut=10, verbose=False):
         isnap_outputs = [read_hdf(f) for f in isnap_files]
 
         logging.info(f"Loaded {len(isnap_outputs)} files for snap {snap} - concatenating... (t = {time.time() - t1:.2f}s)")
-        snap_outputs.append(pd.concat(isnap_outputs, ignore_index=True))
+        isnap_outputs=pd.concat(isnap_outputs, ignore_index=True)
+        
+        #Enforce mass cut
+        logging.info(f"Enforcing mass cut of log10 {mcut}/Msun (t = {time.time() - t1:.2f}s)")
+        if mcut:
+            isnap_outputs = isnap_outputs.loc[isnap_outputs['Mass'].values > 10**mcut,:].copy()
+
+        snap_outputs.append(isnap_outputs)
+
 
     if not snap_outputs:
         print('No hydroflow outputs found for the specified snapshots')
