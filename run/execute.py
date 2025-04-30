@@ -58,7 +58,7 @@ create_dir(logging_folder)
 os.remove(f'{logging_folder}{logging_name}.log') if os.path.exists(f'{logging_folder}{logging_name}.log') else None
 logging.basicConfig(filename=f'{logging_folder}{logging_name}.log', level=logging.INFO)
 logging.info(f"************{datetime.now()}************")
-logging.info(f'Running {code} simulation with {namecat} catalogue [runtime {time.time():.3f} sec]')
+logging.info(f'Running hydroflow for {code} simulation with {namecat} catalogue [runtime {time.time():.3f} sec]')
 
 # Initialise variables
 r200_shells, rstar_shells, kpc_shells, zslab_radii= None, None, None, None
