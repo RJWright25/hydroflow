@@ -48,6 +48,8 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
 
     # Output path
     outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
+    if not os.path.exists(os.getcwd()+'/catalogues/'):
+        os.makedirs(os.getcwd()+'/catalogues/')
 
     # "subcat" will be a list of pandas dataframes which will be concatenated at the end
     subcat=[]
