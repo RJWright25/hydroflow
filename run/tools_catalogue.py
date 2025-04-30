@@ -212,10 +212,10 @@ def combine_catalogues(path_subcat, path_gasflow, snaps=None, mcut=10, verbose=F
     t1 = time.time()
 
     if 'catalogues'  in path_subcat:
-        path_catalogues=path_subcat.split('catalogues')[0]+'/catalogues/'
-        log_path = path_catalogues+'jobs/combine_catalogues.log'
-        if not os.path.exists(path_catalogues+'jobs'):
-            os.makedirs(path_catalogues+'jobs')
+        path_run=path_subcat.split('catalogues')[0]
+        log_path = path_run+'/jobs/combine_catalogues.log'
+        if not os.path.exists(path_run+'jobs'):
+            os.makedirs(path_run+'jobs')
     else:
         log_path = 'combine_catalogues.log'
 
