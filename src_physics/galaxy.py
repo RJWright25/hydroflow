@@ -116,7 +116,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				   zslab_radii={'rmx2reff':'2r_half','rmx10pkpc':10,'rmxzheight':1},
 				   Tbins={'cold':[0,1e3],'cool':[1e3,1e5],'warm':[1e5,1e7],'hot':[1e7,1e15]},
 				   theta_bins={'full':[0,90],'minax':[60,90],'majax':[0,30]},
-				   vcuts={'vc0p25vmx':'0.25Vmax','vc050kmps':50,'vc100kmps':100,'vc250kmps':250},
+				   vcuts={'vc0p25vmx':'0.25Vmax','vc1p00vmx':'1.00Vmax','vc050kmps':50,'vc250kmps':250},
 				   drfacs=[0.1],
 				   logfile=None):
 
@@ -400,7 +400,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
 		# Only do for kpc, rstar and 0.10r200 shells
-		flag_innershell=(('kpc' in rshell_str) and (rshell*afac*1e3<=31)) or ('0p10r200' in rshell_str) or ('reff' in rshell_str)
+		flag_innershell=('kpc' in rshell_str) or ('0p10r200' in rshell_str) or ('0p30r200' in rshell_str) or ('1p00r200' in rshell_str) or ('reff' in rshell_str)
 		for drfac,drfac_str in zip(drfacs,drfacs_str):
 			if flag_innershell:
 				rshell_str=rshell_str
