@@ -243,9 +243,6 @@ if numgal:
         galaxy_output['ivol'] = ivol
         galaxy_output['HydroflowID'] = int(galaxy[galid_key])
 
-
-
-
         # Append to the list of galaxy outputs
         logging.info(f'Appending galaxy to output [runtime {time.time()-t1:.3f} sec]')
         galaxy_outputs.append(galaxy_output)

@@ -113,7 +113,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				   r200_shells=[0.1,0.3,1],
 				   kpc_shells=[10,30,100],
 				   rstar_shells=[1,2,4],
-				   zslab_radii={'rmx2reff':'2r_half','rmx10pkpc':10},
+				   zslab_radii={'rmx2reff':'2r_half','rmx10pkpc':10,'rmxzheight':1},
 				   Tbins={'cold':[0,1e3],'cool':[1e3,1e5],'warm':[1e5,1e7],'hot':[1e7,1e15]},
 				   theta_bins={'full':[0,90],'minax':[60,90],'majax':[0,30]},
 				   vcuts={'vc0p25vmx':'0.25Vmax','vc050kmps':50,'vc100kmps':100,'vc250kmps':250},
@@ -170,8 +170,11 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	# Velocity cuts (if any)
 	galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']))
 	vmins=[];vminstrs=list(vcuts.keys())
-	if 'Subhalo_V_max' in galaxy.keys(): vmax=galaxy['Subhalo_V_max']
-	elif 'Group_V_Crit200' in galaxy_output.keys(): vmax=1.3*galaxy_output['Group_V_Crit200']# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
+	if 'Subhalo_V_max' in galaxy.keys():
+		vmax=galaxy['Subhalo_V_max']
+		print(f'Using Subhalo_V_max for Vmax: val = {vmax:.2f} km/s'.format(vmax))
+	elif 'Group_V_Crit200' in galaxy_output.keys(): 
+		vmax=1.3*galaxy_output['Group_V_Crit200']# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
 	for vcut in vcuts.keys():
 		vcut_kmps=vcuts[vcut]
 		if type(vcut_kmps)==str and 'Vmax' in vcut_kmps:
@@ -252,6 +255,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	for zslab_radius in zslab_radii.values():
 		if type(zslab_radius)==str and 'r_half' in zslab_radius:
 			zslab_radius=galaxy_output['010pkpc_sphere-star-r_half']*np.float32(zslab_radius.split('r_half')[0])
+		elif type(zslab_radius)==str and 'zheight' in zslab_radius:
+			zslab_radius='zheight'
 		else:
 			zslab_radius=zslab_radius/1e3/afac #convert from pkpc to comoving Mpc
 		zslab_radii_vals.append(zslab_radius)
@@ -405,6 +410,9 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 				# Iterate over the z-slab max radii
 				for rmax_str,rmax in zip(zslab_radii_strs,zslab_radii_vals):
+					
+					if 'zheight' in rmax_str:
+						rmax=rhi
 
 					# Mask for the slab in comoving coordinates
 					mask_shell=np.logical_and.reduce([zmask,rrel_inplane<rmax])

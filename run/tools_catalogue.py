@@ -158,7 +158,6 @@ def read_hdf(fname,columns=None,verbose=False):
 
     """
 
-
     # Open the hdf5 file and get columns if not specified
     infile=h5py.File(fname,mode='r')
     if not columns:
@@ -194,9 +193,7 @@ def read_hdf(fname,columns=None,verbose=False):
             metadata_path=infile['Header'].attrs['metadata']
             outdf.attrs['metadata']=metadata_path
 
-
     infile.close()
-
 
     # Print any failed columns
     if failed:
@@ -205,9 +202,7 @@ def read_hdf(fname,columns=None,verbose=False):
             for column in failed:
                 print(column)
 
-
     return outdf
-
 
 def combine_catalogues(path_hydroflow, snaps=None, mcut=10, verbose=False):
 

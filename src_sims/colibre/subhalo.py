@@ -45,6 +45,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
     # Units for masses
     munit='Msun'
     dunit='Mpc'
+    vunit='km/s'
 
     # Output path
     outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
@@ -91,7 +92,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             r200=halodata.spherical_overdensity_200_crit.soradius;r200.convert_to_units(dunit)
             halodata_out['Group_R_Crit200']=np.array(r200.value) #comoving
 
-            vmax=halodata.bound_subhalo.maximum_circular_velocity;vmax.convert_to_units('km/s')
+            vmax=halodata.bound_subhalo.maximum_circular_velocity;vmax.convert_to_units(vunit)
             halodata_out['Subhalo_V_max']=np.array(vmax.value)
 
             # Centre of mass -- use the central galaxy 30kpc inclusive sphere
