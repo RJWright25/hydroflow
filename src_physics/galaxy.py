@@ -186,8 +186,9 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	drfacs_str=['p'+str(f'{idrfac:.0f}').zfill(2) for idrfac in drfacs_pc]
 
 	# Compute relative zheight and theta
-	Lbar,theta,zheight=compute_cylindrical_ztheta(pdata=pdata_candidates,afac=afac,baryons=True,aperture=0.03)
-	pdata_candidates['Relative_theta']=theta
+	Lbar,theta_pos,theta_vel,zheight=compute_cylindrical_ztheta(pdata=pdata_candidates,afac=afac,baryons=True,aperture=0.03)
+	pdata_candidates['Relative_theta_pos']=theta_pos
+	pdata_candidates['Relative_theta_vel']=theta_vel
 	pdata_candidates['Relative_zheight']=zheight
 	for idim,dim in enumerate(['x','y','z']):
 		galaxy_output[f'030pkpc_sphere-Lbar{dim}']=Lbar[idim]
@@ -196,7 +197,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	mass=pdata_candidates['Masses'].values
 	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the halo centre
 	vrad=pdata_candidates['Relative_vrad_pec'].values #peculiar radil velocity in km/s relative to the centre as per the candidate function
-	theta=pdata_candidates['Relative_theta'].values #relative theta in degrees
+	thetapos=pdata_candidates['Relative_theta_pos'].values #relative theta in degrees
+	thetavel=pdata_candidates['Relative_theta_vel'].values #relative theta in degrees
 	temp=pdata_candidates['Temperature'].values
 	sfr=pdata_candidates['StarFormationRate'].values
 	vxyz=pdata_candidates.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values #relative velocity in km/s
@@ -226,7 +228,9 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	# Get relative theta masks
 	thetamasks={}
 	for theta_str,theta_bin in theta_bins.items():
-		thetamasks[theta_str]=np.logical_and.reduce([gas,theta>theta_bin[0],theta<theta_bin[1]])
+		thetamasks[theta_str+'pos']=np.logical_and.reduce([gas,thetapos>theta_bin[0],thetapos<theta_bin[1]])
+		thetamasks[theta_str+'vel']=np.logical_and.reduce([gas,thetavel>theta_bin[0],thetavel<theta_bin[1]])
+		
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
