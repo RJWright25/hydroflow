@@ -379,14 +379,15 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 						galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_shell])/np.nansum(mass[Tmask_shell])
 
 						# Breakdown of mass in this phase by species
-						for spec in specmass.keys():
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-m_{spec}']=np.nansum(specmass[spec][Tmask_shell])
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vrad_{spec}_mean']=np.nansum(vrad[Tmask_shell]*specmass[spec][Tmask_shell])/np.nansum(specmass[spec][Tmask_shell])
-							outmask=np.logical_and(Tmask_shell,vrad>0)
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_mean']=np.nansum(vrad[outmask]*specmass[spec][outmask])/np.nansum(specmass[spec][outmask])
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_50P']=np.float64(np.nanpercentile(vrad[outmask],q=50,weights=specmass[spec][outmask],method="inverted_cdf"))
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_90P']=np.float64(np.nanpercentile(vrad[outmask],q=90,weights=specmass[spec][outmask],method="inverted_cdf"))
-						
+						if Tstr=='all':
+							for spec in specmass.keys():
+								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-m_{spec}']=np.nansum(specmass[spec][Tmask_shell])
+								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vrad_{spec}_mean']=np.nansum(vrad[Tmask_shell]*specmass[spec][Tmask_shell])/np.nansum(specmass[spec][Tmask_shell])
+								outmask=np.logical_and(Tmask_shell,vrad>0)
+								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_mean']=np.nansum(vrad[outmask]*specmass[spec][outmask])/np.nansum(specmass[spec][outmask])
+								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_50P']=np.float64(np.nanpercentile(vrad[outmask],q=50,weights=specmass[spec][outmask],method="inverted_cdf"))
+								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_90P']=np.float64(np.nanpercentile(vrad[outmask],q=90,weights=specmass[spec][outmask],method="inverted_cdf"))
+							
 						# Calculate the total flow rates for the gas
 						for vboundary, vkey in zip(vsboundary, vsboundary_str):
 							gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
