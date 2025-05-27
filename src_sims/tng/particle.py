@@ -58,7 +58,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
 
     # Get limits for the subvolume
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
-
+    
+    ptype_subset={0:1, 1:2, 4:2} 
     ptype_fields={0:['InternalEnergy',
                      'ElectronAbundance',
                      'Density',
@@ -86,15 +87,9 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                 subvol_mask=np.ones(npart_ifile[ptype])
                 coordinates=pdata_ifile[f'PartType{ptype}']['Coordinates'][:]*1e-3/hval #convert to cMpc
                 
-                # Mask for each dimension and check for periodicity
+                # Mask for each dimension 
                 for idim,dim in enumerate('xyz'):
                     lims_idim=lims[2*idim:(2*idim+2)]
-                    if lims_idim[0]<0 and nslice>1:#check for periodic
-                        otherside=coordinates[:,idim]>=boxsize+lims_idim[0]
-                        coordinates[:,idim][otherside]=coordinates[:,idim][otherside]-boxsize
-                    if lims_idim[1]>boxsize and nslice>1:#check for periodic
-                        otherside=coordinates[:,idim]<=(lims_idim[1]-boxsize)
-                        coordinates[:,idim][otherside]=coordinates[:,idim][otherside]+boxsize
 
                     # Mask for the subvolume
                     idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
@@ -108,31 +103,31 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                     
                     # Mask and load basic properties -- ParticleIDs, Masses, Velocities are always included
                     logging.info(f"Reading {ptype} particle IDs, masses, coordinates & velocities...")
-                    pdata[ifile][ptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
-                    pdata[ifile][ptype]['ParticleType']=np.uint16(np.ones(npart_ifile_invol)*ptype)
-                    pdata[ifile][ptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates;del coordinates
-                    pdata[ifile][ptype].loc[:,[f'Velocities_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask]*np.sqrt(afac) #peculiar velocity in km/s
+                    pdata[ifile][ptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask][::ptype_subset[ptype]],columns=['ParticleIDs'])
+                    pdata[ifile][ptype]['ParticleType']=np.uint16(np.ones(npart_ifile_invol)*ptype)[::ptype_subset[ptype]] # ParticleType is always the same as ptype
+                    pdata[ifile][ptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates[::ptype_subset[ptype],:];del coordinates
+                    pdata[ifile][ptype].loc[:,[f'Velocities_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask][::ptype_subset[ptype],:]*np.sqrt(afac) #peculiar velocity in km/s
 
                     # Get masses (use the mass table value for DM particles)
                     if not ptype==1:
-                        pdata[ifile][ptype]['Masses']=np.float32(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*1e10/hval)
+                        pdata[ifile][ptype]['Masses']=np.float32(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask][::ptype_subset[ptype],:]*1e10/hval)
                     else:
-                        pdata[ifile][ptype]['Masses']=np.float32(np.ones(npart_ifile_invol)*mass_table[ptype]*1e10/hval)      
+                        pdata[ifile][ptype]['Masses']=np.float32(np.ones(npart_ifile_invol)*mass_table[ptype]*1e10/hval)[::ptype_subset[ptype]]  
 
                     # Mask and load rest of the properties
                     logging.info(f"Reading extra baryonic properties...")
                     for field in ptype_fields[ptype]:
                         if not 'GFM' in field:
-                            pdata[ifile][ptype][field]=np.float128(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+                            pdata[ifile][ptype][field]=np.float64(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])[::ptype_subset[ptype],:]
                         else:
                             field_out=field[4:]
-                            pdata[ifile][ptype][field_out]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask]
+                            pdata[ifile][ptype][field_out]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask][::ptype_subset[ptype]]
 
                     # Convert density to g/cm^3
                     if ptype==0:
                         # Raw data are in 1e10/h (ckpc/h)^-3
                         pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*1e10*hval**2/afac**3 #Msun/pkpc^3
-                        pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*np.float128(constant_gpmsun)/np.float128(constant_cmpkpc)**3 #g/cm^3
+                        pdata[ifile][ptype]['Density']=pdata[ifile][ptype]['Density'].values*np.float64(constant_gpmsun)/np.float64(constant_cmpkpc)**3 #g/cm^3
 
                     # If gas, do temp calculation
                     logging.info(f"Calculating temperature for {ptype} particles...")

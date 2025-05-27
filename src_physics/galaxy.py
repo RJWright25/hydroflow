@@ -174,7 +174,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		vmax=galaxy['Subhalo_V_max']
 		print(f'Using Subhalo_V_max for Vmax: val = {vmax:.2f} km/s'.format(vmax))
 	elif 'Group_V_Crit200' in galaxy_output.keys(): 
-		vmax=1.3*galaxy_output['Group_V_Crit200']# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
+		vmax=1.33*galaxy_output['Group_V_Crit200']# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
 	for vcut in vcuts.keys():
 		vcut_kmps=vcuts[vcut]
 		if type(vcut_kmps)==str and 'Vmax' in vcut_kmps:
@@ -186,9 +186,9 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	drfacs_str=['p'+str(f'{idrfac:.0f}').zfill(2) for idrfac in drfacs_pc]
 
 	# Compute relative zheight and theta
-	Lbar,theta_pos,theta_vel,zheight=compute_cylindrical_ztheta(pdata=pdata_candidates,afac=afac,baryons=True,aperture=0.03)
-	pdata_candidates['Relative_theta_pos']=theta_pos
-	pdata_candidates['Relative_theta_vel']=theta_vel
+	Lbar,thetapos,thetavel,zheight=compute_cylindrical_ztheta(pdata=pdata_candidates,afac=afac,baryons=True,aperture=0.03)
+	pdata_candidates['Relative_theta_pos']=thetapos
+	pdata_candidates['Relative_theta_vel']=thetavel
 	pdata_candidates['Relative_zheight']=zheight
 	for idim,dim in enumerate(['x','y','z']):
 		galaxy_output[f'030pkpc_sphere-Lbar{dim}']=Lbar[idim]
@@ -228,9 +228,12 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	# Get relative theta masks
 	thetamasks={}
 	for theta_str,theta_bin in theta_bins.items():
-		thetamasks[theta_str+'pos']=np.logical_and.reduce([gas,thetapos>theta_bin[0],thetapos<theta_bin[1]])
-		thetamasks[theta_str+'vel']=np.logical_and.reduce([gas,thetavel>theta_bin[0],thetavel<theta_bin[1]])
-		
+		if theta_str=='full':
+			thetamasks[theta_str]=np.logical_and.reduce([gas])
+		else:
+			thetamasks[theta_str+'pos']=np.logical_and.reduce([gas,thetapos>theta_bin[0],thetapos<theta_bin[1]])
+			thetamasks[theta_str+'vel']=np.logical_and.reduce([gas,thetavel>theta_bin[0],thetavel<theta_bin[1]])
+	
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
@@ -243,16 +246,16 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	# Get gas half-mass radius
 	gas_r_half=np.nan
 	gas_rz_half=np.nan
-	gas_mask=np.logical_and(gas,rrel*afac<0.01)
+	gas_mask=np.logical_and(gas,rrel*afac<0.03)
 	if np.nansum(gas_mask):
 		gas_r_half=calc_halfmass_radius(mass[gas_mask],rrel[gas_mask])
 		gas_rz_half=calc_halfmass_radius(mass[gas_mask],np.abs(zheight[gas_mask]))
 
 	# Add to the galaxy output
-	galaxy_output['010pkpc_sphere-star-r_half']=star_r_half
-	galaxy_output['010pkpc_sphere-star-rz_half']=star_rz_half
-	galaxy_output['010pkpc_sphere-gas-r_half']=gas_r_half
-	galaxy_output['010pkpc_sphere-gas-rz_half']=gas_rz_half
+	galaxy_output['030pkpc_sphere-star-r_half']=star_r_half
+	galaxy_output['030pkpc_sphere-star-rz_half']=star_rz_half
+	galaxy_output['030pkpc_sphere-gas-r_half']=gas_r_half
+	galaxy_output['030pkpc_sphere-gas-rz_half']=gas_rz_half
 
 	# Max co-planar radii for z-slab calculations
 	zslab_radii_vals=[];zslab_radii_strs=list(zslab_radii.keys())
@@ -277,7 +280,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 	# Loop over all the spherical shells
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
-		flag_innershell=(('kpc' in rshell_str) and (rshell*afac*1e3<=31)) or ('0p10r200' in rshell_str) or ('reff' in rshell_str)
+		flag_innershell=(('kpc' in rshell_str) and (rshell*afac*1e3<=31)) or ('0p10r200' in rshell_str) or ('0p15r200' in rshell_str) or ('0p20r200' in rshell_str) or ('0p30r200' in rshell_str) or ('reff' in rshell_str)
 
 		# Pseudo-evolution velocity cut (updated for each shell)
 		if 'r200' in rshell_str and galaxy['SubGroupNumber']==0:
@@ -335,6 +338,11 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				mask_shell=np.zeros_like(rrel).astype(bool)
 				mask_shell[rshell_minidx:rshell_maxidx]=True
 
+				# Add theta categorisation for shells without the disk
+				igal_theta_masks=thetamasks.copy()
+				if flag_innershell: #nd == no disk
+					igal_theta_masks['fullnd']=np.logical_and.reduce([gas,np.abs(zheight)*afac<0.002]) # +-2kpc z-slab
+
 				# Now convert the shell values to physical units for the calculations
 				rhi=rhi*afac
 				rlo=rlo*afac
@@ -365,7 +373,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				
 				### GAS shell properties
 				# Break down by theta
-				for theta_str,thetamask in thetamasks.items():
+				for theta_str,thetamask in igal_theta_masks.items():
 					mask_shell_theta=np.logical_and(mask_shell,thetamask)
 
 					# Break down the gas mass by phase
@@ -382,6 +390,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 						for spec in specmass.keys():
 							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-m_{spec}']=np.nansum(specmass[spec][Tmask_shell])
 							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vrad_{spec}_mean']=np.nansum(vrad[Tmask_shell]*specmass[spec][Tmask_shell])/np.nansum(specmass[spec][Tmask_shell])
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vrad_{spec}_50P']=np.nanpercentile(vrad[Tmask_shell],50)
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vrad_{spec}_90P']=np.nanpercentile(vrad[Tmask_shell],90)
 						
 						# Calculate the total flow rates for the gas
 						for vboundary, vkey in zip(vsboundary, vsboundary_str):

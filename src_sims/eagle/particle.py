@@ -67,10 +67,11 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     ptypes={0:['Temperature',
                 'Metallicity',
                 'Density',
-                'StarFormationRate',
-                'SmoothingLength'],
+                'StarFormationRate'],
             1:[],
             4:['Metallicity']}
+    
+    ptype_subset={0:1, 1:2, 4:2} 
     
     # Use the EagleSnapshot class to read the particle data
     snapshot=EagleSnapshot(path)
@@ -83,16 +84,16 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     for iptype,ptype in enumerate(ptypes):
 
         logging.info(f"Reading {ptype} particle IDs, coordinates & velocities...")
-        pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs'),columns=['ParticleIDs'])
+        pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs')[::ptype_subset[ptype]],columns=['ParticleIDs'])
         pdata[ptype]['ParticleType']=np.ones(pdata[ptype].shape[0])*ptype
-        pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')/hval #comoving position in Mpc
-        pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')*np.sqrt(afac) #peculiar velocity in km/s
+        pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')[::ptype_subset[ptype]]/hval #comoving position in Mpc
+        pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')[::ptype_subset[ptype],:]*np.sqrt(afac) #peculiar velocity in km/s
 
         # Get masses (use the mass table value for DM particles)
         if ptype==1:
             pdata[ptype].loc[:,'Masses']=file['Header'].attrs['MassTable'][1]*1e10/hval #mass in Msun
         else:
-            pdata[ptype]['Masses']=snapshot.read_dataset(ptype,'Mass')*1e10/hval #mass in Msun
+            pdata[ptype]['Masses']=snapshot.read_dataset(ptype,'Mass')[::ptype_subset[ptype]]*1e10/hval #mass in Msun
         
         # Convert other properties to physical units
         logging.info(f"Reading extra baryonic properties...")
@@ -100,14 +101,12 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
             hexp=file[f'PartType{ptype}/{field}'].attrs['h-scale-exponent']
             aexp=file[f'PartType{ptype}/{field}'].attrs['aexp-scale-exponent']
             cgs=file[f'PartType{ptype}/{field}'].attrs['CGSConversionFactor']
-            pdata[ptype][field]=snapshot.read_dataset(ptype,field)*(hval**hexp)*(afac**aexp)*cgs
+            pdata[ptype][field]=snapshot.read_dataset(ptype,field)[::ptype_subset[ptype]]*(hval**hexp)*(afac**aexp)*cgs
 
 
     # Convert SFR to Msun/yr from g/s
     pdata[0]['StarFormationRate']=pdata[0]['StarFormationRate']*(1/constant_gpmsun)*constant_spyr
 
-    # Convert hsml to Mpc
-    pdata[0]['SmoothingLength']=pdata[0]['SmoothingLength']/(constant_cmpkpc*1e3)
 
     # Add missing fields to star particles
     npart_star=pdata[4].shape[0]

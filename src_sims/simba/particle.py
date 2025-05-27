@@ -59,6 +59,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                   4:['Metallicity'],
                   5:[]}
     
+    ptype_subset={0:1, 1:2, 4:2} 
+
     # Initialize particle data
     pdata=[None for iptype in range(len(ptype_fields))]
 
@@ -80,12 +82,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
             # Check for periodicity
             for idim,dim in enumerate('xyz'):
                 lims_idim=lims[2*idim:(2*idim+2)]
-                if lims_idim[0]<0 and nslice>1:#check for periodic
-                    otherside=coordinates[:,idim]>=boxsize+lims_idim[0]
-                    coordinates[:,idim][otherside]=coordinates[:,idim][otherside]-boxsize
-                if lims_idim[1]>boxsize and nslice>1:#check for periodic
-                    otherside=coordinates[:,idim]<=(lims_idim[1]-boxsize)
-                    coordinates[:,idim][otherside]=coordinates[:,idim][otherside]+boxsize
 
                 idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
                 subvol_mask=np.logical_and(subvol_mask,idim_mask)
@@ -98,8 +94,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
 
                 # Save basic particle data 
                 logging.info(f"Reading IDs, coordinates, velocities and masses for ptype {ptype}...")
-                pdata[iptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask],columns=['ParticleIDs'])
-                pdata[iptype]['ParticleType']=np.uint16(np.ones(npart_ifile_invol)*ptype)
+                pdata[iptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask][::ptype_subset[ptype]],columns=['ParticleIDs'])
+                pdata[iptype]['ParticleType']=np.uint16(np.ones(npart_ifile_invol)*ptype)[::ptype_subset[ptype]]
                 pdata[iptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates[subvol_mask];del coordinates
                 pdata[iptype].loc[:,[f'Velocities_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask]*np.sqrt(afac)#peculiar velocity in km/s
                 pdata[iptype]['Masses']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*1e10/hval #mass in Msun
