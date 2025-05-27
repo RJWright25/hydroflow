@@ -280,7 +280,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 	# Loop over all the spherical shells
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
-		flag_innershell=(('kpc' in rshell_str) and (rshell*afac*1e3<=31)) or ('0p10r200' in rshell_str) or ('0p15r200' in rshell_str) or ('0p20r200' in rshell_str) or ('0p30r200' in rshell_str) or ('reff' in rshell_str)
+		flag_innershell=(('kpc' in rshell_str) and (rshell*afac*1e3<=31)) or ('r200' in rshell_str and np.float32(rshell_str.split('r200')[0].replace('p','.'))<1.1) or ('reff' in rshell_str)
 
 		# Pseudo-evolution velocity cut (updated for each shell)
 		if 'r200' in rshell_str and galaxy['SubGroupNumber']==0:
@@ -341,7 +341,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				# Add theta categorisation for shells without the disk
 				igal_theta_masks=thetamasks.copy()
 				if flag_innershell: #nd == no disk
-					igal_theta_masks['fullnd']=np.logical_and.reduce([gas,np.abs(zheight)*afac<0.002]) # +-2kpc z-slab
+					igal_theta_masks['fullnd']=np.logical_and.reduce([gas,np.abs(zheight)*afac>0.002]) # +-2kpc z-slab
 
 				# Now convert the shell values to physical units for the calculations
 				rhi=rhi*afac
