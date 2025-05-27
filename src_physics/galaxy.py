@@ -233,7 +233,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		else:
 			thetamasks[theta_str+'pos']=np.logical_and.reduce([gas,thetapos>theta_bin[0],thetapos<theta_bin[1]])
 			thetamasks[theta_str+'vel']=np.logical_and.reduce([gas,thetavel>theta_bin[0],thetavel<theta_bin[1]])
-	
+	thetamasks['fullnd']=np.logical_and.reduce([gas,zheight*afac>0.002]) #full non-disk gas
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
@@ -338,11 +338,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				mask_shell=np.zeros_like(rrel).astype(bool)
 				mask_shell[rshell_minidx:rshell_maxidx]=True
 
-				# Add theta categorisation for shells without the disk
-				igal_theta_masks=thetamasks.copy()
-				if flag_innershell: #nd == no disk
-					igal_theta_masks['fullnd']=np.logical_and.reduce([gas,np.abs(zheight)*afac>0.002]) # +-2pkpc z-slab
-
 				# Now convert the shell values to physical units for the calculations
 				rhi=rhi*afac
 				rlo=rlo*afac
@@ -373,7 +368,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				
 				### GAS shell properties
 				# Break down by theta
-				for theta_str,thetamask in igal_theta_masks.items():
+				for theta_str,thetamask in thetamasks.items():
 					mask_shell_theta=np.logical_and(mask_shell,thetamask)
 
 					# Break down the gas mass by phase
