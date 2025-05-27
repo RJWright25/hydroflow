@@ -280,7 +280,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 	# Loop over all the spherical shells
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
-		flag_innershell=(('kpc' in rshell_str) and (rshell*afac*1e3<=31)) or ('r200' in rshell_str and rshell/galaxy_output['Group_R_Crit200']<1.1) or ('reff' in rshell_str)
 
 		# Pseudo-evolution velocity cut (updated for each shell)
 		if 'r200' in rshell_str and galaxy['SubGroupNumber']==0:
@@ -322,10 +321,9 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-m_{spec}']=np.nansum(specmass[spec][Tmask_sphere])
 
 				# If considering a galaxy-scale shell, calculate the SFR and metallicity
-				if flag_innershell:
-					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_sphere])
-					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_sphere])/np.nansum(mass[Tmask_sphere])
-							
+				galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_sphere])
+				galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_sphere])/np.nansum(mass[Tmask_sphere])
+						
 			#### SPHERICAL SHELL CALCULATIONS (r between r-dr/2 and r+dr/2) ####
 			# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
 			for drfac,drfac_str in zip(drfacs,drfacs_str):
@@ -377,9 +375,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 						galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-n_tot']=np.nansum(Tmask_shell)
 						
 						# If considering a galaxy-scale shell, calculate the SFR and metallicity
-						if flag_innershell:
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_shell])
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_shell])/np.nansum(mass[Tmask_shell])
+						galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_shell])
+						galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_shell])/np.nansum(mass[Tmask_shell])
 
 						# Breakdown of mass in this phase by species
 						for spec in specmass.keys():
