@@ -280,7 +280,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 	# Loop over all the spherical shells
 	for rshell,rshell_str in zip(radial_shells,radial_shells_str):
-		flag_innershell=(('kpc' in rshell_str) and (rshell*afac*1e3<=31)) or ('r200' in rshell_str and np.float32(rshell_str.split('r200')[0].replace('p','.'))<1.1) or ('reff' in rshell_str)
+		flag_innershell=(('kpc' in rshell_str) and (rshell*afac*1e3<=31)) or ('r200' in rshell_str and rshell/galaxy_output['Group_R_Crit200']<1.1) or ('reff' in rshell_str)
 
 		# Pseudo-evolution velocity cut (updated for each shell)
 		if 'r200' in rshell_str and galaxy['SubGroupNumber']==0:
