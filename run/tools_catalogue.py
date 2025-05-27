@@ -123,7 +123,12 @@ def dump_hdf(fname,data,verbose=False):
             else:
                 if icol%100==0:
                     print(f'Dumping {column} ... {icol+1}/{len(columns)}')
-        outfile.create_dataset(name=column,data=data[column].values)
+        try:            
+            outfile.create_dataset(name=column,data=data[column].values)
+        except:
+            print(f'Failed to dump {column} - skipping')
+            print(data=data[column].values)
+            raise
 
     outfile.close()
 
