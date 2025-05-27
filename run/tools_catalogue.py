@@ -127,7 +127,7 @@ def dump_hdf(fname,data,verbose=False):
             outfile.create_dataset(name=column,data=data[column].values)
         except:
             print(f'Failed to dump {column} - skipping')
-            print(data=data[column].values)
+            print(data[column].values)
             raise
 
     outfile.close()
