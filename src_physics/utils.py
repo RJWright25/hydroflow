@@ -404,6 +404,51 @@ def calc_halfmass_radius(masses,radius):
     return halfmass_radius
 
 
+def weighted_nanpercentile(data, weights, percentiles):
+    """
+    Compute weighted percentiles ignoring NaNs.
+
+    Parameters
+    ----------
+    data : array_like
+        Input data array, can contain NaNs.
+    weights : array_like
+        Weights for each data point. Must be same shape as `data`.
+    percentiles : scalar or array_like
+        Percentile or sequence of percentiles to compute (0-100).
+
+    Returns
+    -------
+    percentiles : scalar or ndarray
+        Weighted percentile(s) of the data.
+    """
+    data = np.asarray(data)
+    weights = np.asarray(weights)
+    percentiles = np.atleast_1d(percentiles)
+
+    # Mask NaNs
+    mask = ~np.isnan(data)
+    data = data[mask]
+    weights = weights[mask]
+
+    if len(data) == 0:
+        return np.full_like(percentiles, np.nan, dtype=np.float64)
+
+    # Sort data and associated weights
+    sorter = np.argsort(data)
+    data = data[sorter]
+    weights = weights[sorter]
+
+    # Compute the cumulative sum of weights and normalize
+    cdf = np.cumsum(weights)
+    cdf /= cdf[-1]
+
+    # Interpolate to find the percentiles
+    return np.interp(percentiles / 100.0, cdf, data) if len(percentiles) > 1 else np.interp(percentiles[0] / 100.0, cdf, data)
+
+
+
+
 
 ##### CONSTANTS #####
 
@@ -434,3 +479,7 @@ constant_MpcpGyrtokmps=vel_conversion.value
 distance_conversion=1*units.Mpc
 distance_conversion=distance_conversion.to(units.km)
 constant_Mpcpkm=distance_conversion.value
+
+
+
+
