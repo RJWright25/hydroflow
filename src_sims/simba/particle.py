@@ -59,7 +59,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                   4:['Metallicity'],
                   5:[]}
     
-    ptype_subset={0:1, 1:2, 4:2} 
+    ptype_subset={0:1, 1:4, 4:2} 
 
     # Initialize particle data
     pdata=[None for iptype in range(len(ptype_fields))]
@@ -147,7 +147,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     pdata.loc[gas,'mfrac_HI_BR06']=fHI
     pdata.loc[gas,'mfrac_H2_BR06']=fH2
 
-    
+
     
     # Create a spatial KDTree for the particle data
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
