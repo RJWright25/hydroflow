@@ -96,16 +96,16 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                 logging.info(f"Reading IDs, coordinates, velocities and masses for ptype {ptype}...")
                 pdata[iptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask][::ptype_subset[ptype]],columns=['ParticleIDs'])
                 pdata[iptype]['ParticleType']=np.uint16(np.ones(npart_ifile_invol)*ptype)[::ptype_subset[ptype]]
-                pdata[iptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates[subvol_mask];del coordinates
-                pdata[iptype].loc[:,[f'Velocities_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask]*np.sqrt(afac)#peculiar velocity in km/s
-                pdata[iptype]['Masses']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask]*1e10/hval #mass in Msun
+                pdata[iptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates[subvol_mask][::ptype_subset[ptype],:];del coordinates
+                pdata[iptype].loc[:,[f'Velocities_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask][::ptype_subset[ptype],:]*np.sqrt(afac)#peculiar velocity in km/s
+                pdata[iptype]['Masses']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask][::ptype_subset[ptype]]*1e10/hval*ptype_subset[ptype] #mass in Msun
 
                 # Load extra baryonic properties
                 for field in ptype_fields[ptype]:
                     if not field=='Metallicity':
-                        pdata[iptype][field]=np.float128(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])
+                        pdata[iptype][field]=np.float128(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask][::ptype_subset[ptype]])
                     else:
-                        pdata[iptype][field]=pdata_ifile[f'PartType{ptype}'][field][:,0][subvol_mask]
+                        pdata[iptype][field]=pdata_ifile[f'PartType{ptype}'][field][:,0][subvol_mask][::ptype_subset[ptype]]
 
                 # Convert density to g/cm^3
                 if ptype==0:

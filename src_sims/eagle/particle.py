@@ -93,7 +93,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
         if ptype==1:
             pdata[ptype].loc[:,'Masses']=file['Header'].attrs['MassTable'][1]*1e10/hval #mass in Msun
         else:
-            pdata[ptype]['Masses']=snapshot.read_dataset(ptype,'Mass')[::ptype_subset[ptype]]*1e10/hval #mass in Msun
+            pdata[ptype]['Masses']=snapshot.read_dataset(ptype,'Mass')[::ptype_subset[ptype]]*1e10/hval*ptype_subset[ptype] #mass in Msun
         
         # Convert other properties to physical units
         logging.info(f"Reading extra baryonic properties...")
