@@ -71,7 +71,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
             1:[],
             4:['Metallicity']}
     
-    ptype_subset={0:1, 1:2, 4:2} 
+    ptype_subset={0:1, 1:4, 4:2} 
     
     # Use the EagleSnapshot class to read the particle data
     snapshot=EagleSnapshot(path)
