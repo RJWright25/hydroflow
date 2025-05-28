@@ -131,7 +131,10 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     # Combine the particle data
     pdata=pd.concat(pdata)
     pdata.sort_values(by="ParticleIDs",inplace=True)
-    pdata.reset_index(inplace=True,drop=True)      
+    pdata.reset_index(inplace=True,drop=True)    
+
+    # Print fraction of particles that are gas
+    logging.info(f"Fraction of gas particles: {np.sum(pdata['ParticleType'].values==0)/pdata.shape[0]:.2e}")  
 
     # Add hydrogen partitions into HI, H2, HII from Rahmati (2013) and Blitz & Rosolowsky (2006)
     logging.info(f"Adding hydrogen partitioning...")
@@ -142,6 +145,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     pdata.loc[:,['mfrac_HI','mfrac_H2']]=np.nan
     pdata.loc[gas,'mfrac_HI']=fHI
     pdata.loc[gas,'mfrac_H2']=fH2
+
+    
     
     # Create a spatial KDTree for the particle data
     pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
