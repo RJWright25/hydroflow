@@ -130,6 +130,12 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     pdata.loc[gas,'mfrac_HI_BR06']=fHI
     pdata.loc[gas,'mfrac_H2_BR06']=fH2
 
+
+    # Print fraction of particles that are gas
+    print(f"Fraction of gas particles: {np.sum(pdata['ParticleType'].values==0)/pdata.shape[0]:.2e}")
+    logging.info(f"Fraction of gas particles: {np.sum(pdata['ParticleType'].values==0)/pdata.shape[0]:.2e}")  
+
+
     # Create a spatial KDTree for the particle data
     logging.info(f"Creating KDTree for particle data...")
     pdata_kdtree=KDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)

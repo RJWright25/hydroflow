@@ -162,8 +162,12 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     logging.info(f"Minima: fHI: {np.nanmin(fHI)}, fHII: {np.nanmin(fHII)}, fH2: {np.nanmin(fH2)}]")
     logging.info(f"Maxima: fHI: {np.nanmax(fHI)}, fHII: {np.nanmax(fHII)}, fH2: {np.nanmax(fH2)}]")
     pdata.loc[:,['mfrac_HI_BR06','mfrac_H2_BR06']]=np.nan
-    pdata.loc[gas,'mfrac_HI']=fHI
-    pdata.loc[gas,'mfrac_H2']=fH2
+    pdata.loc[gas,'mfrac_HI_BR06']=fHI
+    pdata.loc[gas,'mfrac_H2_BR06']=fH2
+
+    # Print fraction of particles that are gas
+    print(f"Fraction of gas particles: {np.sum(pdata['ParticleType'].values==0)/pdata.shape[0]:.2e}")
+    logging.info(f"Fraction of gas particles: {np.sum(pdata['ParticleType'].values==0)/pdata.shape[0]:.2e}")  
 
     # Create a spatial KDTree for the particle data
     logging.info(f"Creating KDTree for particle data...")
