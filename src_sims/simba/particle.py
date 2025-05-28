@@ -134,6 +134,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     pdata.reset_index(inplace=True,drop=True)    
 
     # Print fraction of particles that are gas
+    print(f"Fraction of gas particles: {np.sum(pdata['ParticleType'].values==0)/pdata.shape[0]:.2e}")
     logging.info(f"Fraction of gas particles: {np.sum(pdata['ParticleType'].values==0)/pdata.shape[0]:.2e}")  
 
     # Add hydrogen partitions into HI, H2, HII from Rahmati (2013) and Blitz & Rosolowsky (2006)
