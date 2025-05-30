@@ -74,7 +74,13 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     # Loop over all the snapshot chunks
     t0=time.time()
     for ifile,ifname in enumerate(isnap_flist):
-        pdata_ifile=h5py.File(ifname,'r')
+        try:
+            # Open the snapshot file
+            logging.info(f"Opening file {ifile+1}/{numfiles}: {ifname}")
+            pdata_ifile=h5py.File(ifname,'r')
+        except Exception as e:
+            logging.error(f"Error opening file {ifname}: {e}")
+            continue
         npart_ifile=pdata_ifile['Header'].attrs['NumPart_ThisFile']
         mass_table=pdata_ifile['Header'].attrs['MassTable']
 
