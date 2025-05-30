@@ -126,10 +126,18 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                     logging.info(f"Reading extra baryonic properties...")
                     for field in ptype_fields[ptype]:
                         if not 'GFM' in field:
-                            pdata[ifile][ptype][field]=np.float64(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])[::ptype_subset[ptype]]
+                            try:
+                                pdata[ifile][ptype][field]=np.float64(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask][::ptype_subset[ptype]])
+                            except:
+                                logging.info(f"Trouble reading field {field} for ptype {ptype} in file {ifile+1}/{numfiles}. Skipping this field.")
+                                continue
                         else:
-                            field_out=field[4:]
-                            pdata[ifile][ptype][field_out]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask][::ptype_subset[ptype]]
+                            try:
+                                field_out=field[4:]
+                                pdata[ifile][ptype][field_out]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask][::ptype_subset[ptype]]
+                            except:
+                                logging.info(f"Trouble reading field {field} for ptype {ptype} in file {ifile+1}/{numfiles}. Skipping this field.")
+                                continue
 
                     # Convert density to g/cm^3
                     if ptype==0:
