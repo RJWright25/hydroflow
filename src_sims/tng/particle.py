@@ -118,7 +118,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                     logging.info(f"Reading extra baryonic properties...")
                     for field in ptype_fields[ptype]:
                         if not 'GFM' in field:
-                            pdata[ifile][ptype][field]=np.float64(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])[::ptype_subset[ptype],:]
+                            pdata[ifile][ptype][field]=np.float64(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask])[::ptype_subset[ptype]]
                         else:
                             field_out=field[4:]
                             pdata[ifile][ptype][field_out]=pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask][::ptype_subset[ptype]]
