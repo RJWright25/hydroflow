@@ -110,7 +110,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
 
                     # Get masses (use the mass table value for DM particles)
                     if not ptype==1:
-                        pdata[ifile][ptype]['Masses']=np.float32(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask][::ptype_subset[ptype],:]*1e10/hval)*ptype_subset[ptype]
+                        pdata[ifile][ptype]['Masses']=np.float32(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask][::ptype_subset[ptype]]*1e10/hval)*ptype_subset[ptype]
                     else:
                         pdata[ifile][ptype]['Masses']=np.float32(np.ones(npart_ifile_invol)*mass_table[ptype]*1e10/hval)[::ptype_subset[ptype]]  
 

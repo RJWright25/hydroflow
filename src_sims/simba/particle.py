@@ -77,7 +77,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
             subvol_mask=np.ones(npart_ifile[ptype])
             coordinates=np.float32(pdata_ifile[f'PartType{ptype}']['Coordinates'][:]*1e-3/hval)
 
-            # logging.info(f"min/max coordinates: {np.min(coordinates)}/{np.max(coordinates)}")
+            logging.info(f"min/max coordinates: {np.min(coordinates)}/{np.max(coordinates)}")
 
             # Check for periodicity
             for idim,dim in enumerate('xyz'):
