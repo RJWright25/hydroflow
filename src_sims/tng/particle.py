@@ -80,7 +80,9 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
             pdata_ifile=h5py.File(ifname,'r')
         except Exception as e:
             logging.error(f"Error opening file {ifname}: {e}")
+            pdata_ifile=pd.DataFrame([])
             continue
+            
         npart_ifile=pdata_ifile['Header'].attrs['NumPart_ThisFile']
         mass_table=pdata_ifile['Header'].attrs['MassTable']
 
