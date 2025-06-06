@@ -234,6 +234,10 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 			thetamasks[theta_str+'pos']=np.logical_and.reduce([gas,thetapos>theta_bin[0],thetapos<theta_bin[1]])
 			thetamasks[theta_str+'vel']=np.logical_and.reduce([gas,thetavel>theta_bin[0],thetavel<theta_bin[1]])
 	thetamasks['fullnd']=np.logical_and.reduce([gas,zheight*afac>0.002]) #full non-disk gas
+	thetamasks['minaxposnd']=np.logical_and.reduce([thetamasks['fullnd'],thetamasks['minaxpos']]) #full non-disk gas
+	thetamasks['minaxvelnd']=np.logical_and.reduce([thetamasks['fullnd'],thetamasks['minaxvel']]) #full non-disk gas
+
+
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
