@@ -5,7 +5,7 @@
 import numpy as np
 import pandas as pd
 
-from hydroflow.src_physics.utils import constant_G, compute_cylindrical_ztheta, calc_halfmass_radius, weighted_nanpercentile
+from hydroflow.src_physics.utils import constant_G, compute_cylindrical_ztheta, calc_halfmass_radius, calc_vesc, weighted_nanpercentile
 from hydroflow.src_physics.gasflow import calculate_flow_rate
 
 def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,boxsize=None): 
@@ -196,7 +196,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	# Pre-load the particle data
 	mass=pdata_candidates['Masses'].values
 	rrel=pdata_candidates['Relative_r_comoving'].values #relative position to the halo centre
-	vrad=pdata_candidates['Relative_vrad_pec'].values #peculiar radil velocity in km/s relative to the centre as per the candidate function
+	vrad=pdata_candidates['Relative_vrad_pec'].values #peculiar radial velocity in km/s relative to the centre as per the candidate function
 	thetapos=pdata_candidates['Relative_theta_pos'].values #relative theta in degrees
 	thetavel=pdata_candidates['Relative_theta_vel'].values #relative theta in degrees
 	temp=pdata_candidates['Temperature'].values
@@ -205,6 +205,25 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	vradz=np.dot(vxyz,Lbar/np.linalg.norm(Lbar)) # Get z radial velocity vector
 	vradz[zheight<0]*=-1 # Flip sign of z radial velocity for particles below the plane
 	rrel_inplane=np.sqrt(rrel**2-zheight**2) # Get the in-plane radius
+
+	# Compute escape velocity of each particle to get to R200
+	idx_2r200=np.searchsorted(rrel,galaxy['Group_R_Crit200']*2*afac) # index of 2*R200
+	mass_within_2r200=np.nansum(mass[:idx_2r200]) # cumulative mass within 2*R200
+	vesc_to2r200=calc_vesc(rrel*afac,mass,galaxy['Group_R_Crit200']*2*afac) #escape velocity to get to 2*R200 in km/s
+	vesc_at2r200=calc_vesc(galaxy['Group_R_Crit200']*2*afac,mass_within_2r200,galaxy['Group_R_Crit200']*2*afac) #escape velocity at 2*R200 in km/s
+	
+	print(f'Escape velocity to get to 2R200: {np.nanmean(vesc_to2r200):.2f} km/s')
+	print(f'Using escape velocity at 2*R200: {vesc_at2r200:.2f} km/s')
+
+	# Compute the Bernoulli velocity for each particle 
+	vbernoulli=np.sqrt(0.5*vrad**2+(0.103*temp)/(5/3-1)-0.5*vesc_to2r200**2) #Bernoulli velocity in km/s
+
+
+
+
+
+
+
 
 	# Masks
 	gas=pdata_candidates['ParticleType'].values==0.
@@ -225,20 +244,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	specmass['Z']=pdata_candidates['Metallicity'].values*mass
 	specmass['tot']=np.ones_like(specmass['Z'])*mass
 
-	# Get relative theta masks
-	thetamasks={}
-	for theta_str,theta_bin in theta_bins.items():
-		if theta_str=='full':
-			thetamasks[theta_str]=np.logical_and.reduce([gas])
-		else:
-			thetamasks[theta_str+'pos']=np.logical_and.reduce([gas,thetapos>theta_bin[0],thetapos<theta_bin[1]])
-			thetamasks[theta_str+'vel']=np.logical_and.reduce([gas,thetavel>theta_bin[0],thetavel<theta_bin[1]])
-	thetamasks['fullnd']=np.logical_and.reduce([gas,zheight*afac>0.002]) #full non-disk gas
-	thetamasks['minaxposnd']=np.logical_and.reduce([thetamasks['fullnd'],thetamasks['minaxpos']]) #full non-disk gas
-	thetamasks['minaxvelnd']=np.logical_and.reduce([thetamasks['fullnd'],thetamasks['minaxvel']]) #full non-disk gas
-
-
-
 	# Get stellar half-mass radius
 	star_r_half=np.nan
 	star_rz_half=np.nan
@@ -254,6 +259,19 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	if np.nansum(gas_mask):
 		gas_r_half=calc_halfmass_radius(mass[gas_mask],rrel[gas_mask])
 		gas_rz_half=calc_halfmass_radius(mass[gas_mask],np.abs(zheight[gas_mask]))
+
+	# Get relative theta masks
+	thetamasks={}
+	for theta_str,theta_bin in theta_bins.items():
+		if theta_str=='full':
+			thetamasks[theta_str]=np.logical_and.reduce([gas])
+		else:
+			thetamasks[theta_str+'pos']=np.logical_and.reduce([gas,thetapos>theta_bin[0],thetapos<theta_bin[1]])
+			thetamasks[theta_str+'vel']=np.logical_and.reduce([gas,thetavel>theta_bin[0],thetavel<theta_bin[1]])
+	
+	nondisc_mask=np.logical_and.reduce([gas,np.logical_not(np.logical_and(np.abs(zheight)<(gas_rz_half*2),rrel_inplane<(gas_r_half*2)))]) #non-disk gas
+	for theta_str in thetamasks.keys():
+		thetamasks[theta_str+'nd']=np.logical_and.reduce([nondisc_mask,thetamasks[theta_str]]) #non-disk gas with theta selection
 
 	# Add to the galaxy output
 	galaxy_output['030pkpc_sphere-star-r_half']=star_r_half

@@ -20,7 +20,7 @@ def calculate_flow_rate(masses,vrad,dr,vboundary=0,vmin=[]):
     vboundary: float
         Radial velocity of the boundary (in km/s). Relevant for e.g. pseudo-evolution.
     vmin: list
-        List of minimum radial velocities (in km/s) for outflow calculations.
+        List of minimum radial velocities (in km/s) for outflow calculations. Each entry can be fixed or an array of values.
     dr: float
         Shell width (in pMpc).
 
