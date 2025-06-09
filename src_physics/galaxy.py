@@ -167,20 +167,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	for idim,dim in enumerate(['x','y','z']):
 		galaxy_output[f'030pkpc_sphere-combar_{dim}']=pdata_candidates.loc[0,f'Coordinates_{dim}']
 
-	# Velocity cuts (if any)
-	galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']))
-	vmins=[];vminstrs=list(vcuts.keys())
-	if 'Subhalo_V_max' in galaxy.keys():
-		vmax=galaxy['Subhalo_V_max']
-		print(f'Using Subhalo_V_max for Vmax: val = {vmax:.2f} km/s'.format(vmax))
-	elif 'Group_V_Crit200' in galaxy_output.keys(): 
-		vmax=1.33*galaxy_output['Group_V_Crit200']# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
-	for vcut in vcuts.keys():
-		vcut_kmps=vcuts[vcut]
-		if type(vcut_kmps)==str and 'Vmax' in vcut_kmps:
-			vcut_kmps=vmax*np.float32(vcut_kmps.split('Vmax')[0])
-		vmins.append(vcut_kmps)
-
 	# Shell width for calculations
 	drfacs_pc=[idrfac*100 for idrfac in drfacs] #convert to pc
 	drfacs_str=['p'+str(f'{idrfac:.0f}').zfill(2) for idrfac in drfacs_pc]
@@ -206,25 +192,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	vradz[zheight<0]*=-1 # Flip sign of z radial velocity for particles below the plane
 	rrel_inplane=np.sqrt(rrel**2-zheight**2) # Get the in-plane radius
 
-	# Compute escape velocity of each particle to get to R200
-	idx_2r200=np.searchsorted(rrel,galaxy['Group_R_Crit200']*2*afac) # index of 2*R200
-	mass_within_2r200=np.nansum(mass[:idx_2r200]) # cumulative mass within 2*R200
-	vesc_to2r200=calc_vesc(rrel*afac,mass,galaxy['Group_R_Crit200']*2*afac) #escape velocity to get to 2*R200 in km/s
-	vesc_at2r200=calc_vesc(galaxy['Group_R_Crit200']*2*afac,mass_within_2r200,galaxy['Group_R_Crit200']*2*afac) #escape velocity at 2*R200 in km/s
-	
-	print(f'Escape velocity to get to 2R200: {np.nanmean(vesc_to2r200):.2f} km/s')
-	print(f'Using escape velocity at 2*R200: {vesc_at2r200:.2f} km/s')
-
-	# Compute the Bernoulli velocity for each particle 
-	vbernoulli=np.sqrt(0.5*vrad**2+(0.103*temp)/(5/3-1)-0.5*vesc_to2r200**2) #Bernoulli velocity in km/s
-
-
-
-
-
-
-
-
 	# Masks
 	gas=pdata_candidates['ParticleType'].values==0.
 	star=pdata_candidates['ParticleType'].values==4.
@@ -243,6 +210,43 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		specmass[mfrac_col.split('mfrac_')[1]]=pdata_candidates[mfrac_col].values*mass
 	specmass['Z']=pdata_candidates['Metallicity'].values*mass
 	specmass['tot']=np.ones_like(specmass['Z'])*mass
+
+	# Velocity cuts (if any)
+	galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']))
+	vmins=[];vminstrs=list(vcuts.keys())
+	if 'Subhalo_V_max' in galaxy.keys():
+		vmax=galaxy['Subhalo_V_max']
+		print(f'Using Subhalo_V_max for Vmax: val = {vmax:.2f} km/s'.format(vmax))
+	elif 'Group_V_Crit200' in galaxy_output.keys(): 
+		vmax=1.33*galaxy_output['Group_V_Crit200']# Otherwise assuming vmax=1.33*vcirc, from NFW profile with c=10
+	for vcut in vcuts.keys():
+		vcut_kmps=vcuts[vcut]
+		if type(vcut_kmps)==str and 'Vmax' in vcut_kmps:
+			vcut_kmps=vmax*np.float32(vcut_kmps.split('Vmax')[0])
+		vmins.append(vcut_kmps)
+		
+	# Extra (Bernoulli) velocity cuts
+	idx_2r200=np.searchsorted(rrel,galaxy['Group_R_Crit200']*2) # index of 2*R200
+	mass_within_2r200=np.nansum(mass[:idx_2r200]) # cumulative mass within 2*R200
+	potential_2r200=-constant_G*mass_within_2r200/(galaxy['Group_R_Crit200']*2*afac) #potential at 2*R200 in km^2/s^2
+	potential_profile=-constant_G*np.cumsum(mass)/(rrel*afac) #potential profile in km^2/s^2
+
+	# Compute the potential at 2*r for each particle
+	potential_at2rrel=np.zeros_like(rrel)
+	vesc_at2rrel=np.zeros_like(rrel)
+	idx_at2rrel=np.searchsorted(rrel,2*rrel) # index of 2*r for each particle
+	for idx in range(idx_at2rrel.shape[0]):
+		if idx_at2rrel[idx]>0 and rrel[idx]<=galaxy['Group_R_Crit200']*2: # Only compute for particles within 2*R200 (to fully sample out to 4*R200)
+			mass_within_2rrel=np.nansum(mass[:idx_at2rrel[idx]])
+			potential_at2rrel[idx]=-constant_G*mass_within_2rrel/(2*rrel[idx]*afac)
+			vesc_at2rrel[idx]=np.sqrt(2*(potential_2r200-potential_at2rrel[idx]))
+	
+	# Compute escape/bernoulli velocities
+	cs_squared=0.103*temp #sound speed squared in km^2/s^2
+	vbernoulli_squared=0.5*vrad**2+cs_squared/(5/3-1)+(potential_2r200-potential_profile) #bernoulli velocity in km/s
+
+	print('Bernoulli velocity squared mean: ',np.nanmean(vbernoulli_squared))
+	print('Fraction: ',np.nanmean(vbernoulli_squared>(-0.5*vesc_at2rrel**2)))
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
