@@ -242,11 +242,11 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 			vesc_at2rrel[idx]=np.sqrt(2*(potential_2r200-potential_at2rrel[idx]))
 	
 	# Compute escape/bernoulli velocities
-	cs_squared=0.103*temp #sound speed squared in km^2/s^2
+	cs_squared=0.103*temp #sound speed squared in km^2/s^2 (assumes mu=1.3 -- first approximation)
 	vbernoulli_squared=0.5*vrad**2+cs_squared/(5/3-1)+(potential_2r200-potential_profile) #bernoulli velocity in km/s
-
-	print('Bernoulli velocity squared mean: ',np.nanmean(vbernoulli_squared))
-	print('Fraction: ',np.nanmean(vbernoulli_squared>(-0.5*vesc_at2rrel**2)))
+	mask=np.logical_and.reduce([vrad>0,rrel<1.5*galaxy['Group_R_Crit200']]) #mask for particles within 1.5*R200 and vrad>0
+	print('Bernoulli velocity squared mean: ',np.nanmean(vbernoulli_squared[mask]))
+	print('Fraction: ',np.nanmean(vbernoulli_squared[mask]>(-0.5*vesc_at2rrel[mask]**2)))
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
@@ -274,7 +274,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 			thetamasks[theta_str+'vel']=np.logical_and.reduce([gas,thetavel>theta_bin[0],thetavel<theta_bin[1]])
 	
 	nondisc_mask=np.logical_and.reduce([gas,np.logical_not(np.logical_and(np.abs(zheight)<(gas_rz_half*2),rrel_inplane<(gas_r_half*2)))]) #non-disk gas
-	for theta_str in thetamasks.keys():
+	for theta_str in theta_bins.keys():
 		thetamasks[theta_str+'nd']=np.logical_and.reduce([nondisc_mask,thetamasks[theta_str]]) #non-disk gas with theta selection
 
 	# Add to the galaxy output
