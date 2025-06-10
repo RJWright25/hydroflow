@@ -405,28 +405,38 @@ def calc_halfmass_radius(masses,radius):
 
 
 
+import numpy as np
+
 def estimate_mu(x_H, T, y=0.08):
     """
-    Estimate mean molecular weight μ from hydrogen ionisation and temperature.
+    Vectorized estimate of mean molecular weight μ for given hydrogen ionisation and temperature.
     
-    x_H : float
-        Hydrogen ionisation fraction (mass-weighted)
-    T : float
-        Temperature in K
+    Parameters:
+    -----------
+    x_H : float or np.ndarray
+        Hydrogen ionisation fraction (mass-weighted), shape (...,)
+    T : float or np.ndarray
+        Temperature in K, shape (...,)
     y : float
-        He/H number abundance ratio (≈ 0.08 for primordial)
+        Helium-to-hydrogen number ratio (default = 0.08 for primordial)
+
+    Returns:
+    --------
+    mu : np.ndarray
+        Mean molecular weight in units of proton mass, shape (...,)
     """
-    if T < 1e4:
-        x_He = 0
-    elif T < 1e5:
-        x_He = 1
-    else:
-        x_He = 2
+    x_H = np.asarray(x_H)
+    T = np.asarray(T)
+    
+    x_He = np.zeros_like(T)
+    x_He[(T >= 1e4) & (T < 1e5)] = 1
+    x_He[T >= 1e5] = 2
 
     numerator = 1 + 4 * y
     denominator = 1 + x_H + y * (1 + x_He)
-    return numerator / denominator
+    mu = numerator / denominator
 
+    return mu
 
 def weighted_nanpercentile(data, weights, percentiles):
     """
