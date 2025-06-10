@@ -185,7 +185,7 @@ if numgal:
         # Initialise galaxy output
         galaxy_output = {}
         central = galaxy['SubGroupNumber'] == 0
-        maxrad = 3.5 * galaxy['Group_R_Crit200'] if central else 150e-3 # 3.5*r200 for centrals, 150kpc for satellites
+        maxrad = 3.5 * galaxy['Group_R_Crit200'] if central else 150e-3 # 3.5*r200 for centrals, 150ckpc for satellites
         
         # Check if the galaxy is on the edge of the box
         com=np.array([galaxy[f'CentreOfPotential_{x}'] for x in 'xyz'])

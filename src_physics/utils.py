@@ -405,50 +405,27 @@ def calc_halfmass_radius(masses,radius):
 
 
 
-def calc_vesc(rrel, mass, outer_radius=None):
-
+def estimate_mu(x_H, T, y=0.08):
     """
-    Calculate the escape velocity at a given radius, only accounting for gravity and 
-    assuming a spherically symmetric mass distribution.
-
-    Parameters
-    ----------
-    rrel : array_like
-        Relative radius from the center of mass (in **physical** units) -- sorted in ascending order.
-    mass : float or array_like
-        Mass of the central object (in physical units).
-    outer_radius : float or array
-        The outer radius for which to calculte the potential difference. This sets the "zero" point for the escape velocity calculation. 
-
-
-    Returns
-    -------
-    vesc : ndarray
-        Escape velocity at the specified radii.
-    """
-
-    if outer_radius is None:
-        outer_radius = rrel[-1]
-
-    rrel = np.asarray(rrel)
-    mass = np.asarray(mass)
-    mass_enclosed=np.cumsum(mass)
+    Estimate mean molecular weight μ from hydrogen ionisation and temperature.
     
-    idx_outer = np.searchsorted(rrel, outer_radius, side='right')
-    if outer_radius.shape == ():
-        # If outer_radius is a scalar, we need to ensure mass_outer is a scalar
-        mass_outer = mass_enclosed[idx_outer - 1] if idx_outer > 0 else 0
+    x_H : float
+        Hydrogen ionisation fraction (mass-weighted)
+    T : float
+        Temperature in K
+    y : float
+        He/H number abundance ratio (≈ 0.08 for primordial)
+    """
+    if T < 1e4:
+        x_He = 0
+    elif T < 1e5:
+        x_He = 1
     else:
-        # If outer_radius is an array, we need to ensure mass_outer is an array
-        mass_outer = np.array([mass_enclosed[i - 1] for i in idx_outer])
+        x_He = 2
 
-    mass_outer = mass_enclosed[idx_outer - 1] if idx_outer > 0 else 0
-    potential_outer = -constant_G * mass_outer / outer_radius
-    potential_all= -constant_G * mass_enclosed / rrel
-
-    vesc = np.sqrt(2 * (potential_all - potential_outer))
-
-    return vesc
+    numerator = 1 + 4 * y
+    denominator = 1 + x_H + y * (1 + x_He)
+    return numerator / denominator
 
 
 def weighted_nanpercentile(data, weights, percentiles):
