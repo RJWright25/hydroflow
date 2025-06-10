@@ -226,9 +226,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		vmins.append(vcut_kmps)
 		
 	# Extra (Bernoulli) velocity cuts
-	idx_2r200=np.searchsorted(rrel,galaxy['Group_R_Crit200']*2) # index of 2*R200
-	mass_within_2r200=np.nansum(mass[:idx_2r200]) # cumulative mass within 2*R200
-	potential_2r200=-constant_G*mass_within_2r200/(galaxy['Group_R_Crit200']*2*afac) #potential at 2*R200 in km^2/s^2
+	potential_infinity=-constant_G*np.nansum(mass)/(np.nanmax(rrel)*afac) #potential at 2*R200 in km^2/s^2
 	potential_profile=-constant_G*np.cumsum(mass)/(rrel*afac) #potential profile in km^2/s^2
 
 	# Compute the potential at 2*r for each particle

@@ -227,7 +227,7 @@ if numgal:
             if dump:
                 logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
                 group=str(int(galaxy[galid_key]))
-                data=pdata_candidates.loc[pdata_candidates['ParticleType'].values==0,pdata_fields]
+                data=pdata_candidates.loc[pdata_candidates['ParticleType'].values>=0,pdata_fields]
                 columns=list(subcat_selection.columns)
                 for column in list(galaxy_output.keys()):
                     if '0p10r200' in column or '1p00r200' in column or '030pkpc' in column or 'half' in column:
