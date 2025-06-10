@@ -225,27 +225,28 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 			vcut_kmps=vmax*np.float32(vcut_kmps.split('Vmax')[0])
 		vmins.append(vcut_kmps)
 		
-	# Extra (Bernoulli) velocity cuts
-	potential_infinity=-constant_G*np.nansum(mass)/(np.nanmax(rrel)*afac) #potential at 2*R200 in km^2/s^2
-	potential_profile=-constant_G*np.cumsum(mass)/(rrel*afac) #potential profile in km^2/s^2
+	# # Extra (Bernoulli) velocity cuts
+	# potential_infinity=-constant_G*np.nansum(mass)/(np.nanmax(rrel)*afac) #potential at 2*R200 in km^2/s^2
+	# potential_profile=-constant_G*np.cumsum(mass)/(rrel*afac) #potential profile in km^2/s^2
+	# vesc_profile=
 
-	# Compute the potential at 2*r for each particle
-	potential_at2rrel=np.zeros_like(rrel)
-	vesc_at2rrel=np.zeros_like(rrel)
-	idx_at2rrel=np.searchsorted(rrel,2*rrel) # index of 2*r for each particle
-	for idx in range(idx_at2rrel.shape[0]):
-		if idx_at2rrel[idx]>0 and rrel[idx]<=galaxy['Group_R_Crit200']*2: # Only compute for particles within 2*R200 (to fully sample out to 4*R200)
-			mass_within_2rrel=np.nansum(mass[:idx_at2rrel[idx]])
-			potential_at2rrel[idx]=-constant_G*mass_within_2rrel/(2*rrel[idx]*afac)
-			vesc_at2rrel[idx]=np.sqrt(2*(potential_2r200-potential_at2rrel[idx]))
+	# # Compute the potential at 2*r for each particle
+	# potential_at2rrel=np.zeros_like(rrel)
+	# vesc_at2rrel=np.zeros_like(rrel)
+	# idx_at2rrel=np.searchsorted(rrel,2*rrel) # index of 2*r for each particle
+	# for idx in range(idx_at2rrel.shape[0]):
+	# 	if idx_at2rrel[idx]>0 and rrel[idx]<=galaxy['Group_R_Crit200']*2: # Only compute for particles within 2*R200 (to fully sample out to 4*R200)
+	# 		mass_within_2rrel=np.nansum(mass[:idx_at2rrel[idx]])
+	# 		potential_at2rrel[idx]=-constant_G*mass_within_2rrel/(2*rrel[idx]*afac)
+	# 		vesc_at2rrel[idx]=np.sqrt(2*(potential_2r200-potential_at2rrel[idx]))
 	
-	# Compute escape/bernoulli velocities
-	cs_squared=0.103*temp #sound speed squared in km^2/s^2 (assumes mu=1.3 -- first approximation)
-	vbernoulli_squared=0.5*vrad**2+cs_squared/(5/3-1)-(potential_2r200-potential_profile) #bernoulli velocity in km/s
-	mask=np.logical_and.reduce([vrad>0,rrel<1.5*galaxy['Group_R_Crit200']]) #mask for particles within 1.5*R200 and vrad>0
-	print('Bernoulli velocity squared mean: ',np.nanmean(vbernoulli_squared[mask]))
-	print('Fraction to get to 2rrel: ',np.nanmean(vbernoulli_squared[mask]>(-0.5*vesc_at2rrel[mask]**2)))
-	print('Fraction with v_bernoulli>0: ',np.nanmean(vbernoulli_squared[mask]>0))
+	# # Compute escape/bernoulli velocities
+	# cs_squared=0.103*temp #sound speed squared in km^2/s^2 (assumes mu=1.3 -- first approximation)
+	# vbernoulli_squared=0.5*vrad**2+cs_squared/(5/3-1)-(potential_2r200-potential_profile) #bernoulli velocity in km/s
+	# mask=np.logical_and.reduce([vrad>0,rrel<1.5*galaxy['Group_R_Crit200']]) #mask for particles within 1.5*R200 and vrad>0
+	# print('Bernoulli velocity squared mean: ',np.nanmean(vbernoulli_squared[mask]))
+	# print('Fraction to get to 2rrel: ',np.nanmean(vbernoulli_squared[mask]>(-0.5*vesc_at2rrel[mask]**2)))
+	# print('Fraction with v_bernoulli>0: ',np.nanmean(vbernoulli_squared[mask]>0))
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
