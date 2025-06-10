@@ -246,7 +246,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	vbernoulli_squared=0.5*vrad**2+cs_squared/(5/3-1)-(potential_2r200-potential_profile) #bernoulli velocity in km/s
 	mask=np.logical_and.reduce([vrad>0,rrel<1.5*galaxy['Group_R_Crit200']]) #mask for particles within 1.5*R200 and vrad>0
 	print('Bernoulli velocity squared mean: ',np.nanmean(vbernoulli_squared[mask]))
-	print('Fraction: ',np.nanmean(vbernoulli_squared[mask]>(-0.5*vesc_at2rrel[mask]**2)))
+	print('Fraction to get to 2rrel: ',np.nanmean(vbernoulli_squared[mask]>(-0.5*vesc_at2rrel[mask]**2)))
+	print('Fraction with v_bernoulli>0: ',np.nanmean(vbernoulli_squared[mask]>0))
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
