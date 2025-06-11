@@ -239,8 +239,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	cs=0.129*np.sqrt(temp/mu);gamma=5/3 #ideal gas
 	vb_toinf=np.sqrt(2*(potential_infinity - potential_profile) - 2*cs**2/(gamma-1) )
 	vb_to3r=np.sqrt(2*(potential_atxrrel - potential_profile) - 2*cs**2/(gamma-1)  )
-	vmins.append(vb_toinf);vminstrs.append('bntoinf')
-	vmins.append(vb_to3r); vminstrs.append('bnto3r')
+	vmins.append(vb_toinf);vminstrs.append('vcbntoinf')
+	vmins.append(vb_to3r); vminstrs.append('vcbnto3rr')
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
