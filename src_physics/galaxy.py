@@ -238,7 +238,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	mu=estimate_mu(x_H=ionised_frac_H,T=temp,y=0.08) #Estimate the mean molecular weight based on the ionised fraction and temperature
 	cs=0.129*np.sqrt(temp/mu);gamma=5/3 #ideal gas
 	vb_toinf=np.sqrt(2*(potential_infinity - potential_profile) - 2*cs**2/(gamma-1) )
-	vb_to3r=np.sqrt(2*(potential_atxrrel[gas] - potential_profile) - 2*cs**2/(gamma-1)  )
+	vb_to3r=np.sqrt(2*(potential_atxrrel - potential_profile) - 2*cs**2/(gamma-1)  )
 	vmins.append(vb_toinf);vminstrs.append('bntoinf')
 	vmins.append(vb_to3r); vminstrs.append('bnto3r')
 
