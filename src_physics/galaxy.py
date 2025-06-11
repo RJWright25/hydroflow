@@ -210,8 +210,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		specmass[mfrac_col.split('mfrac_')[1]]=pdata_candidates[mfrac_col].values*mass
 	specmass['Z']=pdata_candidates['Metallicity'].values*mass
 	specmass['tot']=np.ones_like(specmass['Z'])*mass
-	key_HI= key if 'HI' in pdata_candidates.columns else None ;key_H2= key if 'H2' in pdata_candidates.columns else None #
-	print(f'Using {key_HI} and {key_H2} for ionised fractions of H') if key_HI is not None or key_H2 is not None else print('No ionised fractions for H found in the data.')
+	key_HI= key if 'mfrac_HI' in list(specmass.keys()) else None ;key_H2= key if 'mfrac_H2' in list(specmass.keys()) else None #
+	print(f'Using {key_HI} and {key_H2} for ionised fractions of H')
 	ionised_frac_H= np.ones_like(temp) # If no species, assume fully ionised
 	if key_HI is not None and key_H2 is not None:
 		ionised_frac_H=1-(pdata_candidates[key_HI][:]+ pdata_candidates[key_H2][:])/(0.76)
