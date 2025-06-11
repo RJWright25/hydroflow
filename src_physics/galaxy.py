@@ -5,7 +5,7 @@
 import numpy as np
 import pandas as pd
 
-from hydroflow.src_physics.utils import constant_G, compute_cylindrical_ztheta, calc_halfmass_radius, weighted_nanpercentile
+from hydroflow.src_physics.utils import constant_G, compute_cylindrical_ztheta, calc_halfmass_radius, weighted_nanpercentile, estimate_mu
 from hydroflow.src_physics.gasflow import calculate_flow_rate
 
 def retrieve_galaxy_candidates(galaxy,pdata_subvol,kdtree_subvol,maxrad=None,boxsize=None): 
@@ -210,6 +210,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		specmass[mfrac_col.split('mfrac_')[1]]=pdata_candidates[mfrac_col].values*mass
 	specmass['Z']=pdata_candidates['Metallicity'].values*mass
 	specmass['tot']=np.ones_like(specmass['Z'])*mass
+	key_HI= key if 'HI' in specmass.keys() else None ;key_H2= key if 'H2' in specmass.keys() else None #
 
 	# Velocity cuts (if any)
 	galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']))
@@ -225,28 +226,23 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 			vcut_kmps=vmax*np.float32(vcut_kmps.split('Vmax')[0])
 		vmins.append(vcut_kmps)
 		
-	# # Extra (Bernoulli) velocity cuts
-	# potential_infinity=-constant_G*np.nansum(mass)/(np.nanmax(rrel)*afac) #potential at 2*R200 in km^2/s^2
-	# potential_profile=-constant_G*np.cumsum(mass)/(rrel*afac) #potential profile in km^2/s^2
-	# vesc_profile=
+	# Extra (Bernoulli) velocity cuts
+	potential_infinity=-constant_G*np.nansum(mass)/(np.nanmax(rrel)*afac)
+	potential_profile=-constant_G*np.cumsum(mass)/(rrel*afac)
+	indices_3r = np.searchsorted(rrel,  3 * rrel);indices_3r=np.clip(indices_3r, 0, len(rrel) - 1)
+	potential_atxrrel = potential_profile[indices_3r]
 
-	# # Compute the potential at 2*r for each particle
-	# potential_at2rrel=np.zeros_like(rrel)
-	# vesc_at2rrel=np.zeros_like(rrel)
-	# idx_at2rrel=np.searchsorted(rrel,2*rrel) # index of 2*r for each particle
-	# for idx in range(idx_at2rrel.shape[0]):
-	# 	if idx_at2rrel[idx]>0 and rrel[idx]<=galaxy['Group_R_Crit200']*2: # Only compute for particles within 2*R200 (to fully sample out to 4*R200)
-	# 		mass_within_2rrel=np.nansum(mass[:idx_at2rrel[idx]])
-	# 		potential_at2rrel[idx]=-constant_G*mass_within_2rrel/(2*rrel[idx]*afac)
-	# 		vesc_at2rrel[idx]=np.sqrt(2*(potential_2r200-potential_at2rrel[idx]))
-	
-	# # Compute escape/bernoulli velocities
-	# cs_squared=0.103*temp #sound speed squared in km^2/s^2 (assumes mu=1.3 -- first approximation)
-	# vbernoulli_squared=0.5*vrad**2+cs_squared/(5/3-1)-(potential_2r200-potential_profile) #bernoulli velocity in km/s
-	# mask=np.logical_and.reduce([vrad>0,rrel<1.5*galaxy['Group_R_Crit200']]) #mask for particles within 1.5*R200 and vrad>0
-	# print('Bernoulli velocity squared mean: ',np.nanmean(vbernoulli_squared[mask]))
-	# print('Fraction to get to 2rrel: ',np.nanmean(vbernoulli_squared[mask]>(-0.5*vesc_at2rrel[mask]**2)))
-	# print('Fraction with v_bernoulli>0: ',np.nanmean(vbernoulli_squared[mask]>0))
+	if key_HI is not None and key_H2 is not None:
+		ionised_frac=1-(pdata_candidates[key_HI][:]+ pdata_candidates[key_H2][:])/(0.76)
+	else:
+		ionised_frac= np.ones_like(temp) # If no species, assume fully ionised
+
+	mu=estimate_mu(x_H=ionised_frac,T=temp,y=0.08) #Estimate the mean molecular weight based on the ionised fraction and temperature
+	cs=0.129*np.sqrt(temp/mu);gamma=5/3 #ideal gas
+	vb_toinf=np.sqrt(2*(potential_infinity - potential_profile) - 2*cs**2/(gamma-1) )
+	vb_to3r=np.sqrt(2*(potential_atxrrel[gas] - potential_profile) - 2*cs**2/(gamma-1)  )
+	vmins.append(vb_toinf);vminstrs.append('vbntoinf')
+	vmins.append(vb_to3r); vminstrs.append('vbnto3r')
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
@@ -416,7 +412,15 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 							
 						# Calculate the total flow rates for the gas
 						for vboundary, vkey in zip(vsboundary, vsboundary_str):
-							gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
+							# Retrieve vmins -- mask the vmin values which are arrays
+							vmins_use=[]
+							for iv,vminstr in enumerate(vminstrs):
+								if type(vmins[iv])==np.ndarray:
+									vmins_use.append(vmins[iv][Tmask_shell])
+								else:
+									vmins_use.append(vmins[iv])
+							
+							gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins_use)
 							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_vc000kmps']=gas_flow_rates[0]
 							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_vc000kmps']=gas_flow_rates[1]
 							for iv,vminstr in enumerate(vminstrs):
@@ -424,12 +428,13 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 
 							# Calculate the flow rates for the gas by species
-							for spec in specmass.keys():
-								gas_flow_rates_species=calculate_flow_rate(masses=specmass[spec][Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
-								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps']=gas_flow_rates_species[0]
-								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps']=gas_flow_rates_species[1]
-								for iv,vminstr in enumerate(vminstrs):
-									galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]
+							if Tstr=='all':
+								for spec in specmass.keys():
+									gas_flow_rates_species=calculate_flow_rate(masses=specmass[spec][Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins_use)
+									galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps']=gas_flow_rates_species[0]
+									galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps']=gas_flow_rates_species[1]
+									for iv,vminstr in enumerate(vminstrs):
+										galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]
 
 	#### CYLINDRICAL SLAB CALCULATIONS (abs[z] between r-dr/2 and r+dr/2) ####
 	# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
