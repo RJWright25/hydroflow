@@ -210,7 +210,7 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		specmass[mfrac_col.split('mfrac_')[1]]=pdata_candidates[mfrac_col].values*mass
 	specmass['Z']=pdata_candidates['Metallicity'].values*mass
 	specmass['tot']=np.ones_like(specmass['Z'])*mass
-	key_HI= key if 'HI' in specmass.keys() else None ;key_H2= key if 'H2' in specmass.keys() else None #
+	key_HI= key if 'HI' in pdata_candidates.columns else None ;key_H2= key if 'H2' in pdata_candidates.columnss else None #
 
 	# Velocity cuts (if any)
 	galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']))
