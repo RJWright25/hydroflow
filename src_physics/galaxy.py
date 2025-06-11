@@ -468,19 +468,28 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 						# Calculate the total flow rates for the gas
 						for vboundary, vkey in zip([0], ['vbstatic']):
-							gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vradz[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
+							# Retrieve vmins -- mask the vmin values which are arrays
+							vmins_use=[]
+							for iv,vminstr in enumerate(vminstrs):
+								if type(vmins[iv])==np.ndarray:
+									vmins_use.append(vmins[iv][Tmask_shell])
+								else:
+									vmins_use.append(vmins[iv])
+
+							gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vradz[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins_use)
 							galaxy_output[f'{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_vc000kmps']=gas_flow_rates[0]
 							galaxy_output[f'{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_vc000kmps']=gas_flow_rates[1]
 							for iv,vminstr in enumerate(vminstrs):
 								galaxy_output[f'{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_{vminstr}']=gas_flow_rates[2+iv]
 							
 							# Calculate the flow rates for the gas by species
-							for spec in specmass.keys():
-								gas_flow_rates_species=calculate_flow_rate(masses=specmass[spec][Tmask_shell],vrad=vradz[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins)
-								galaxy_output[f'{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps']=gas_flow_rates_species[0]
-								galaxy_output[f'{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps']=gas_flow_rates_species[1]
-								for iv,vminstr in enumerate(vminstrs):
-									galaxy_output[f'{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]
+							if Tstr=='all':
+								for spec in specmass.keys():
+									gas_flow_rates_species=calculate_flow_rate(masses=specmass[spec][Tmask_shell],vrad=vradz[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins_use)
+									galaxy_output[f'{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps']=gas_flow_rates_species[0]
+									galaxy_output[f'{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps']=gas_flow_rates_species[1]
+									for iv,vminstr in enumerate(vminstrs):
+										galaxy_output[f'{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]
 
 
 	# Return the galaxy output dictionary
