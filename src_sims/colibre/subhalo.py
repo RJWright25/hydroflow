@@ -75,10 +75,11 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             halodata_out['SnapNum']=np.ones(halodata.soap.host_halo_index.shape)*snapnum
 
             # IDs
+            central=halodata.input_halos.is_central.value
             halodata_out['HostHaloID']=halodata.soap.host_halo_index.value
             halodata_out['GroupNumber']=np.arange(len(halodata_out['HostHaloID']))
             halodata_out['SubGroupNumber']=np.zeros(len(halodata_out['HostHaloID']))
-            halodata_out.loc[halodata_out['HostHaloID'].values>=0,'SubGroupNumber']=1
+            halodata_out.loc[np.logical_not(central),'SubGroupNumber']=1
             halodata_out['GalaxyID_raw']=halodata.input_halos_hbtplus.track_id.value
             halodata_out['GalaxyID']=snapnum*1e12+halodata_out['GalaxyID_raw'].values # Unique galaxy ID
 
