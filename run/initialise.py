@@ -195,6 +195,19 @@ def load_metadata(name):
     """
     with open(name, 'rb') as f:
         sim_metadata = pickle.load(f)
+
+    try:
+        cosmotest= sim_metadata.cosmology.H0
+    except:
+        print(f"Cosmology not found in {name}. Generating hard-coded cosmo object...")
+        if sim_metadata.simtype =='simba':
+            sim_metadata.cosmology = apy_cosmo.LambdaCDM(H0=68.0,Om0=0.3,Ob0=0.048,Ode0=0.7,Tcmb0=2.73)
+        elif sim_metadata.simtype == 'tng':
+            sim_metadata.cosmology = apy_cosmo.LambdaCDM(H0=67.74,Om0=0.3089,Ob0=0.0486,Ode0=0.6911,Tcmb0=2.73)
+        elif sim_metadata.simtype == 'eagle':
+            sim_metadata.cosmology = apy_cosmo.LambdaCDM(H0=67.77,Om0=0.307,Ob0=0.04825,Ode0=0.693,Tcmb0=2.73)
+        elif sim_metadata.simtype == 'colibre':
+            sim_metadata.cosmology = apy_cosmo.LambdaCDM(H0=68.1,Om0=0.304611,Ob0=0.0486,Ode0=0.693922,Tcmb0=2.7255)
     return sim_metadata
 
 
