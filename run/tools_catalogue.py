@@ -270,6 +270,9 @@ def combine_catalogues(path_hydroflow, snaps=None, mcut=10, verbose=False):
         #Enforce mass cut
         logging.info(f"Enforcing mass cut of log10 {mcut}/Msun (t = {time.time() - t1:.2f}s)")
         if mcut:
+            if not 'Mass' in isnap_outputs.columns:
+                isnap_outputs['Mass'] = isnap_outputs['Group_M_Crit200'].values
+                logging.warning(f"Mass column not found in {snapdir_path} - skipping mass cut")
             isnap_outputs = isnap_outputs.loc[isnap_outputs['Mass'].values > 10**mcut,:].copy()
 
         snap_outputs.append(isnap_outputs)
