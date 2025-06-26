@@ -271,9 +271,9 @@ def combine_catalogues(path_hydroflow, snaps=None, mcut=10, verbose=False):
         logging.info(f"Enforcing mass cut of log10 {mcut}/Msun (t = {time.time() - t1:.2f}s)")
         if mcut:
             if not 'Mass' in isnap_outputs.columns:
-                isnap_outputs['Mass'] = isnap_outputs['Group_M_Crit200'].values
                 logging.warning(f"Mass column not found in {snapdir_path} - skipping mass cut")
-            isnap_outputs = isnap_outputs.loc[isnap_outputs['Mass'].values > 10**mcut,:].copy()
+            else:
+                isnap_outputs = isnap_outputs.loc[isnap_outputs['Mass'].values > 10**mcut,:].copy()
 
         snap_outputs.append(isnap_outputs)
 
@@ -292,8 +292,10 @@ def combine_catalogues(path_hydroflow, snaps=None, mcut=10, verbose=False):
     print(f'Writing to {outpath} ... (t = {time.time() - t1:.2f}s)')
     logging.info(f"Writing to {outpath}")
     create_dir(outpath)
-
-    snap_outputs.sort_values(by=['SnapNum', 'Mass'], ascending=[False, False], inplace=True, ignore_index=True)
+    try:
+        snap_outputs.sort_values(by=['SnapNum', 'Mass'], ascending=[False, False], inplace=True, ignore_index=True)
+    except:
+        logging.warning("Sorting by SnapNum and Mass failed, sorting only by HydroflowID")
     snap_outputs.reset_index(drop=True, inplace=True)
     dump_hdf(outpath, data=snap_outputs, verbose=verbose)
 
