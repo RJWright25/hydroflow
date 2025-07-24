@@ -67,11 +67,13 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     ptypes={0:['Temperature',
                 'Metallicity',
                 'Density',
-                'StarFormationRate'],
-            1:[],
-            4:['Metallicity']}
+                'StarFormationRate',
+                'Velocities'],
+            1:['Velocities'],
+            4:['Metallicity',
+               'Velocities']}
     
-    ptype_subset={0:1, 1:4, 4:2} 
+    ptype_subset={0:1, 1:2, 4:2} 
     
     # Use the EagleSnapshot class to read the particle data
     snapshot=EagleSnapshot(path)
@@ -91,7 +93,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
 
         # Get masses (use the mass table value for DM particles)
         if ptype==1:
-            pdata[ptype].loc[:,'Masses']=file['Header'].attrs['MassTable'][1]*1e10/hval #mass in Msun
+            pdata[ptype].loc[:,'Masses']=file['Header'].attrs['MassTable'][1]*1e10/hval*ptype_subset[ptype] #mass in Msun
         else:
             pdata[ptype]['Masses']=snapshot.read_dataset(ptype,'Mass')[::ptype_subset[ptype]]*1e10/hval*ptype_subset[ptype] #mass in Msun
         
@@ -107,6 +109,10 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     # Convert SFR to Msun/yr from g/s
     pdata[0]['StarFormationRate']=pdata[0]['StarFormationRate']*(1/constant_gpmsun)*constant_spyr
 
+
+    #Convert cm/s to km/s
+    for ptype in pdata:
+        pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']].values/1e5 #convert to km/s
 
     # Add missing fields to star particles
     npart_star=pdata[4].shape[0]

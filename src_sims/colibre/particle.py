@@ -72,8 +72,9 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         partbuffer=[pdata_snap_masked.gas]
     else:
         parttypes=[0,1,4]
-        partstrs=['gas','dm','stars']
-        partbuffer=[pdata_snap_masked.gas,pdata_snap_masked.dark_matter,pdata_snap_masked.stars]
+        partstrs=['gas','dm','stars','bhs']
+        print(dir(pdata_snap_masked.black_holes))
+        partbuffer=[pdata_snap_masked.gas,pdata_snap_masked.dark_matter,pdata_snap_masked.stars,pdata_snap_masked.black_holes]
 
     # Loop over particle types
     for iptype,ptype,pdata_masked_object  in zip(parttypes,partstrs,partbuffer):
@@ -156,6 +157,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
             # Metallicity
             logging.info(f"Reading Z... [pdata time: {time.time()-t0:.2f} s]")
             pdata_ptype['Metallicity']=pdata_masked_object.metal_mass_fractions.value[::subset]
+
 
         logging.info(f"Appending {ptype} particles to pdata... [pdata time: {time.time()-t0:.2f} s]")
         pdata.append(pdata_ptype)

@@ -404,9 +404,6 @@ def calc_halfmass_radius(masses,radius):
     return halfmass_radius
 
 
-
-import numpy as np
-
 def estimate_mu(x_H, T, y=0.08):
     """
     Vectorized estimate of mean molecular weight μ for given hydrogen ionisation and temperature.

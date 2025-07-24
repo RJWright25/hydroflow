@@ -59,7 +59,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     # Get limits for the subvolume
     lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
     
-    ptype_subset={0:1, 1:4, 4:2} 
+    ptype_subset={0:1, 1:2, 4:2} 
     ptype_fields={0:['InternalEnergy',
                      'ElectronAbundance',
                      'Density',
@@ -120,7 +120,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
                     if not ptype==1:
                         pdata[ifile][ptype]['Masses']=np.float32(pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask][::ptype_subset[ptype]]*1e10/hval)*ptype_subset[ptype]
                     else:
-                        pdata[ifile][ptype]['Masses']=np.float32(np.ones(npart_ifile_invol)*mass_table[ptype]*1e10/hval)[::ptype_subset[ptype]]  
+                        pdata[ifile][ptype]['Masses']=np.float32(np.ones(npart_ifile_invol)*mass_table[ptype]*1e10/hval)[::ptype_subset[ptype]]*ptype_subset[ptype] #mass in Msun
 
                     # Mask and load rest of the properties
                     logging.info(f"Reading extra baryonic properties...")
