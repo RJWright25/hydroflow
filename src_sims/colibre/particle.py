@@ -93,19 +93,21 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         masses=pdata_masked_object.masses
         masses.convert_to_units('Msun')
         pdata_ptype['Masses']=masses.value[::subset]*subset
+        del masses
 
         logging.info(f"Reading coordinates for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         coordinates=pdata_masked_object.coordinates
         coordinates.convert_to_units('Mpc') #comoving
         for ix,x in enumerate('xyz'):
             pdata_ptype[f'Coordinates_{x}']=coordinates.value[::subset,ix]
-
+        del coordinates
         
         logging.info(f"Reading velocities for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         velocities=pdata_masked_object.velocities
         velocities.convert_to_units('km/s');velocities.convert_to_physical()
         for ix,x in enumerate('xyz'):
                 pdata_ptype[f'Velocities_{x}']=velocities.value[::subset,ix]
+        del velocities
 
         logging.info(f"Reading IDs for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         pdata_ptype['ParticleIDs']=pdata_masked_object.particle_ids.value[::subset]
@@ -118,19 +120,22 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
             logging.info(f"Reading temperature... [pdata time: {time.time()-t0:.2f} s]")
             temp=pdata_masked_object.temperatures
             temp.convert_to_units('K')
-            pdata_ptype['Temperature']=temp.value;del temp
+            pdata_ptype['Temperature']=temp.value
+            del temp
 
             # Density
             logging.info(f"Reading density... [pdata time: {time.time()-t0:.2f} s]")
             dens=pdata_masked_object.densities
             dens.convert_to_units('g/cm**3');dens.convert_to_physical()
-            pdata_ptype['Density']=dens.value;del dens
+            pdata_ptype['Density']=dens.value
+            del dens
 
             # Star formation rate
             logging.info(f"Reading SFR... [pdata time: {time.time()-t0:.2f} s]")
             sfr=pdata_masked_object.star_formation_rates
             sfr.convert_to_units('Msun/yr')
             pdata_ptype['StarFormationRate']=sfr.value
+            del sfr
 
             # # Smoothing length
             # logging.info(f"Reading smoothing length... [pdata time: {time.time()-t0:.2f} s]")
@@ -151,6 +156,8 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
                 logging.info(f"Converting H species fractions to mass fractions... [pdata time: {time.time()-t0:.2f} s]")
                 for spec in ['HI','H2']:
                     pdata_ptype[f'mfrac_{spec}']=pdata_ptype[f'mfrac_{spec}']*hydrogen_frac
+
+                del hydrogen_frac
 
         # Read additional star properties
         elif ptype=='stars':
