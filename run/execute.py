@@ -21,7 +21,7 @@ parser.add_argument('--nslice', type=int)
 parser.add_argument('--ivol', type=int)
 parser.add_argument('--snap', type=int)
 parser.add_argument('--mcut', type=float)
-parser.add_argument('--dump', type=int)
+parser.add_argument('--dump', type=int) #this is now the subsampling factor -- 0==none, 1==all, 2==every second particle
 parser.add_argument('--pars', type=str)
 args=parser.parse_args()
 
@@ -29,7 +29,7 @@ args=parser.parse_args()
 repo, code, pathcat = args.repo, args.code, args.path
 path = pathcat.split('cat')[0]
 nslice, ivol, snap = args.nslice, args.ivol, args.snap
-dump = bool(args.dump)
+dump = int(args.dump)
 mcut = 10**(args.mcut)
 
 # Set up paths
@@ -227,16 +227,31 @@ if numgal:
             logging.info(f'Galaxy successfully processed [runtime {time.time()-t1:.3f} sec]')
 
             # Dump particle data if requested
-            if dump:
-                logging.info(f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec]')
-                group=str(int(galaxy[galid_key]))
-                data=pdata_candidates.loc[pdata_candidates['ParticleType'].values>=0,pdata_fields]
-                columns=list(subcat_selection.columns)
+            if isinstance(dump, int) and dump > 0:
+                logging.info(
+                    f'Dumping particle data for galaxy {galaxy[galid_key]} [runtime {time.time()-t1:.3f} sec] '
+                    f'(stride={dump})'
+                )
+                group = str(int(galaxy[galid_key]))
+
+                # select all valid particles & requested fields
+                data = pdata_candidates.loc[pdata_candidates['ParticleType'].values >= 0, pdata_fields]
+
+                # deterministically take every `dump`-th row (dump==1 keeps all)
+                if dump > 1:
+                    data = data.iloc[::dump].copy()
+
+                # optional: log how many rows we kept
+                logging.debug(f'Particle rows kept: {len(data)} of {len(pdata_candidates)}')
+
+                columns = list(subcat_selection.columns)
                 for column in list(galaxy_output.keys()):
-                    if '0p10r200' in column or '1p00r200' in column or '030pkpc' in column or 'half' in column:
+                    if ('0p10r200' in column or '1p00r200' in column or
+                        '030pkpc' in column or 'half' in column):
                         columns.append(column)
-                metadata_dump={key:galaxy_output[key] for key in columns}
-                dump_hdf_group(dumpcat_fname,group,data,metadata=metadata_dump,verbose=False)
+
+                metadata_dump = {key: galaxy_output[key] for key in columns}
+                dump_hdf_group(dumpcat_fname, group, data, metadata=metadata_dump, verbose=False)
 
         else:
             logging.info(f'No particles found for galaxy {int(galaxy[galid_key])} in subvolume {ivol}.')
