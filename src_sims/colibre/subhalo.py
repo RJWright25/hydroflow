@@ -97,7 +97,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             mfof=halodata.input_halos_fof.masses;mfof.convert_to_units(munit)
             halodata_out['GroupMass']=np.array(mfof.value)
 
-            for overdensity in zip(['200_crit','500_crit'],[halodata.spherical_overdensity_200_crit,halodata.spherical_overdensity_500_crit]):
+            for overdensity in zip(['Crit200','Crit500'],[halodata.spherical_overdensity_200_crit,halodata.spherical_overdensity_500_crit]):
                 od_str=overdensity[0];od_data=overdensity[1]
                 mod=od_data.total_mass;mod.convert_to_units(munit)
                 halodata_out[f'Group_M_{od_str}']=np.array(mod.value)
@@ -133,7 +133,6 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             aveSFR_30kpc=halodata.exclusive_sphere_30kpc.averaged_star_formation_rate;aveSFR_30kpc.convert_to_units(f'{munit}/yr')
             halodata_out['030pkpc_sphere-gas_all-ave_SFR_10Myr-soapexcl']=np.array(aveSFR_30kpc.value[:,0]) #averaged over 10 Myr
             halodata_out['030pkpc_sphere-gas_all-ave_SFR_100Myr-soapexcl']=np.array(aveSFR_30kpc.value[:,1]) #averaged over 100 Myr
-
             rstar=halodata.exclusive_sphere_30kpc.half_mass_radius_stars;rstar.convert_to_units(dunit)
             halodata_out['030pkpc_sphere-star-r_half-soapexcl']=np.array(rstar.value)
             rgas=halodata.exclusive_sphere_30kpc.half_mass_radius_gas;rgas.convert_to_units(dunit)
@@ -147,7 +146,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             kappaco_gas=halodata.exclusive_sphere_30kpc.kappa_corot_gas
             halodata_out['030pkpc_sphere-gas_all-kappa_corot-soapexcl']=np.array(kappaco_gas)
             stellarluminosities=halodata.exclusive_sphere_30kpc.stellar_luminosity
-            stellarluminosities.convert_to_units('Lsun')
+            stellarluminosities.convert_to_units('1')
             for iband,band in enumerate(['u','g','r','i','z','Y','J','H','K']):
                 lum_band=stellarluminosities[:,iband]
                 halodata_out[f'030pkpc_sphere-star-L_{band}-soapexcl']=np.array(lum_band.value)
@@ -162,8 +161,6 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             halodata_out['030pkpc_sphere-BH-n_tot-soapexcl']=np.array(nbh)
             mbh_total=halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass;mbh_total.convert_to_units(munit)
             halodata_out['030pkpc_sphere-BH-m_tot-soapexcl']=np.array(mbh_total.value)
-            mbh_nmergers=halodata.exclusive_sphere_30kpc.most_massive_black_hole_number_of_mergers
-            halodata_out['030pkpc_sphere-BH-n_mergers-soapexcl']=np.array(mbh_nmergers)
             bh_aveaccretion=halodata.exclusive_sphere_30kpc.most_massive_black_hole_averaged_accretion_rate;bh_aveaccretion.convert_to_units(f'{munit}/yr')
             halodata_out['030pkpc_sphere-BH-ave_accretion_10Myr-soapexcl']=np.array(bh_aveaccretion.value[:,0]) #averaged over 10 Myr
             halodata_out['030pkpc_sphere-BH-ave_accretion_100Myr-soapexcl']=np.array(bh_aveaccretion.value[:,1]) #averaged over 100 Myr
@@ -181,6 +178,9 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             if hasattr(halodata.exclusive_sphere_30kpc,'most_massive_black_hole_accretion_mode'):
                 bh_accretion_mode=halodata.exclusive_sphere_30kpc.most_massive_black_hole_accretion_mode
                 halodata_out['030pkpc_sphere-BH-accdisc_mode_soapexcl']=bh_accretion_mode.value # 0=thin, 1=thick, 2=slim
+            if hasattr(halodata.exclusive_sphere_30kpc,'most_massive_black_hole_number_of_mergers'):
+                mbh_nmergers=halodata.exclusive_sphere_30kpc.most_massive_black_hole_number_of_mergers
+                halodata_out['030pkpc_sphere-BH-n_mergers-soapexcl']=np.array(mbh_nmergers)
 
             # Give each satellite the group mass, r200 and m200 of the central and distance to central
             print('Matching group data to satellite data...')
