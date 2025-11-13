@@ -73,7 +73,6 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
     else:
         parttypes=[0,1,4]
         partstrs=['gas','dm','stars','bhs']
-        print(dir(pdata_snap_masked.black_holes))
         partbuffer=[pdata_snap_masked.gas,pdata_snap_masked.dark_matter,pdata_snap_masked.stars,pdata_snap_masked.black_holes]
 
     # Loop over particle types
@@ -152,7 +151,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
                 logging.info(f"Reading H2... [pdata time: {time.time()-t0:.2f} s]")
                 pdata_ptype['mfrac_H2']=pdata_snap_masked.gas.species_fractions.H2.value*2 # multiply by 2 to mass fraction (instead of number density fraction)
                 logging.info(f"Reading Z... [pdata time: {time.time()-t0:.2f} s]")
-                pdata_ptype['Metallicity']=pdata_masked_object.metal_mass_fractions.value
+                pdata_ptype['Metallicity']=pdata_snap_masked.gas.metal_mass_fractions.value
                 logging.info(f"Converting H species fractions to mass fractions... [pdata time: {time.time()-t0:.2f} s]")
                 for spec in ['HI','H2']:
                     pdata_ptype[f'mfrac_{spec}']=pdata_ptype[f'mfrac_{spec}']*hydrogen_frac
