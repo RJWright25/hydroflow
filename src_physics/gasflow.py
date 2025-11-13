@@ -29,7 +29,7 @@ def calculate_flow_rate(masses,vrad,dr,vboundary=0,vmin=[]):
     Output:
     -----------
     flow_rates: np.array
-        Array of mass flow rates (in Msun/yr) -- [inflow,outflow].
+        Array of mass flow rates (in Msun/Gyr) -- [inflow,outflow].
 
     """
     # Calculate the flow rate across the boundary
