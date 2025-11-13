@@ -192,16 +192,32 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	vradz[zheight<0]*=-1 # Flip sign of z radial velocity for particles below the plane
 	rrel_inplane=np.sqrt(rrel**2-zheight**2) # Get the in-plane radius
 
+	# Check for membership data
+	membership=False
+	if 'HaloCatalogueIndex' in pdata_candidates.columns:
+		particle_haloidx=pdata_candidates['HaloCatalogueIndex'].values
+		membership=True
+
 	# Masks
 	gas=pdata_candidates['ParticleType'].values==0.
 	star=pdata_candidates['ParticleType'].values==4.
 	dm=pdata_candidates['ParticleType'].values==1.
 
+	# Membership masks
+	membership_masks={}
+	if membership:
+		membership_masks['incl']=np.isfinite(particle_haloidx)
+		membership_masks['excl']=particle_haloidx==galaxy['HaloCatalogueIndex']
+		membership_masks['unbd']=particle_haloidx==-1
+		#incl-excl-unbd==satellite particles
+	else:
+		membership_masks['incl']=np.ones_like(mass).astype(bool)
+
 	# Gas selections by temperature (adding sf, all)
 	Tmasks={'all':gas,'sf':np.logical_and(gas,sfr>0)}
 	if Tbins is not None:
 		for Tstr,Tbin in Tbins.items():
-			Tmasks[Tstr]=np.logical_and.reduce([gas,temp>Tbin[0],temp<Tbin[1]])
+			Tmasks[Tstr]=np.logical_and.reduce([gas,temp>Tbin[0],temp<Tbin[1]]).astype(bool)
 
 	# Species fractions (if available)
 	specmass={}
@@ -313,42 +329,49 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 
 		# Skip the shell if it is a multiple of r200 and the galaxy is a satellite
 		if not ('r200' in rshell_str and galaxy['SubGroupNumber']>0) and rshell>0:
-			
+
+
 			#### SPHERE CALCULATIONS (r<rshell) ####
 			# Mask for the sphere in comoving coordinates
 			rshell_maxidx=np.searchsorted(rrel,rshell)
 			mask_sphere=np.zeros_like(rrel).astype(bool)
 			mask_sphere[:rshell_maxidx]=True
-			
-			# Add the sphere volume in pkpc^3
 			galaxy_output[f'{rshell_str}_sphere-vol']=4/3*np.pi*(rshell*afac*1e3)**3
-		
-			### DARK MATTER
-			galaxy_output[f'{rshell_str}_sphere-dm-m_tot']=np.nansum(mass[np.logical_and(mask_sphere,dm)])
-			galaxy_output[f'{rshell_str}_sphere-dm-n_tot']=np.nansum(np.logical_and(mask_sphere,dm))
+			
+			for mem_str in membership_masks.keys():
+				# Apply the mask to the sphere
+				mask_sphere=np.logical_and(mask_sphere,membership_masks[mem_str])
 
-			### STARS
-			galaxy_output[f'{rshell_str}_sphere-star-m_tot']=np.nansum(mass[np.logical_and(mask_sphere,star)])
-			galaxy_output[f'{rshell_str}_sphere-star-n_tot']=np.nansum(np.logical_and(mask_sphere,star))
-			galaxy_output[f'{rshell_str}_sphere-star-Z']=np.nansum(specmass['Z'][np.logical_and(mask_sphere,star)])/np.nansum(mass[np.logical_and(mask_sphere,star)])
+				# Add the sphere volume in pkpc^3
+				### DARK MATTER
+				galaxy_output[f'{rshell_str}_sphere-dm-m_tot_{mem_str}']=np.nansum(mass[np.logical_and(mask_sphere,dm)])
+				galaxy_output[f'{rshell_str}_sphere-dm-n_tot_{mem_str}']=np.nansum(np.logical_and(mask_sphere,dm))
 
-			### GAS
-			# Break down the gas mass by phase
-			for Tstr,Tmask in Tmasks.items():
-				Tmask_sphere=np.logical_and.reduce([mask_sphere,gas,Tmask])
-				galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-n_tot']=np.nansum(Tmask_sphere)
+				### STARS
+				galaxy_output[f'{rshell_str}_sphere-star-m_tot_{mem_str}']=np.nansum(mass[np.logical_and(mask_sphere,star)])
+				galaxy_output[f'{rshell_str}_sphere-star-n_tot_{mem_str}']=np.nansum(np.logical_and(mask_sphere,star))
+				galaxy_output[f'{rshell_str}_sphere-star-Z_{mem_str}']=np.nansum(specmass['Z'][np.logical_and(mask_sphere,star)])/np.nansum(mass[np.logical_and(mask_sphere,star)])
 
-				# Breakdown of mass in this phase by species
-				for spec in specmass.keys():
-					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-m_{spec}']=np.nansum(specmass[spec][Tmask_sphere])
+				### GAS
+				# Break down the gas mass by phase
+				for Tstr,Tmask in Tmasks.items():
+					Tmask_sphere=np.logical_and.reduce([mask_sphere,gas,Tmask])
+					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-n_tot_{mem_str}']=np.nansum(Tmask_sphere.astype(bool).astype(float))
+					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-m_tot_{mem_str}']=np.nansum(mass[Tmask_sphere])
 
-				# If considering a galaxy-scale shell, calculate the SFR and metallicity
-				galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_sphere])
-				galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_sphere])/np.nansum(mass[Tmask_sphere])
-						
+					# Breakdown of mass in this phase by species
+					for spec in specmass.keys():
+						galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-m_{spec}_{mem_str}']=np.nansum(specmass[spec][Tmask_sphere])
+
+					# If considering a galaxy-scale shell, calculate the SFR and metallicity
+					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-SFR_{mem_str}']=np.nansum(sfr[Tmask_sphere])
+					galaxy_output[f'{rshell_str}_sphere-gas_'+Tstr+f'-Z_{mem_str}']=np.nansum(specmass['Z'][Tmask_sphere])/np.nansum(mass[Tmask_sphere])
+
 			#### SPHERICAL SHELL CALCULATIONS (r between r-dr/2 and r+dr/2) ####
 			# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)
+			
 			for drfac,drfac_str in zip(drfacs,drfacs_str):
+
 				rshell_str=rshell_str
 				rhi=rshell+(drfac*rshell)/2
 				rlo=rshell-(drfac*rshell)/2
@@ -362,79 +385,84 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 				rhi=rhi*afac
 				rlo=rlo*afac
 				dr=rhi-rlo
-
+	
 				# Shell volume and area in pkpc^3 and pkpc^2
 				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-vol']=4/3*np.pi*((rhi*1e3)**3-(rlo*1e3)**3)
 				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-area']=4*np.pi*((rhi*1e3)**2-(rlo*1e3)**2)
 
-				### DM shell properties
-				dm_shell_mask=np.logical_and(mask_shell,dm)
-				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-m_tot']=np.nansum(mass[dm_shell_mask])
-				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-n_tot']=np.nansum(dm_shell_mask)
-				for vboundary, vkey in zip(vsboundary, vsboundary_str):
-					dm_flow_rates=calculate_flow_rate(masses=mass[dm_shell_mask],vrad=vrad[dm_shell_mask],dr=dr,vboundary=vbdef,vmin=[])
-					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-mdot_tot_inflow_{vkey}_vc000kmps']=dm_flow_rates[0]
-					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-mdot_tot_outflow_{vkey}_vc000kmps']=dm_flow_rates[1]
+				for mem_str in membership_masks.keys():
+					# Apply the membership mask
+					mask_shell=np.logical_and(mask_shell,membership_masks[mem_str])
 
-				### STARS shell properties
-				stars_shell_mask=np.logical_and(mask_shell,star)
-				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-m_tot']=np.nansum(mass[stars_shell_mask])
-				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-n_tot']=np.nansum(stars_shell_mask)
-				galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-Z']=np.nansum(specmass['Z'][stars_shell_mask])/np.nansum(mass[stars_shell_mask])
-				for vboundary, vkey in zip(vsboundary, vsboundary_str):
-					stars_flow_rates=calculate_flow_rate(masses=mass[stars_shell_mask],vrad=vrad[stars_shell_mask],dr=dr,vboundary=vboundary,vmin=[])
-					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-mdot_tot_inflow_{vkey}_vc000kmps']=stars_flow_rates[0]
-					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-mdot_tot_outflow_{vkey}_vc000kmps']=stars_flow_rates[1]
-				
-				### GAS shell properties
-				# Break down by theta
-				for theta_str,thetamask in thetamasks.items():
-					mask_shell_theta=np.logical_and(mask_shell,thetamask)
+					### DM shell properties
+					dm_shell_mask=np.logical_and(mask_shell,dm)
+					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-m_tot_{mem_str}']=np.nansum(mass[dm_shell_mask])
+					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-n_tot_{mem_str}']=np.nansum(dm_shell_mask)
+					for vboundary, vkey in zip(vsboundary, vsboundary_str):
+						dm_flow_rates=calculate_flow_rate(masses=mass[dm_shell_mask],vrad=vrad[dm_shell_mask],dr=dr,vboundary=vbdef,vmin=[])
+						galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-mdot_tot_inflow_{vkey}_vc000kmps_{mem_str}']=dm_flow_rates[0]
+						galaxy_output[f'{rshell_str}_shell{drfac_str}_full-dm-mdot_tot_outflow_{vkey}_vc000kmps_{mem_str}']=dm_flow_rates[1]
 
-					# Break down the gas mass by phase
-					for Tstr,Tmask in Tmasks.items():
-						Tmask_shell=np.logical_and.reduce([mask_shell_theta,gas,Tmask])
-						galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-n_tot']=np.nansum(Tmask_shell)
-						
-						# If considering a galaxy-scale shell, calculate the SFR and metallicity
-						galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-SFR']=np.nansum(sfr[Tmask_shell])
-						galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-Z']=np.nansum(specmass['Z'][Tmask_shell])/np.nansum(mass[Tmask_shell])
+					### STARS shell properties
+					stars_shell_mask=np.logical_and(mask_shell,star)
+					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-m_tot_{mem_str}']=np.nansum(mass[stars_shell_mask])
+					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-n_tot_{mem_str}']=np.nansum(stars_shell_mask)
+					galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-Z_{mem_str}']=np.nansum(specmass['Z'][stars_shell_mask])/np.nansum(mass[stars_shell_mask])
+					for vboundary, vkey in zip(vsboundary, vsboundary_str):
+						stars_flow_rates=calculate_flow_rate(masses=mass[stars_shell_mask],vrad=vrad[stars_shell_mask],dr=dr,vboundary=vboundary,vmin=[])
+						galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-mdot_tot_inflow_{vkey}_vc000kmps_{mem_str}']=stars_flow_rates[0]
+						galaxy_output[f'{rshell_str}_shell{drfac_str}_full-star-mdot_tot_outflow_{vkey}_vc000kmps_{mem_str}']=stars_flow_rates[1]
 
-						# Breakdown of mass in this phase by species
-						if Tstr=='all':
-							for spec in specmass.keys():
-								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-m_{spec}']=np.nansum(specmass[spec][Tmask_shell])
-								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vrad_{spec}_mean']=np.nansum(vrad[Tmask_shell]*specmass[spec][Tmask_shell])/np.nansum(specmass[spec][Tmask_shell])
-								outmask=np.logical_and(Tmask_shell,vrad>0)
-								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_mean']=np.nansum(vrad[outmask]*specmass[spec][outmask])/np.nansum(specmass[spec][outmask])
-								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_50P']=np.float64(weighted_nanpercentile(vrad[outmask],specmass[spec][outmask],50))
-								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_90P']=np.float64(weighted_nanpercentile(vrad[outmask],specmass[spec][outmask],90))
+					### GAS shell properties
+					# Break down by theta
+					for theta_str,thetamask in thetamasks.items():
+						mask_shell_theta=np.logical_and(mask_shell,thetamask)
+
+						# Break down the gas mass by phase
+						for Tstr,Tmask in Tmasks.items():
+							Tmask_shell=np.logical_and.reduce([mask_shell_theta,gas,Tmask])
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-n_tot_{mem_str}']=np.nansum(Tmask_shell)
 							
-						# Calculate the total flow rates for the gas
-						for vboundary, vkey in zip(vsboundary, vsboundary_str):
-							# Retrieve vmins -- mask the vmin values which are arrays
-							vmins_use=[]
-							for iv,vminstr in enumerate(vminstrs):
-								if type(vmins[iv])==np.ndarray:
-									vmins_use.append(vmins[iv][Tmask_shell])
-								else:
-									vmins_use.append(vmins[iv])
-							
-							gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins_use)
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_vc000kmps']=gas_flow_rates[0]
-							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_vc000kmps']=gas_flow_rates[1]
-							for iv,vminstr in enumerate(vminstrs):
-								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_{vminstr}']=gas_flow_rates[2+iv]
+							# If considering a galaxy-scale shell, calculate the SFR and metallicity
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-T_{mem_str}']=np.nanmedian(temp[Tmask_shell])
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-SFR_{mem_str}']=np.nansum(sfr[Tmask_shell])
+							galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-Z_{mem_str}']=np.nansum(specmass['Z'][Tmask_shell])/np.nansum(mass[Tmask_shell])
 
-
-							# Calculate the flow rates for the gas by species
+							# Breakdown of mass in this phase by species
 							if Tstr=='all':
 								for spec in specmass.keys():
-									gas_flow_rates_species=calculate_flow_rate(masses=specmass[spec][Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins_use)
-									galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps']=gas_flow_rates_species[0]
-									galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps']=gas_flow_rates_species[1]
-									for iv,vminstr in enumerate(vminstrs):
-										galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}']=gas_flow_rates_species[2+iv]
+									galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-m_{spec}_{mem_str}']=np.nansum(specmass[spec][Tmask_shell])
+									galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vrad_{spec}_mean_{mem_str}']=np.nansum(vrad[Tmask_shell]*specmass[spec][Tmask_shell])/np.nansum(specmass[spec][Tmask_shell])
+									outmask=np.logical_and(Tmask_shell,vrad>0)
+									galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_mean_{mem_str}']=np.nansum(vrad[outmask]*specmass[spec][outmask])/np.nansum(specmass[spec][outmask])
+									galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_50P_{mem_str}']=np.float64(weighted_nanpercentile(vrad[outmask],specmass[spec][outmask],50))
+									galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-vradout_{spec}_90P_{mem_str}']=np.float64(weighted_nanpercentile(vrad[outmask],specmass[spec][outmask],90))
+
+							# Calculate the total flow rates for the gas
+							for vboundary, vkey in zip(vsboundary, vsboundary_str):
+								# Retrieve vmins -- mask the vmin values which are arrays
+								vmins_use=[]
+								for iv,vminstr in enumerate(vminstrs):
+									if type(vmins[iv])==np.ndarray:
+										vmins_use.append(vmins[iv][Tmask_shell])
+									else:
+										vmins_use.append(vmins[iv])
+								
+								gas_flow_rates=calculate_flow_rate(masses=mass[Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins_use)
+								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_tot_inflow_{vkey}_vc000kmps_{mem_str}']=gas_flow_rates[0]
+								galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_vc000kmps_{mem_str}']=gas_flow_rates[1]
+								for iv,vminstr in enumerate(vminstrs):
+									galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_tot_outflow_{vkey}_{vminstr}_{mem_str}']=gas_flow_rates[2+iv]
+
+
+								# Calculate the flow rates for the gas by species
+								if Tstr=='all':
+									for spec in specmass.keys():
+										gas_flow_rates_species=calculate_flow_rate(masses=specmass[spec][Tmask_shell],vrad=vrad[Tmask_shell],dr=dr,vboundary=vboundary,vmin=vmins_use)
+										galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_inflow_{vkey}_vc000kmps_{mem_str}']=gas_flow_rates_species[0]
+										galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_vc000kmps_{mem_str}']=gas_flow_rates_species[1]
+										for iv,vminstr in enumerate(vminstrs):
+											galaxy_output[f'{rshell_str}_shell{drfac_str}_{theta_str}-gas_'+Tstr+f'-mdot_{spec}_outflow_{vkey}_{vminstr}_{mem_str}']=gas_flow_rates_species[2+iv]
 
 	#### CYLINDRICAL SLAB CALCULATIONS (abs[z] between r-dr/2 and r+dr/2) ####
 	# Mask for the shell in comoving coordinates (particle data is in comoving coordinates)

@@ -81,20 +81,29 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             halodata_out['GroupNumber']=np.arange(len(halodata_out['HostHaloID']))
             halodata_out['SubGroupNumber']=np.zeros(len(halodata_out['HostHaloID']))
             halodata_out.loc[np.logical_not(central),'SubGroupNumber']=1
-            halodata_out['GalaxyID_raw']=halodata.input_halos_hbtplus.track_id.value
-            halodata_out['GalaxyID']=snapnum*1e12+halodata_out['GalaxyID_raw'].values # Unique galaxy ID
 
+            #Use TrackID from HBT+ as unique galaxy ID
+            halodata_out['GalaxyID']=halodata.input_halos_hbtplus.track_id.value
+            halodata_out['GalaxyID_unique']=snapnum*1e12+halodata_out['GalaxyID'].values # Unique galaxy ID
+            halodata_out['DescendantID']=halodata.input_halos_hbtplus.descendant_track_id # Descendant galaxy ID
+            halodata_out['ParentID']=halodata.input_halos_hbtplus.nested_parent_track_id # Parent galaxy ID
+            halodata_out['HaloCatalogueIndex']=halodata.input_halos.halo_catalogue_index.value #This can be used to map to particle data
+            halodata_out['SubhaloRank']=halodata.soap.subhalo_rank_by_bound_mass.value # Rank of the subhalo within its host halo by bound mass
+        
             print("Central fraction: ",np.sum(central)/len(halodata_out['HostHaloID']))
+            print("Central fraction by rank: ",np.nanmean(halodata_out['SubhaloRank'].values==0))
 
             # Host halo properties
             mfof=halodata.input_halos_fof.masses;mfof.convert_to_units(munit)
             halodata_out['GroupMass']=np.array(mfof.value)
-            
-            m200=halodata.spherical_overdensity_200_crit.total_mass;m200.convert_to_units(munit)
-            halodata_out['Group_M_Crit200']=np.array(m200.value)
 
-            r200=halodata.spherical_overdensity_200_crit.soradius;r200.convert_to_units(dunit)
-            halodata_out['Group_R_Crit200']=np.array(r200.value) #comoving
+            for overdensity in zip(['200_crit','500_crit'],[halodata.spherical_overdensity_200_crit,halodata.spherical_overdensity_500_crit]):
+                od_str=overdensity[0];od_data=overdensity[1]
+                mod=od_data.total_mass;mod.convert_to_units(munit)
+                halodata_out[f'Group_M_{od_str}']=np.array(mod.value)
+                rod=od_data.soradius;rod.convert_to_units(dunit)
+                halodata_out[f'Group_R_{od_str}']=np.array(rod.value) #comoving
+
 
             vmax=halodata.bound_subhalo.maximum_circular_velocity;vmax.convert_to_units(vunit)
             halodata_out['Subhalo_V_max']=np.array(vmax.value)
@@ -121,6 +130,10 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             halodata_out['030pkpc_sphere-gas_all-m_H2-soapexcl']=np.array(mH2_30kpc.value)
             sfr_30kpc=halodata.exclusive_sphere_30kpc.star_formation_rate;sfr_30kpc.convert_to_units(f'{munit}/yr')
             halodata_out['030pkpc_sphere-gas_all-SFR-soapexcl']=np.array(sfr_30kpc.value)
+            aveSFR_30kpc=halodata.exclusive_sphere_30kpc.averaged_star_formation_rate;aveSFR_30kpc.convert_to_units(f'{munit}/yr')
+            halodata_out['030pkpc_sphere-gas_all-ave_SFR_10Myr-soapexcl']=np.array(aveSFR_30kpc.value[:,0]) #averaged over 10 Myr
+            halodata_out['030pkpc_sphere-gas_all-ave_SFR_100Myr-soapexcl']=np.array(aveSFR_30kpc.value[:,1]) #averaged over 100 Myr
+
             rstar=halodata.exclusive_sphere_30kpc.half_mass_radius_stars;rstar.convert_to_units(dunit)
             halodata_out['030pkpc_sphere-star-r_half-soapexcl']=np.array(rstar.value)
             rgas=halodata.exclusive_sphere_30kpc.half_mass_radius_gas;rgas.convert_to_units(dunit)
@@ -129,13 +142,45 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             halodata_out['030pkpc_sphere-star-disk_to_total-soapexcl']=np.array(disk_to_total_star)
             disk_to_total_gas=halodata.exclusive_sphere_30kpc.disc_to_total_gas_mass_fraction
             halodata_out['030pkpc_sphere-gas_all-disk_to_total-soapexcl']=np.array(disk_to_total_gas)
-            mbh=halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass;mbh.convert_to_units(munit)
-            halodata_out['030pkpc_sphere-BH-m_tot-soapexcl']=np.array(mbh.value)
+            kappaco_star=halodata.exclusive_sphere_30kpc.kappa_corot_stars
+            halodata_out['030pkpc_sphere-star-kappa_corot-soapexcl']=np.array(kappaco_star)
+            kappaco_gas=halodata.exclusive_sphere_30kpc.kappa_corot_gas
+            halodata_out['030pkpc_sphere-gas_all-kappa_corot-soapexcl']=np.array(kappaco_gas)
+            stellarluminosities=halodata.exclusive_sphere_30kpc.stellar_luminosity
+            for band in ['u','g','r','i','z','Y','J','H','K']:
+                lum_band=stellarluminosities[band];lum_band.convert_to_units('Lsun')
+                halodata_out[f'030pkpc_sphere-star-L_{band}-soapexcl']=np.array(lum_band.value)
+
             angmom=halodata.inclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical()
             halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_x']=np.array(angmom.value[:,0])
             halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_y']=np.array(angmom.value[:,1])
             halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_z']=np.array(angmom.value[:,2])
- 
+
+            # Black hole properties
+            nbh=halodata.exclusive_sphere_30kpc.number_of_black_hole_particles
+            halodata_out['030pkpc_sphere-BH-n_tot-soapexcl']=np.array(nbh)
+            mbh_total=halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass;mbh_total.convert_to_units(munit)
+            halodata_out['030pkpc_sphere-BH-m_tot-soapexcl']=np.array(mbh_total.value)
+            mbh_nmergers=halodata.exclusive_sphere_30kpc.most_massive_black_hole_number_of_mergers
+            halodata_out['030pkpc_sphere-BH-n_mergers-soapexcl']=np.array(mbh_nmergers)
+            bh_aveaccretion=halodata.exclusive_sphere_30kpc.most_massive_black_hole_averaged_accretion_rate;bh_aveaccretion.convert_to_units(f'{munit}/yr')
+            halodata_out['030pkpc_sphere-BH-ave_accretion_10Myr-soapexcl']=np.array(bh_aveaccretion.value[:,0]) #averaged over 10 Myr
+            halodata_out['030pkpc_sphere-BH-ave_accretion_100Myr-soapexcl']=np.array(bh_aveaccretion.value[:,1]) #averaged over 100 Myr
+            bh_thermal_energy=halodata.exclusive_sphere_30kpc.most_massive_black_hole_injected_thermal_energy;bh_thermal_energy.convert_to_units('erg')
+            halodata_out['030pkpc_sphere-BH-thermal_energy_soapexcl']=np.array(bh_thermal_energy.value)
+            bh_accreted_mass=halodata.exclusive_sphere_30kpc.most_massive_black_hole_total_accreted_mass;bh_accreted_mass.convert_to_units(munit)
+            halodata_out['030pkpc_sphere-BH-accreted_mass_soapexcl']=np.array(bh_accreted_mass.value)
+
+            #hybrid AGN props
+            if hasattr(halodata.exclusive_sphere_30kpc,'most_massive_black_hole_injected_jet_energy_by_mode'):
+                bh_jet_energy_modes=halodata.exclusive_sphere_30kpc.most_massive_black_hole_injected_jet_energy_by_mode;bh_jet_energy_modes.convert_to_units('erg')
+                bh_jet_energy_modes=bh_jet_energy_modes.value
+                for imode,mode in enumerate(['thin','thick','slim']):
+                    halodata_out[f'030pkpc_sphere-BH-jet_energy_{mode}_soapexcl']=bh_jet_energy_modes.value[:,imode]
+            if hasattr(halodata.exclusive_sphere_30kpc,'most_massive_black_hole_accretion_mode'):
+                bh_accretion_mode=halodata.exclusive_sphere_30kpc.most_massive_black_hole_accretion_mode
+                halodata_out['030pkpc_sphere-BH-accdisc_mode_soapexcl']=bh_accretion_mode.value # 0=thin, 1=thick, 2=slim
+
             # Give each satellite the group mass, r200 and m200 of the central and distance to central
             print('Matching group data to satellite data...')
             satellites=halodata_out['SubGroupNumber'].values>0
@@ -145,8 +190,8 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             halodata_out.loc[satellites,'Group_R_Crit200']=halodata_out['Group_R_Crit200'].values[hosthaloidxs]
             halodata_out.loc[satellites,'Group_Rrel']=np.sqrt((halodata_out['CentreOfPotential_x'].values[satellites]-halodata_out['CentreOfPotential_x'].values[hosthaloidxs])**2+(halodata_out['CentreOfPotential_y'].values[satellites]-halodata_out['CentreOfPotential_y'].values[hosthaloidxs])**2+(halodata_out['CentreOfPotential_z'].values[satellites]-halodata_out['CentreOfPotential_z'].values[hosthaloidxs])**2)
 
-            if flowrates:
-                print('Calculating flow rates...')
+            try:
+                print('Extracting flow rates...')
                 scales=['0p10r200','0p30r200','1p00r200']
                 scale_idx={'0p10r200':0,'0p30r200':1,'1p00r200':2}
 
@@ -156,6 +201,8 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
                         flowrate=flowrate.value
                         for iflow,flowtype in enumerate(['mdot_tot_inflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc0p25vmx']):
                             halodata_out[f'{scale}_shellp10_full-gas_{key}-{flowtype}-soap']=flowrate[:,iflow*3+scale_idx[scale]]
+            except:
+                print("Flow rate extraction failed. Continuing without flow rates...")
 
 
             # Remove subhalos below mass cut

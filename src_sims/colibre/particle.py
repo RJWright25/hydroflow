@@ -111,6 +111,10 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         logging.info(f"Reading IDs for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         pdata_ptype['ParticleIDs']=pdata_masked_object.particle_ids.value[::subset]
         pdata_ptype['ParticleType']=iptype*np.ones(pdata_ptype['ParticleIDs'].shape[0]) 
+        
+        if 'membership' in path:
+            logging.info(f"Reading HaloCatalogueIndex for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
+            pdata_ptype['HaloCatalogueIndex']=pdata_masked_object.halo_catalogue_index.value[::subset]
 
         # Read additional gas properties
         if ptype=='gas':
