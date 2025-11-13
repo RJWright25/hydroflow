@@ -105,6 +105,9 @@ directory=path.split('cat')[0]
 metadata_path=None
 if 'metadata' in subcat.attrs:
     metadata_path=subcat.attrs['metadata']
+    if not isinstance(metadata_path,str):
+        metadata_path=metadata_path.decode('utf-8')
+    print(f'Found metadata path in subhalo catalogue: {metadata_path}')
 else:
     simflist=os.listdir(directory)
     for metadata_path in simflist:
@@ -235,6 +238,7 @@ if numgal:
                 group = str(int(galaxy[galid_key]))
 
                 # select all valid particles & requested fields
+                print(list(pdata_candidates.columns))
                 data = pdata_candidates.loc[pdata_candidates['ParticleType'].values >= 0, pdata_fields]
 
                 # deterministically take every `dump`-th row (dump==1 keeps all)
