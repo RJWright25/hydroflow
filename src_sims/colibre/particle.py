@@ -87,6 +87,11 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
 
         logging.info(f"Reading {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         pdata_ptype=pd.DataFrame()
+
+        if hasattr(pdata_masked_object,'halo_catalogue_index'):
+            logging.info(f"Reading HaloCatalogueIndex for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
+            pdata_ptype['HaloCatalogueIndex']=pdata_masked_object.halo_catalogue_index.value[::subset]
+
         
         logging.info(f"Reading masses for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         masses=pdata_masked_object.masses
@@ -112,10 +117,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
         pdata_ptype['ParticleIDs']=pdata_masked_object.particle_ids.value[::subset]
         pdata_ptype['ParticleType']=iptype*np.ones(pdata_ptype['ParticleIDs'].shape[0]) 
         
-        # if hasattr(pdata_masked_object,'halo_catalogue_index'):
-        logging.info(f"Reading HaloCatalogueIndex for {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
-        pdata_ptype['HaloCatalogueIndex']=pdata_masked_object.halo_catalogue_index.value[::subset]
-
+ 
         # Read additional gas properties
         if ptype=='gas':
 
