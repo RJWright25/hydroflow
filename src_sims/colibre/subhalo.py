@@ -181,7 +181,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
         with h5py.File(outpath, 'r+') as subcatfile:
             header= subcatfile.create_group("Header")
             if 'metadata_path' in locals():
-                header.attrs['metadata'] = metadata_path
+                header.attrs['metadata'] = str(metadata_path)
     else:
         print("No metadata file found. Metadata path not added to subhalo catalogue.")
 
