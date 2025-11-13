@@ -147,8 +147,9 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             kappaco_gas=halodata.exclusive_sphere_30kpc.kappa_corot_gas
             halodata_out['030pkpc_sphere-gas_all-kappa_corot-soapexcl']=np.array(kappaco_gas)
             stellarluminosities=halodata.exclusive_sphere_30kpc.stellar_luminosity
-            for band in ['u','g','r','i','z','Y','J','H','K']:
-                lum_band=stellarluminosities[band];lum_band.convert_to_units('Lsun')
+            stellarluminosities.convert_to_units('Lsun')
+            for iband,band in enumerate(['u','g','r','i','z','Y','J','H','K']):
+                lum_band=stellarluminosities[:,iband]
                 halodata_out[f'030pkpc_sphere-star-L_{band}-soapexcl']=np.array(lum_band.value)
 
             angmom=halodata.inclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical()

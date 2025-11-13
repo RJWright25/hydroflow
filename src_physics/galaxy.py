@@ -298,8 +298,8 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	# Max co-planar radii for z-slab calculations
 	zslab_radii_vals=[];zslab_radii_strs=list(zslab_radii.keys())
 	for zslab_radius in zslab_radii.values():
-		if type(zslab_radius)==str and 'r_half' in zslab_radius:
-			zslab_radius=galaxy_output['010pkpc_sphere-star-r_half']*np.float32(zslab_radius.split('r_half')[0])
+		if type(zslab_radius)==str and 'reff' in zslab_radius:
+			zslab_radius=galaxy_output['010pkpc_sphere-star-r_half']*np.float32(zslab_radius.split('reff')[0])
 		elif type(zslab_radius)==str and 'zheight' in zslab_radius:
 			zslab_radius='zheight'
 		else:
