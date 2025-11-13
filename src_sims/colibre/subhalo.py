@@ -32,8 +32,8 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
     
     # Grab metadata from the metadata file
     if metadata is not None:
-        metadata=load_metadata(metadata)
         metadata_path=metadata
+        metadata=load_metadata(metadata)
     else:
         simflist=os.listdir(os.getcwd())
         for metadata_path in simflist:
@@ -228,8 +228,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
     if metadata is not None:
         with h5py.File(outpath, 'r+') as subcatfile:
             header= subcatfile.create_group("Header")
-            if 'metadata_path' in locals():
-                header.attrs['metadata'] = str(metadata_path)
+            header.attrs['metadata'] = str(metadata_path)
     else:
         print("No metadata file found. Metadata path not added to subhalo catalogue.")
 
