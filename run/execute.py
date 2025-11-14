@@ -238,7 +238,6 @@ if numgal:
                 group = str(int(galaxy[galid_key]))
 
                 # select all valid particles & requested fields
-                print(list(pdata_candidates.columns))
                 data = pdata_candidates.loc[pdata_candidates['ParticleType'].values >= 0, pdata_fields]
 
                 # deterministically take every `dump`-th row (dump==1 keeps all)

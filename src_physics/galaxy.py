@@ -207,9 +207,10 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	membership_masks={}
 	if membership:
 		membership_masks['incl']=np.isfinite(particle_haloidx)
-		membership_masks['excl']=particle_haloidx==galaxy['HaloCatalogueIndex']
-		membership_masks['unbd']=particle_haloidx==-1
+		membership_masks['excl']=np.abs(particle_haloidx-galaxy['HaloCatalogueIndex'])<0.1
+		membership_masks['unbd']=particle_haloidx<0
 		#incl-excl-unbd==satellite particles
+		print(f'Galaxy {galaxy["SubhaloID"]}: {np.nanmean(membership_masks["incl"])} all, {np.nanmean(membership_masks["excl"])} exslusive, {np.nanmean(membership_masks["unbd"])} unbound particles found.')
 	else:
 		membership_masks['incl']=np.ones_like(mass).astype(bool)
 
@@ -226,13 +227,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		specmass[mfrac_col.split('mfrac_')[1]]=pdata_candidates[mfrac_col].values*mass
 	specmass['Z']=pdata_candidates['Metallicity'].values*mass
 	specmass['tot']=np.ones_like(specmass['Z'])*mass
-	key_HI= 'mfrac_HI';key_H2='mfrac_H2'
-	if 'mfrac_HI_BR06' in mfrac_columns:
-		key_HI='mfrac_HI_BR06';key_H2='mfrac_H2_BR06'
-	print(f'Using {key_HI} and {key_H2} for ionised fractions of H')
-	ionised_frac_H= np.ones_like(temp) # If no species, assume fully ionised
-	if key_HI is not None and key_H2 is not None:
-		ionised_frac_H=1-(pdata_candidates[key_HI][:]+ pdata_candidates[key_H2][:])/(0.76)
 
 	# Velocity cuts (if any)
 	galaxy_output['Group_V_Crit200']=np.sqrt(constant_G*galaxy['Group_M_Crit200']/(galaxy['Group_R_Crit200']))
@@ -249,16 +243,16 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 		vmins.append(vcut_kmps)
 		
 	# Extra (Bernoulli) velocity cuts
-	potential_infinity=-constant_G*np.nansum(mass)/(np.nanmax(rrel)*afac)
-	potential_profile=-constant_G*np.cumsum(mass)/(rrel*afac)
-	indices_3r = np.searchsorted(rrel,  3 * rrel);indices_3r=np.clip(indices_3r, 0, len(rrel) - 1)
-	potential_atxrrel = potential_profile[indices_3r]
-	mu=estimate_mu(x_H=ionised_frac_H,T=temp,y=0.08) #Estimate the mean molecular weight based on the ionised fraction and temperature
-	cs=0.129*np.sqrt(temp/mu);gamma=5/3 #ideal gas
-	# vb_toinf=np.sqrt(2*(potential_infinity - potential_profile) - 2*cs**2/(gamma-1) )
-	vb_to3r=np.sqrt(2*(potential_atxrrel - potential_profile) - 2*cs**2/(gamma-1)  )
-	# vmins.append(vb_toinf);vminstrs.append('vcbntoinf')
-	vmins.append(vb_to3r); vminstrs.append('vcbnto3rr')
+	# potential_infinity=-constant_G*np.nansum(mass)/(np.nanmax(rrel)*afac)
+	# potential_profile=-constant_G*np.cumsum(mass)/(rrel*afac)
+	# indices_3r = np.searchsorted(rrel,  3 * rrel);indices_3r=np.clip(indices_3r, 0, len(rrel) - 1)
+	# potential_atxrrel = potential_profile[indices_3r]
+	# mu=estimate_mu(x_H=ionised_frac_H,T=temp,y=0.08) #Estimate the mean molecular weight based on the ionised fraction and temperature
+	# cs=0.129*np.sqrt(temp/mu);gamma=5/3 #ideal gas
+	# # vb_toinf=np.sqrt(2*(potential_infinity - potential_profile) - 2*cs**2/(gamma-1) )
+	# vb_to3r=np.sqrt(2*(potential_atxrrel - potential_profile) - 2*cs**2/(gamma-1)  )
+	# # vmins.append(vb_toinf);vminstrs.append('vcbntoinf')
+	# vmins.append(vb_to3r); vminstrs.append('vcbnto3rr')
 
 	# Get stellar half-mass radius
 	star_r_half=np.nan
@@ -285,9 +279,9 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 			thetamasks[theta_str+'pos']=np.logical_and.reduce([gas,thetapos>theta_bin[0],thetapos<theta_bin[1]])
 			thetamasks[theta_str+'vel']=np.logical_and.reduce([gas,thetavel>theta_bin[0],thetavel<theta_bin[1]])
 	
-	nondisc_mask=np.logical_and.reduce([gas,np.logical_not(np.logical_and(np.abs(zheight)<(gas_rz_half*2),rrel_inplane<(gas_r_half*2)))]) #non-disk gas
-	for theta_str in list(thetamasks.keys()):
-		thetamasks[theta_str+'nd']=np.logical_and.reduce([nondisc_mask,thetamasks[theta_str]]) #non-disk gas with theta selection
+	# nondisc_mask=np.logical_and.reduce([gas,np.logical_not(np.logical_and(np.abs(zheight)<(gas_rz_half*2),rrel_inplane<(gas_r_half*2)))]) #non-disk gas
+	# for theta_str in list(thetamasks.keys()):
+	# 	thetamasks[theta_str+'nd']=np.logical_and.reduce([nondisc_mask,thetamasks[theta_str]]) #non-disk gas with theta selection
 
 	# Add to the galaxy output
 	galaxy_output['030pkpc_sphere-star-r_half']=star_r_half
