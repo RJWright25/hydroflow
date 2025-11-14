@@ -363,7 +363,6 @@ def analyse_galaxy(
     mass = pdata_candidates["Masses"].values
     rrel = pdata_candidates["Relative_r_comoving"].values  # comoving Mpc
     vrad = pdata_candidates["Relative_vrad_pec"].values    # km/s, radial pec vel
-
     thetapos = pdata_candidates["Relative_theta_pos"].values
     thetavel = pdata_candidates["Relative_theta_vel"].values
     temp = pdata_candidates["Temperature"].values
@@ -513,10 +512,10 @@ def analyse_galaxy(
             thetamasks[theta_str + "pos"] = np.logical_and.reduce(
                 [gas, thetapos > theta_bin[0], thetapos < theta_bin[1]]
             )
-            # By velocity angle
-            thetamasks[theta_str + "vel"] = np.logical_and.reduce(
-                [gas, thetavel > theta_bin[0], thetavel < theta_bin[1]]
-            )
+            # # By velocity angle
+            # thetamasks[theta_str + "vel"] = np.logical_and.reduce(
+            #     [gas, thetavel > theta_bin[0], thetavel < theta_bin[1]]
+            # )
 
     # Disk / non-disk masks for theta selections (currently commented out)
     #
@@ -545,7 +544,7 @@ def analyse_galaxy(
         if isinstance(zslab_radius, str) and "reff" in zslab_radius:
             # e.g. '2reff' => 2 * r_half of stars, from the 10 pkpc sphere
             zslab_radius_val = (
-                galaxy_output["010pkpc_sphere-star-r_half"]
+                galaxy_output["030pkpc_sphere-star-r_half"]
                 * float(zslab_radius.split("reff")[0])
             )
         elif isinstance(zslab_radius, str) and "zheight" in zslab_radius:
@@ -607,7 +606,7 @@ def analyse_galaxy(
         )
         
 		# Only 'incl' membership for spheres
-        for mem_str, mem_mask in zip(['incl'], [membership_masks['incl']]): 
+        for mem_str, mem_mask in membership_masks.items():
             # Combine geometric sphere selection with membership selection
             mask_sphere = np.logical_and(base_sphere_mask, mem_mask)
 
@@ -760,6 +759,16 @@ def analyse_galaxy(
                         galaxy_output[
                             f"{rshell_str}_shell{drfac_str}_{theta_str}-gas_{Tstr}-n_tot_{mem_str}"
                         ] = np.nansum(Tmask_shell.astype(bool).astype(float))
+                        # Total mass (phase-resolved)
+                        galaxy_output[
+							f"{rshell_str}_shell{drfac_str}_{theta_str}-gas_{Tstr}-m_tot_{mem_str}"
+						] = np.nansum(mass[Tmask_shell])
+                        
+						# Mass-weighted mean temperature (phase-resolved)
+                        galaxy_output[
+							f"{rshell_str}_shell{drfac_str}_{theta_str}-gas_{Tstr}-T_mean_{mem_str}"
+						] = np.nansum(
+							temp[Tmask_shell] * mass[Tmask_shell]) / np.nansum(mass[Tmask_shell])
 
                         # Median temperature (phase-resolved)
                         galaxy_output[
