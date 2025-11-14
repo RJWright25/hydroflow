@@ -81,13 +81,13 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             halodata_out['GroupNumber']=np.arange(len(halodata_out['HostHaloID']))
             halodata_out['SubGroupNumber']=np.zeros(len(halodata_out['HostHaloID']))
             halodata_out.loc[np.logical_not(central),'SubGroupNumber']=1
+            halodata_out['HaloCatalogueIndex']=halodata.input_halos.halo_catalogue_index.value #This can be used to map to particle data
 
             #Use TrackID from HBT+ as unique galaxy ID
             halodata_out['GalaxyID']=halodata.input_halos_hbtplus.track_id.value
             halodata_out['GalaxyID_unique']=snapnum*1e12+halodata_out['GalaxyID'].values # Unique galaxy ID
             halodata_out['DescendantID']=halodata.input_halos_hbtplus.descendant_track_id # Descendant galaxy ID
             halodata_out['ParentID']=halodata.input_halos_hbtplus.nested_parent_track_id # Parent galaxy ID
-            halodata_out['HaloCatalogueIndex']=halodata.input_halos.halo_catalogue_index.value #This can be used to map to particle data
             halodata_out['SubhaloRank']=halodata.soap.subhalo_rank_by_bound_mass.value # Rank of the subhalo within its host halo by bound mass
         
             print("Central fraction: ",np.sum(central)/len(halodata_out['HostHaloID']))

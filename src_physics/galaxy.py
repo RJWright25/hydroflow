@@ -192,11 +192,6 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	vradz[zheight<0]*=-1 # Flip sign of z radial velocity for particles below the plane
 	rrel_inplane=np.sqrt(rrel**2-zheight**2) # Get the in-plane radius
 
-	# Check for membership data
-	membership=False
-	if 'HaloCatalogueIndex' in pdata_candidates.columns:
-		particle_haloidx=pdata_candidates['HaloCatalogueIndex'].values
-		membership=True
 
 	# Masks
 	gas=pdata_candidates['ParticleType'].values==0.
@@ -204,15 +199,15 @@ def analyse_galaxy(galaxy,pdata_candidates,metadata,
 	dm=pdata_candidates['ParticleType'].values==1.
 
 	# Membership masks
-	membership_masks={}
-	if membership:
-		membership_masks['incl']=np.isfinite(particle_haloidx)
-		membership_masks['excl']=np.abs(particle_haloidx-galaxy['HaloCatalogueIndex'])<0.1
-		membership_masks['unbd']=particle_haloidx<0
-		#incl-excl-unbd==satellite particles
-		print(f'Galaxy {galaxy["SubhaloID"]}: {np.nanmean(membership_masks["incl"])} all, {np.nanmean(membership_masks["excl"])} exslusive, {np.nanmean(membership_masks["unbd"])} unbound particles found.')
-	else:
-		membership_masks['incl']=np.ones_like(mass).astype(bool)
+	membership_masks={'incl':np.ones_like(mass).astype(bool)}
+	pdata_candidates['Membership']=np.zeros(pdata_candidates.shape[0])-1	 #status: -1 == unbound, 0 == bound, 1 ==satellite
+	if 'HaloCatalogueIndex' in pdata_candidates.columns:
+		particle_haloidx=pdata_candidates['HaloCatalogueIndex'].values
+		pdata_candidates.loc[particle_haloidx<0,'Membership']= -1  #status: -1 == unbound
+		pdata_candidates.loc[np.abs(np.float64(particle_haloidx)-galaxy['HaloCatalogueIndex'])<0.1,'Membership']= 0  #status: 0 == bound
+		pdata_candidates.loc[np.logical_and(particle_haloidx>=0,np.abs(np.float64(particle_haloidx)-galaxy['HaloCatalogueIndex'])>=0.1),'Membership']= 1 
+		memberships=pdata_candidates['Membership'].values
+		membership_masks['excl']=memberships<=0 #bound or unbound particles but not satellites
 
 	# Gas selections by temperature (adding sf, all)
 	Tmasks={'all':gas,'sf':np.logical_and(gas,sfr>0)}
