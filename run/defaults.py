@@ -7,6 +7,7 @@ Tbins={'cold':[0,1e3],'cool':[1e3,1e5],'warm':[1e5,1e7],'hot':[1e7,1e15]} # Temp
 theta_bins={'minax':[30,90],'full':[0,90]} # Angular bins for inflow/outflow calculations
 vcuts={'vc0p25vmx':'0.25Vmax','vc1p00vmx':'1.00Vmax','vc050kmps':50,'vc250kmps':250}
 drfacs=[0.1] # Fraction of shell radius to use for shell thickness (r-dr/2 - r+dr/2)
+dzfacs=[0.4]
 
 # Particle data fields to dump if requested
 pdata_fields=['Masses',

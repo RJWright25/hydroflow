@@ -130,6 +130,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
                 # should be shifted *up* by one boxsize.
                 mask_otherside = pdata_candidates[coord_col].values < boxsize / 2.0
                 pdata_candidates.loc[mask_otherside, coord_col] += boxsize
+                
     # ------------------------------------------------------------------
     # 5. Compute relative radii (using catalogue COM, comoving coordinates)
     # ------------------------------------------------------------------
@@ -168,7 +169,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         mask_30pkpc = np.logical_and(mask_30pkpc,pdata_candidates["Membership"].values==0)
     if np.nansum(mask_30pkpc) == 0:
 		# No baryons within 30 pkpc (or none bound); skip to dm only
-            mask_30pkpc = radii_relative < 0.03
+        mask_30pkpc = radii_relative < 0.03
     # Select masses and compute baryonic COM and VCOM within 30 pkpc (bound if membership present)
     mass_sel = mass[mask_30pkpc]
     com_030pkpc = (np.nansum(mass_sel[:, np.newaxis] * coords[mask_30pkpc], axis=0)
@@ -219,6 +220,7 @@ def analyse_galaxy(
     theta_bins={"full": [0, 90], "minax": [60, 90], "majax": [0, 30]},
     vcuts={"vc0p25vmx": "0.25Vmax", "vc1p00vmx": "1.00Vmax", "vc050kmps": 50, "vc250kmps": 250},
     drfacs=[0.1],
+    dzfacs=[0.4],
     logfile=None,
 ):
     """
@@ -279,6 +281,9 @@ def analyse_galaxy(
 
     drfacs : list
         Fractional shell widths (Δr = drfac * r). Usually small (e.g. 0.1).
+    
+    dzfacs : list
+        Fractional zslab shell widths (Δz = drfac * z). Usually small (e.g. 0.1).
 
     logfile : str or None
         Currently unused, kept for compatibility.
@@ -337,6 +342,9 @@ def analyse_galaxy(
     # ------------------------------------------------------------------
     drfacs_pc = [drfac * 100.0 for drfac in drfacs]  # convert 0.1 Mpc => 10 pc style scaling
     drfacs_str = ["p" + f"{val:.0f}".zfill(2) for val in drfacs_pc]
+
+    dzfacs_pc=[dzfac * 100.0 for dzfac in dzfacs]
+    dzfacs_str=["p" + f"{val:.0f}".zfill(2) for val in dzfacs_pc]
 
     # ------------------------------------------------------------------
     # 4. Cylindrical coordinates and disk orientation
@@ -914,7 +922,7 @@ def analyse_galaxy(
             or ("reff" in rshell_str)
         )
 
-        for drfac, drfac_str in zip(drfacs, drfacs_str):
+        for drfac, drfac_str in zip(dzfacs, dzfacs_str):
             if not flag_innershell:
                 continue
 

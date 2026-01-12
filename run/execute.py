@@ -62,14 +62,14 @@ logging.info(f'Running hydroflow for {code} simulation with {namecat} catalogue 
 
 # Initialise variables
 r200_shells, rstar_shells, kpc_shells, zslab_radii= None, None, None, None
-Tbins, theta_bins, vcuts, drfacs = None, None, None, None
+Tbins, theta_bins, vcuts, drfacs, drfacs_zslab = None, None, None, None, None
 pdata_fields = []
 
 # Load parameters from file if given
 pfile=args.pars
 if pfile is not None and os.path.exists(pfile):
     params=import_variables(pfile)
-    pars=['r200_shells','rstar_shells','kpc_shells','zslab_radii','Tbins','theta_bins','vcuts','drfacs','pdata_fields']
+    pars=['r200_shells','rstar_shells','kpc_shells','zslab_radii','Tbins','theta_bins','vcuts','drfacs','dzfacs','pdata_fields']
     for par in pars:
         if hasattr(params,par):
             exec(f"{par}=params.{par}")
@@ -222,6 +222,7 @@ if numgal:
                                                 theta_bins=theta_bins,
                                                 vcuts=vcuts,
                                                 drfacs=drfacs,
+                                                dzfacs=dzfacs,
                                                 logfile=logging_folder+logging_name+'.log')
                                                 
             
