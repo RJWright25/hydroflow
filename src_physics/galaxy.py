@@ -345,6 +345,7 @@ def analyse_galaxy(
 
     dzfacs_pc=[dzfac * 100.0 for dzfac in dzfacs]
     dzfacs_str=["p" + f"{val:.0f}".zfill(2) for val in dzfacs_pc]
+    print(dzfacs_str)
 
     # ------------------------------------------------------------------
     # 4. Cylindrical coordinates and disk orientation
@@ -923,6 +924,7 @@ def analyse_galaxy(
         )
 
         for drfac, drfac_str in zip(dzfacs, dzfacs_str):
+            print('zfac',drfac)
             if not flag_innershell:
                 continue
 
