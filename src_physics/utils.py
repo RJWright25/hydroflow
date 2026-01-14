@@ -65,7 +65,7 @@ def ivol_idx(ivol,nslice):
 	return (ix,iy,iz)
 
 
-def get_limits(ivol,nslice,boxsize,buffer=0.1):
+def get_limits(ivol,nslice,boxsize,buffer=0.2):
 	"""
 	get_limits: Generate the limits of a subvolume in the simulation volume.
 
@@ -98,13 +98,13 @@ def get_limits(ivol,nslice,boxsize,buffer=0.1):
 
 	subvol_ix,subvol_iy,subvol_iz=ivol_idx(ivol,nslice)
 	subvol_L=boxsize/nslice
-	subvol_buffer=subvol_L*buffer
-	xmin=subvol_ix*subvol_L-subvol_buffer
-	ymin=subvol_iy*subvol_L-subvol_buffer
-	zmin=subvol_iz*subvol_L-subvol_buffer
-	xmax=(subvol_ix+1)*subvol_L+subvol_buffer
-	ymax=(subvol_iy+1)*subvol_L+subvol_buffer
-	zmax=(subvol_iz+1)*subvol_L+subvol_buffer
+	# subvol_buffer=subvol_L*buffer
+	xmin=subvol_ix*subvol_L-buffer
+	ymin=subvol_iy*subvol_L-buffer
+	zmin=subvol_iz*subvol_L-buffer
+	xmax=(subvol_ix+1)*subvol_L+buffer
+	ymax=(subvol_iy+1)*subvol_L+buffer
+	zmax=(subvol_iz+1)*subvol_L+buffer
 	
 	return xmin,xmax,ymin,ymax,zmin,zmax
 

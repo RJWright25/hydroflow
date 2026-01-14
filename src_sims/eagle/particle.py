@@ -61,7 +61,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
     zval=metadata.snapshots_z[snap_idx_in_metadata]
 
     # Get limits for the subvolume -- these are in cMpc
-    lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
+    lims=get_limits(ivol,nslice,boxsize)
 
     # Define the fields to read for each particle type (always include ParticleIDs, Masses, Coordinates, Velocity)
     ptypes={0:['Temperature',
