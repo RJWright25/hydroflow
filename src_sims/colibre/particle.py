@@ -54,10 +54,10 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
 
     # Spatially mask the subregion if nslice>1
     if nslice>1:
-        limits=get_limits(ivol=ivol,nslice=nslice,boxsize=boxsize*unyt.Mpc)
+        limits=get_limits(ivol=ivol,nslice=nslice,boxsize=boxsize)
         logging.info(f"Limits given: {limits}")
         mask=swiftsimio_mask(path)
-        mask.constrain_spatial([[limits[0],limits[1]],[limits[2],limits[3]],[limits[4],limits[5]]])
+        mask.constrain_spatial([[limits[0]*unyt.Mpc,limits[1]*unyt.Mpc],[limits[2]*unyt.Mpc,limits[3]*unyt.Mpc],[limits[4]*unyt.Mpc,limits[5]*unyt.Mpc]])
         pdata_snap_masked=swiftsimio_loader(path, mask=mask)
     else:
         pdata_snap_masked=pdata_snap
