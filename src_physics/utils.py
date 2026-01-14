@@ -65,7 +65,7 @@ def ivol_idx(ivol,nslice):
 	return (ix,iy,iz)
 
 
-def get_limits(ivol,nslice,boxsize,buffer=0.2):
+def get_limits(ivol,nslice,boxsize,buffer=1):
 	"""
 	get_limits: Generate the limits of a subvolume in the simulation volume.
 
