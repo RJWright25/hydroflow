@@ -127,7 +127,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
             pdata_ptype['Temperature']=temp.value
             del temp
 
-            hsml=pdata_masked_object.gas.smoothing_lengths
+            hsml=pdata_masked_object.smoothing_lengths
             hsml.convert_to_units('Mpc') #comoving
             pdata_ptype['SmoothingLength']=hsml.value
             del hsml
