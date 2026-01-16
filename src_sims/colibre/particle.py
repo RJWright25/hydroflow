@@ -127,6 +127,12 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
             pdata_ptype['Temperature']=temp.value
             del temp
 
+            hsml=pdata_masked_object.gas.smoothing_lengths
+            hsml.convert_to_units('Mpc') #comoving
+            pdata_ptype['SmoothingLength']=hsml.value
+            del hsml
+
+
             # Density
             logging.info(f"Reading density... [pdata time: {time.time()-t0:.2f} s]")
             dens=pdata_masked_object.densities
