@@ -207,6 +207,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
                         halodata_out[f'{scale}_shellp10_full-dm-{flowtype}-soap']=flowrate[:,iflow*3+scale_idx[scale]]
                     
             except:
+                raise
                 print("Flow rate extraction failed. Continuing without flow rates...")
 
 
