@@ -68,7 +68,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
                 'Metallicity',
                 'Density',
                 'StarFormationRate'],
-            1:['Velocities'],
+            1:[],
             4:['Metallicity']}
     
     ptype_subset={0:1, 1:2, 4:2} 
