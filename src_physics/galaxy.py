@@ -314,7 +314,7 @@ def analyse_galaxy(
     Hz = metadata.cosmology.H(z).value  # Hubble rate [km/s/Mpc]
     afac = 1.0 / (1.0 + z)              # scale factor
 
-    # Pseudo-evolution velocity (Schaller+13–type expression)
+    # Pseudo-evolution velocity
     # Using Group_M_Crit200 in Msun, Group_R_Crit200 in Mpc, G in suitable units.
     M200 = galaxy["Group_M_Crit200"]
     vpseudo = (
