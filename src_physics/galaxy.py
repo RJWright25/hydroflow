@@ -142,7 +142,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
 	# ------------------------------------------------------------------
     # 6. Membership classification (central / satellite / unbound)
     # ------------------------------------------------------------------
-    membership_present= "Membership" in pdata_candidates.columns
+    membership_present= "HaloCatalogueIndex" in pdata_candidates.columns
     pdata_candidates["Membership"] = np.zeros(pdata_candidates.shape[0]) - 1.0
     if membership_present:
         particle_haloidx = pdata_candidates["HaloCatalogueIndex"].values.astype(float)
@@ -283,7 +283,7 @@ def analyse_galaxy(
         Fractional shell widths (Δr = drfac * r). Usually small (e.g. 0.1).
     
     dzfacs : list
-        Fractional zslab shell widths (Δz = drfac * z). Usually small (e.g. 0.1).
+        Fractional zslab shell widths (Δz = dzfac * z). Usually small (e.g. 0.1).
 
     logfile : str or None
         Currently unused, kept for compatibility.
@@ -338,7 +338,7 @@ def analyse_galaxy(
         ]
 
     # ------------------------------------------------------------------
-    # 3. Shell-width bookkeeping (drfacs in physical pc, string labels)
+    # 3. Shell-width bookkeeping (drfacs in frac, string labels)
     # ------------------------------------------------------------------
     drfacs_pc = [drfac * 100.0 for drfac in drfacs]  # convert 0.1 Mpc => 10 pc style scaling
     drfacs_str = ["p" + f"{val:.0f}".zfill(2) for val in drfacs_pc]
@@ -442,7 +442,7 @@ def analyse_galaxy(
     # 9. Velocity cuts and Vmax estimate
     # ------------------------------------------------------------------
     galaxy_output["Group_V_Crit200"] = np.sqrt(
-        constant_G * galaxy["Group_M_Crit200"] / galaxy["Group_R_Crit200"]
+        constant_G * galaxy["Group_M_Crit200"] / (galaxy["Group_R_Crit200"]*afac)
 	)  # km/s
 
     vmins = []

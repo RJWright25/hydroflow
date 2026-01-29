@@ -202,6 +202,10 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
                         flowrate=flowrate.value
                         for iflow,flowtype in enumerate(['mdot_tot_inflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc0p25vmx']):
                             halodata_out[f'{scale}_shellp10_full-gas_{key}-{flowtype}-soap']=flowrate[:,iflow*3+scale_idx[scale]]
+                    flowrate=halodata.spherical_overdensity_200_crit.dm_mass_flow_rate
+                    for iflow,flowtype in enumerate(['mdot_tot_inflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc0p25vmx']):
+                        halodata_out[f'{scale}_shellp10_full-dm-{flowtype}-soap']=flowrate[:,iflow*3+scale_idx[scale]]
+                    
             except:
                 print("Flow rate extraction failed. Continuing without flow rates...")
 
