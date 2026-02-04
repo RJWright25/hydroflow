@@ -204,6 +204,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
                             halodata_out[f'{scale}_shellp10_full-gas_{key}-{flowtype}-soap']=flowrate[:,iflow*3+scale_idx[scale]]
                     flowrate=halodata.spherical_overdensity_200_crit.dark_matter_mass_flow_rate
                     for iflow,flowtype in enumerate(['mdot_tot_inflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc000kmps']):
+                        flowrate.convert_to_units(f'{munit}/Gyr')
                         halodata_out[f'{scale}_shellp10_full-dm-{flowtype}-soap']=flowrate[:,iflow*2+scale_idx[scale]]
                     
             except:

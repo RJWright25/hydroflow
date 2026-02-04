@@ -317,14 +317,24 @@ def analyse_galaxy(
     # Pseudo-evolution velocity
     # Using Group_M_Crit200 in Msun, Group_R_Crit200 in Mpc, G in suitable units.
     M200 = galaxy["Group_M_Crit200"]
-    vpseudo = (
-        2.0
-        / 3.0
-        * (constant_G / 100.0) ** (1.0 / 3.0)
-        * M200 ** (1.0 / 3.0)
-        * (2.0 * omegar + 1.5 * omegam)
-        * Hz ** (1.0 / 3.0)
-    )
+
+    vpseudo=(2 / 3) * (constant_G * M200 * Hz / 100) ** (1 / 3)
+    vpseudo *= (2 *omegar + (3 / 2) * omegam)
+    print(f"z={z}, Hz={Hz} km/s, omegag={omegar}, omegam={omegam}")
+
+    # R_dot = (2 / 3) * (G * self.SO_mass * self.cosmology["H"] / 100) ** (
+    #                 1 / 3
+    #             )
+    #             R_dot *= (
+    #                 2 * self.cosmology["Omega_g"] + (3 / 2) * self.cosmology["Omega_m"]
+    #             )
+    #             R_dot *= R_frac
+    # vpseudo = (
+    #     2.0/ 3.0 * (constant_G / 100.0) ** (1.0 / 3.0) * M200 ** (1.0 / 3.0) * (2.0 * omegar + 1.5 * omegam) * Hz ** (1.0 / 3.0)
+    # )
+
+
+
     galaxy_output["1p00r200-vpdoev"] = vpseudo  # km/s
 
     # ------------------------------------------------------------------
@@ -345,7 +355,6 @@ def analyse_galaxy(
 
     dzfacs_pc=[dzfac * 100.0 for dzfac in dzfacs]
     dzfacs_str=["p" + f"{val:.0f}".zfill(2) for val in dzfacs_pc]
-    print(dzfacs_str)
 
     # ------------------------------------------------------------------
     # 4. Cylindrical coordinates and disk orientation
@@ -355,6 +364,7 @@ def analyse_galaxy(
     #   thetapos : polar angle of positions relative to Lbar
     #   thetavel : polar angle of velocities relative to Lbar
     #   zheight  : height above the disk plane (Mpc)
+
     Lbar, thetapos, thetavel, zheight = compute_cylindrical_ztheta(
         pdata=pdata_candidates, afac=afac, baryons=True, aperture=0.03
     )
@@ -588,12 +598,12 @@ def analyse_galaxy(
         # Pseudo-evolution velocity boundary (vbdef):
         # only applied to R200 shells and only for centrals
         if ("r200" in rshell_str) and (galaxy["SubGroupNumber"] == 0):
-            vbdef = vpseudo * (rshell / galaxy["Group_R_Crit200"])
+            vbpseudo = vpseudo * (rshell / galaxy["Group_R_Crit200"])
         else:
-            vbdef = 0.0
+            vbpseudo = 0.0
 
-        vsboundary = [vbdef]
-        vsboundary_str = ["vbdef"]
+        vsboundary = [vbpseudo,0]
+        vsboundary_str = ["vbpseudo",'vbstatic']
 
         # Skip R200-based shells for satellite galaxies, and ignore rshell <= 0
         if ("r200" in rshell_str) and (galaxy["SubGroupNumber"] > 0):
