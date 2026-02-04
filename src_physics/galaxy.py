@@ -321,6 +321,7 @@ def analyse_galaxy(
     vpseudo=(2 / 3) * (constant_G * M200 * Hz / 100) ** (1 / 3)
     vpseudo *= (2 *omegar + (3 / 2) * omegam)
     print(f"z={z}, Hz={Hz} km/s, omegag={omegar}, omegam={omegam}")
+    print(f"vpseudo= {vpseudo} km/s")
 
     # R_dot = (2 / 3) * (G * self.SO_mass * self.cosmology["H"] / 100) ** (
     #                 1 / 3
