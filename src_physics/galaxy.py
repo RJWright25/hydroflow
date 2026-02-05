@@ -309,8 +309,8 @@ def analyse_galaxy(
     # ------------------------------------------------------------------
     # Cosmology at this redshift
     z = galaxy["Redshift"]
-    omegar = metadata.cosmology.Ogamma(z)
-    omegam = metadata.cosmology.Om(z)
+    omegag = metadata.cosmology.Ogamma(0)
+    omegam = metadata.cosmology.Om(0)
     Hz = metadata.cosmology.H(z).value  # Hubble rate [km/s/Mpc]
     afac = 1.0 / (1.0 + z)              # scale factor
 
@@ -319,8 +319,8 @@ def analyse_galaxy(
     M200 = galaxy["Group_M_Crit200"]
 
     vpseudo=(2 / 3) * (constant_G * M200 * Hz / 100) ** (1 / 3)
-    vpseudo *= (2 *omegar + (3 / 2) * omegam)
-    print(f"z={z}, Hz={Hz} km/s, omegag={omegar}, omegam={omegam}")
+    vpseudo *= (2 *omegag + (3 / 2) * omegam)
+    print(f"z={z}, Hz={Hz} km/s, omegag={omegag}, omegam={omegam}")
     print(f"vpseudo= {vpseudo} km/s")
 
     # R_dot = (2 / 3) * (G * self.SO_mass * self.cosmology["H"] / 100) ** (
@@ -330,10 +330,7 @@ def analyse_galaxy(
     #                 2 * self.cosmology["Omega_g"] + (3 / 2) * self.cosmology["Omega_m"]
     #             )
     #             R_dot *= R_frac
-    # vpseudo = (
-    #     2.0/ 3.0 * (constant_G / 100.0) ** (1.0 / 3.0) * M200 ** (1.0 / 3.0) * (2.0 * omegar + 1.5 * omegam) * Hz ** (1.0 / 3.0)
-    # )
-
+ 
 
 
     galaxy_output["1p00r200-vpdoev"] = vpseudo  # km/s
@@ -622,8 +619,7 @@ def analyse_galaxy(
 
         # Volume of the sphere in physical pkpc^3
         galaxy_output[f"{rshell_str}_sphere-vol"] = (
-            4.0 / 3.0 * np.pi * (rshell * afac * 1e3) ** 3
-        )
+            4.0 / 3.0 * np.pi * (rshell * afac * 1e3) ** 3)
         
 		# Only 'incl' membership for spheres
         for mem_str, mem_mask in membership_masks.items():
