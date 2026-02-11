@@ -108,8 +108,8 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=False):
             # print("Central fraction by rank: ",np.nanmean(halodata_out['SubhaloRank'].values==0))
 
             # Host halo properties
-            mfof=halodata.input_halos_fof.masses;mfof.convert_to_units(munit)
             if not subfind:
+                mfof=halodata.input_halos_fof.masses;mfof.convert_to_units(munit)
                 halodata_out['GroupMass']=np.array(mfof.value)
 
             for overdensity in zip(['Crit200','Crit500'],[halodata.spherical_overdensity_200_crit,halodata.spherical_overdensity_500_crit]):
