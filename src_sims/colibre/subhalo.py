@@ -171,10 +171,10 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=False):
                     lum_band=stellarluminosities[:,iband]
                     halodata_out[f'030pkpc_sphere-star-L_{band}-soapexcl']=np.array(lum_band.value)
 
-            angmom=halodata.inclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical()
-            halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_x']=np.array(angmom.value[:,0])
-            halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_y']=np.array(angmom.value[:,1])
-            halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_z']=np.array(angmom.value[:,2])
+            angmom=halodata.exclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical()
+            halodata_out['030pkpc_sphere-baryon-L_tot-soapexcl_x']=np.array(angmom.value[:,0])
+            halodata_out['030pkpc_sphere-baryon-L_tot-soapexcl_y']=np.array(angmom.value[:,1])
+            halodata_out['030pkpc_sphere-baryon-L_tot-soapexcl_z']=np.array(angmom.value[:,2])
 
             # Black hole properties
             nbh=halodata.exclusive_sphere_30kpc.number_of_black_hole_particles
