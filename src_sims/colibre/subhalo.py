@@ -104,12 +104,13 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=False):
                 halodata_out['ParentID']=halodata.input_halos_hbtplus.nested_parent_track_id # Parent galaxy ID
                 halodata_out['SubhaloRank']=halodata.soap.subhalo_rank_by_bound_mass.value # Rank of the subhalo within its host halo by bound mass
             
-            print("Central fraction: ",np.sum(central)/len(halodata_out['HostHaloID']))
-            print("Central fraction by rank: ",np.nanmean(halodata_out['SubhaloRank'].values==0))
+            # print("Central fraction: ",np.sum(central)/len(halodata_out['HostHaloID']))
+            # print("Central fraction by rank: ",np.nanmean(halodata_out['SubhaloRank'].values==0))
 
             # Host halo properties
             mfof=halodata.input_halos_fof.masses;mfof.convert_to_units(munit)
-            halodata_out['GroupMass']=np.array(mfof.value)
+            if not subfind:
+                halodata_out['GroupMass']=np.array(mfof.value)
 
             for overdensity in zip(['Crit200','Crit500'],[halodata.spherical_overdensity_200_crit,halodata.spherical_overdensity_500_crit]):
                 od_str=overdensity[0];od_data=overdensity[1]
