@@ -67,29 +67,43 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=False):
             print(f"Reading subhalo catalogue from {ipath}...")
             halodata = swiftsimio_loader(ipath)# Load a dataset
 
+            # Test if soap or subfind
+            try:
+                halodata.input_halos_subfind.sub_group_number
+                subfind=True
+            except:
+                subfind=False
+
             # Create a pandas dataframe to store the subhalo data
             halodata_out=pd.DataFrame()
             # Collect redshift & snapshot number
             redshift=halodata.metadata.redshift
             snapnum=int(halodata.metadata.filename.split('/')[-1].split('_')[-1].split('.')[0])
-            halodata_out['Redshift']=np.ones(halodata.soap.host_halo_index.shape)*redshift
-            halodata_out['SnapNum']=np.ones(halodata.soap.host_halo_index.shape)*snapnum
-
+            numhaloes=halodata.input_halos.halo_catalogue_index.shape
+            halodata_out['Redshift']=np.ones(numhaloes)*redshift
+            halodata_out['SnapNum']=np.ones(numhaloes)*snapnum
+            
             # IDs
             central=halodata.input_halos.is_central.value
-            halodata_out['HostHaloID']=halodata.soap.host_halo_index.value
-            halodata_out['GroupNumber']=np.arange(len(halodata_out['HostHaloID']))
-            halodata_out['SubGroupNumber']=np.zeros(len(halodata_out['HostHaloID']))
+            if not subfind:
+                halodata_out['HostHaloID']=halodata.soap.host_halo_index.value
+            halodata_out['GroupNumber']=np.arange(numhaloes)
+            halodata_out['SubGroupNumber']=np.zeros(numhaloes)
             halodata_out.loc[np.logical_not(central),'SubGroupNumber']=1
             halodata_out['HaloCatalogueIndex']=halodata.input_halos.halo_catalogue_index.value #This can be used to map to particle data
 
             #Use TrackID from HBT+ as unique galaxy ID
-            halodata_out['GalaxyID']=halodata.input_halos_hbtplus.track_id.value
-            halodata_out['GalaxyID_unique']=snapnum*1e12+halodata_out['GalaxyID'].values # Unique galaxy ID
-            halodata_out['DescendantID']=halodata.input_halos_hbtplus.descendant_track_id # Descendant galaxy ID
-            halodata_out['ParentID']=halodata.input_halos_hbtplus.nested_parent_track_id # Parent galaxy ID
-            halodata_out['SubhaloRank']=halodata.soap.subhalo_rank_by_bound_mass.value # Rank of the subhalo within its host halo by bound mass
-        
+            if subfind:
+                halodata_out['GroupNumber']=halodata.input_halos_subfind.group_number
+                halodata_out['SubGroupNumber']=halodata.input_halos_subfind.sub_group_number
+                
+            else:
+                halodata_out['GalaxyID']=halodata.input_halos_hbtplus.track_id.value
+                halodata_out['GalaxyID_unique']=snapnum*1e12+halodata_out['GalaxyID'].values # Unique galaxy ID
+                halodata_out['DescendantID']=halodata.input_halos_hbtplus.descendant_track_id # Descendant galaxy ID
+                halodata_out['ParentID']=halodata.input_halos_hbtplus.nested_parent_track_id # Parent galaxy ID
+                halodata_out['SubhaloRank']=halodata.soap.subhalo_rank_by_bound_mass.value # Rank of the subhalo within its host halo by bound mass
+            
             print("Central fraction: ",np.sum(central)/len(halodata_out['HostHaloID']))
             print("Central fraction by rank: ",np.nanmean(halodata_out['SubhaloRank'].values==0))
 
