@@ -15,9 +15,8 @@ from hydroflow.src_physics.utils import (
     constant_G,
     compute_cylindrical_ztheta,
     calc_halfmass_radius,
-    weighted_nanpercentile,
-    # estimate_mu,      # currently only used in commented-out Bernoulli velocity cuts
-)
+    weighted_nanpercentile)
+
 from hydroflow.src_physics.gasflow import calculate_flow_rate
 
 
@@ -408,6 +407,7 @@ def analyse_galaxy(
     #   -1 : unbound
     #    0 : bound to the main halo
     #    1 : satellite (bound to another halo)
+    
     membership_masks = {"incl": np.ones_like(mass, dtype=bool)}
     if "Membership" in pdata_candidates.columns:
         memberships = pdata_candidates["Membership"].values

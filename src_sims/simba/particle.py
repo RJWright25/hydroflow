@@ -6,7 +6,7 @@ from scipy.spatial import cKDTree
 from hydroflow.src_physics.utils import get_limits, calc_temperature, partition_neutral_gas, constant_gpmsun, constant_cmpkpc
 
 ##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
+def read_subvol(path,ivol,nslice,metadata,logfile=None):
     """
     read_subvol: Read particle data for a subvolume from a SIMBA simulation snapshot.
 

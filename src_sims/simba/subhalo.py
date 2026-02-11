@@ -9,7 +9,7 @@ import time
 from hydroflow.run.tools_catalogue import dump_hdf
 from hydroflow.run.initialise import load_metadata
 
-def extract_subhaloes(path,mcut=1e11,metadata=None):
+def extract_subhaloes(path,mcut=1e10,metadata=None):
 
     """
     extract_subhaloes: Read the subhalo catalogue from a SIMBA caesar output file. 
@@ -97,7 +97,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         group_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=caesarfile['/halo_data/minpotpos'][:]*dconv
 
         # Remove groups with mass below the cut and reindex
-        group_df=group_df[group_df.Mass>=mcut]
+        group_df=group_df[group_df.Group_M_Crit200>=mcut]
         group_df.sort_values(['Mass'],inplace=True,ascending=False)
         group_df.reset_index(drop=True,inplace=True)
 
@@ -111,7 +111,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         subcat=subhalo_dfs[0]
 
     # Sort the subcat by snapshot number and mass
-    subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False],inplace=True)
+    subcat.sort_values(by=['SnapNum','Group_M_Crit200','SubGroupNumber'],ascending=[False,False,True],inplace=True)
     subcat.reset_index(inplace=True,drop=True)
 
     # Dump the subhalo catalogue

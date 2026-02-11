@@ -8,7 +8,7 @@ from hydroflow.run.initialise import load_metadata
 
 from swiftsimio import load as swiftsimio_loader
 
-def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
+def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=False):
     """
     extract_subhaloes: Read the subhalo catalog from a COLIBRE SOAP output file using swiftsimio. This massages the data into the preferred format for the subhalo catalog, and saves it to a HDF5 file.
 
@@ -191,29 +191,30 @@ def extract_subhaloes(path,mcut=1e11,metadata=None,flowrates=False):
             halodata_out.loc[satellites,'Group_R_Crit200']=halodata_out['Group_R_Crit200'].values[hosthaloidxs]
             halodata_out.loc[satellites,'Group_Rrel']=np.sqrt((halodata_out['CentreOfPotential_x'].values[satellites]-halodata_out['CentreOfPotential_x'].values[hosthaloidxs])**2+(halodata_out['CentreOfPotential_y'].values[satellites]-halodata_out['CentreOfPotential_y'].values[hosthaloidxs])**2+(halodata_out['CentreOfPotential_z'].values[satellites]-halodata_out['CentreOfPotential_z'].values[hosthaloidxs])**2)
 
-            try:
-                print('Extracting flow rates...')
-                scales=['0p10r200','0p30r200','1p00r200']
-                scale_idx={'0p10r200':0,'0p30r200':1,'1p00r200':2}
+            if flowrates:
+                try:
+                    print('Extracting flow rates...')
+                    scales=['0p10r200','0p30r200','1p00r200']
+                    scale_idx={'0p10r200':0,'0p30r200':1,'1p00r200':2}
 
-                for iscale,scale in enumerate(scales):
-                    for key,flowrate in zip(['cold','cool','warm','hot'],[halodata.spherical_overdensity_200_crit.cold_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.cool_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.warm_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.hot_gas_mass_flow_rate]):
-                        flowrate.convert_to_units(f'{munit}/Gyr')
-                        flowrate=flowrate.value
-                        for iflow,flowtype in enumerate(['mdot_tot_inflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc0p25vmx']):
-                            halodata_out[f'{scale}_shellp10_full-gas_{key}-{flowtype}-soap']=flowrate[:,iflow*3+scale_idx[scale]]
-                    flowrate=halodata.spherical_overdensity_200_crit.dark_matter_mass_flow_rate
-                    for iflow,flowtype in enumerate(['mdot_tot_inflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc000kmps']):
-                        flowrate.convert_to_units(f'{munit}/Gyr')
-                        halodata_out[f'{scale}_shellp10_full-dm-{flowtype}-soap']=flowrate[:,iflow*2+scale_idx[scale]]
-                    
-            except:
-                raise
-                print("Flow rate extraction failed. Continuing without flow rates...")
+                    for iscale,scale in enumerate(scales):
+                        for key,flowrate in zip(['cold','cool','warm','hot'],[halodata.spherical_overdensity_200_crit.cold_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.cool_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.warm_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.hot_gas_mass_flow_rate]):
+                            flowrate.convert_to_units(f'{munit}/Gyr')
+                            flowrate=flowrate.value
+                            for iflow,flowtype in enumerate(['mdot_tot_inflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc0p25vmx']):
+                                halodata_out[f'{scale}_shellp10_full-gas_{key}-{flowtype}-soap']=flowrate[:,iflow*3+scale_idx[scale]]
+                        flowrate=halodata.spherical_overdensity_200_crit.dark_matter_mass_flow_rate
+                        for iflow,flowtype in enumerate(['mdot_tot_inflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc000kmps']):
+                            flowrate.convert_to_units(f'{munit}/Gyr')
+                            halodata_out[f'{scale}_shellp10_full-dm-{flowtype}-soap']=flowrate[:,iflow*2+scale_idx[scale]]
+                        
+                except:
+                    raise
+                    print("Flow rate extraction failed. Continuing without flow rates...")
 
 
             # Remove subhalos below mass cut
-            halodata_out=halodata_out[halodata_out['Mass']>=mcut]
+            halodata_out=halodata_out[halodata_out['Group_M_Crit200']>=mcut]
             halodata_out.reset_index(drop=True,inplace=True)
 
             # Add to previous snapshots

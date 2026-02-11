@@ -9,7 +9,7 @@ from hydroflow.run.initialise import load_metadata
 
 import illustris_python as tng_tools
 
-def extract_subhaloes(path,mcut=1e11,metadata=None):
+def extract_subhaloes(path,mcut=1e10,metadata=None):
 
     """
     read_subcat: Read the subhalo catalogue from an Illustris simulation snapshot. Uses the illustris_python package.
@@ -123,7 +123,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         
         # Sort subhalo data
         subhalo_df.sort_values(by=['GroupNumber','Mass'],inplace=True,ascending=[True,False])
-        subhalo_df=subhalo_df.loc[subhalo_df['Mass'].values>=mcut,:] #apply mass cut
+        subhalo_df=subhalo_df.loc[subhalo_df['Group_M_Crit200'].values>=mcut,:] #apply mass cut
         subhalo_df.reset_index(inplace=True,drop=True)
 
         # Match group data to subhalo data
@@ -169,7 +169,7 @@ def extract_subhaloes(path,mcut=1e11,metadata=None):
         subcat=pd.concat(subhalo_dfs)
     else:
         subcat=subhalo_dfs[0]
-    subcat.sort_values(by=['SnapNum','Mass'],ascending=[False,False],inplace=True)
+    subcat.sort_values(by=['SnapNum','Group_M_Crit200','SubGroupNumber'],ascending=[False,False,True],inplace=True)
     subcat.reset_index(inplace=True,drop=True)
 
     # Dump the subhalo catalogue
