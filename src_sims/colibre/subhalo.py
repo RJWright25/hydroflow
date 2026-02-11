@@ -79,7 +79,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=False):
             # Collect redshift & snapshot number
             redshift=halodata.metadata.redshift
             snapnum=int(halodata.metadata.filename.split('/')[-1].split('_')[-1].split('.')[0])
-            numhaloes=halodata.input_halos.halo_catalogue_index.shape
+            numhaloes=halodata.input_halos.halo_catalogue_index.shape[0]
             halodata_out['Redshift']=np.ones(numhaloes)*redshift
             halodata_out['SnapNum']=np.ones(numhaloes)*snapnum
             
