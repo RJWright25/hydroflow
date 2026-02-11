@@ -181,13 +181,15 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=False):
             halodata_out['030pkpc_sphere-BH-n_tot-soapexcl']=np.array(nbh)
             mbh_total=halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass;mbh_total.convert_to_units(munit)
             halodata_out['030pkpc_sphere-BH-m_tot-soapexcl']=np.array(mbh_total.value)
-            bh_aveaccretion=halodata.exclusive_sphere_30kpc.most_massive_black_hole_averaged_accretion_rate;bh_aveaccretion.convert_to_units(f'{munit}/yr')
-            halodata_out['030pkpc_sphere-BH-ave_accretion_10Myr-soapexcl']=np.array(bh_aveaccretion.value[:,0]) #averaged over 10 Myr
-            halodata_out['030pkpc_sphere-BH-ave_accretion_100Myr-soapexcl']=np.array(bh_aveaccretion.value[:,1]) #averaged over 100 Myr
-            bh_thermal_energy=halodata.exclusive_sphere_30kpc.most_massive_black_hole_injected_thermal_energy;bh_thermal_energy.convert_to_units('erg')
-            halodata_out['030pkpc_sphere-BH-thermal_energy_soapexcl']=np.array(bh_thermal_energy.value)
-            bh_accreted_mass=halodata.exclusive_sphere_30kpc.most_massive_black_hole_total_accreted_mass;bh_accreted_mass.convert_to_units(munit)
-            halodata_out['030pkpc_sphere-BH-accreted_mass_soapexcl']=np.array(bh_accreted_mass.value)
+
+            if not subfind:
+                bh_aveaccretion=halodata.exclusive_sphere_30kpc.most_massive_black_hole_averaged_accretion_rate;bh_aveaccretion.convert_to_units(f'{munit}/yr')
+                halodata_out['030pkpc_sphere-BH-ave_accretion_10Myr-soapexcl']=np.array(bh_aveaccretion.value[:,0]) #averaged over 10 Myr
+                halodata_out['030pkpc_sphere-BH-ave_accretion_100Myr-soapexcl']=np.array(bh_aveaccretion.value[:,1]) #averaged over 100 Myr
+                bh_thermal_energy=halodata.exclusive_sphere_30kpc.most_massive_black_hole_injected_thermal_energy;bh_thermal_energy.convert_to_units('erg')
+                halodata_out['030pkpc_sphere-BH-thermal_energy_soapexcl']=np.array(bh_thermal_energy.value)
+                bh_accreted_mass=halodata.exclusive_sphere_30kpc.most_massive_black_hole_total_accreted_mass;bh_accreted_mass.convert_to_units(munit)
+                halodata_out['030pkpc_sphere-BH-accreted_mass_soapexcl']=np.array(bh_accreted_mass.value)
 
             #hybrid AGN props
             if hasattr(halodata.exclusive_sphere_30kpc,'most_massive_black_hole_injected_jet_energy_by_mode'):
