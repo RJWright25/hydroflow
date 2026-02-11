@@ -145,10 +145,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=False):
             halodata_out['030pkpc_sphere-gas_all-m_H2-soapexcl']=np.array(mH2_30kpc.value)
             sfr_30kpc=halodata.exclusive_sphere_30kpc.star_formation_rate;sfr_30kpc.convert_to_units(f'{munit}/yr')
             halodata_out['030pkpc_sphere-gas_all-SFR-soapexcl']=np.array(sfr_30kpc.value)
-            if not subfind:
-                aveSFR_30kpc=halodata.exclusive_sphere_30kpc.averaged_star_formation_rate;aveSFR_30kpc.convert_to_units(f'{munit}/yr')
-                halodata_out['030pkpc_sphere-gas_all-ave_SFR_10Myr-soapexcl']=np.array(aveSFR_30kpc.value[:,0]) #averaged over 10 Myr
-                halodata_out['030pkpc_sphere-gas_all-ave_SFR_100Myr-soapexcl']=np.array(aveSFR_30kpc.value[:,1]) #averaged over 100 Myr
+
             rstar=halodata.exclusive_sphere_30kpc.half_mass_radius_stars;rstar.convert_to_units(dunit)
             halodata_out['030pkpc_sphere-star-r_half-soapexcl']=np.array(rstar.value)
             rgas=halodata.exclusive_sphere_30kpc.half_mass_radius_gas;rgas.convert_to_units(dunit)
@@ -161,11 +158,18 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=False):
             halodata_out['030pkpc_sphere-star-kappa_corot-soapexcl']=np.array(kappaco_star)
             kappaco_gas=halodata.exclusive_sphere_30kpc.kappa_corot_gas
             halodata_out['030pkpc_sphere-gas_all-kappa_corot-soapexcl']=np.array(kappaco_gas)
-            stellarluminosities=halodata.exclusive_sphere_30kpc.stellar_luminosity
-            stellarluminosities.convert_to_units('1')
-            for iband,band in enumerate(['u','g','r','i','z','Y','J','H','K']):
-                lum_band=stellarluminosities[:,iband]
-                halodata_out[f'030pkpc_sphere-star-L_{band}-soapexcl']=np.array(lum_band.value)
+
+            if not subfind:
+                aveSFR_30kpc=halodata.exclusive_sphere_30kpc.averaged_star_formation_rate;aveSFR_30kpc.convert_to_units(f'{munit}/yr')
+                halodata_out['030pkpc_sphere-gas_all-ave_SFR_10Myr-soapexcl']=np.array(aveSFR_30kpc.value[:,0]) #averaged over 10 Myr
+                halodata_out['030pkpc_sphere-gas_all-ave_SFR_100Myr-soapexcl']=np.array(aveSFR_30kpc.value[:,1]) #averaged over 100 Myr
+
+    
+                stellarluminosities=halodata.exclusive_sphere_30kpc.stellar_luminosity
+                stellarluminosities.convert_to_units('1')
+                for iband,band in enumerate(['u','g','r','i','z','Y','J','H','K']):
+                    lum_band=stellarluminosities[:,iband]
+                    halodata_out[f'030pkpc_sphere-star-L_{band}-soapexcl']=np.array(lum_band.value)
 
             angmom=halodata.inclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical()
             halodata_out['030pkpc_sphere-baryon-L_tot-soapincl_x']=np.array(angmom.value[:,0])
