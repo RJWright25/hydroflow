@@ -136,31 +136,41 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     particle_type = pdata_candidates["ParticleType"].values
     mass = pdata_candidates["Masses"].values
     vxyz = pdata_candidates[[f"Velocities_{ax}" for ax in "xyz"]].values
+
+    # Iteratively find the baryonic centre of mass and velocity
+    # Firstly 100kpc, then 30kpc, then 10kpc
+    for scale in [100,30,10]:
+        mask = radii_relative < scale/1e3
+
+        # Impose subhalo membership if present
+        if membership_present:
+            mask=np.logical_and(mask,pdata_candidates["Membership"].values==0)
+        baryons=np.logical_not(particle_type==1)
+
+        # If enough baryons, use them only
+        if np.nansum(baryons)>50:
+            mask=np.logical_and(mask,baryons)
+
+        com_updated = (np.nansum(mass[mask][:, np.newaxis] * coords[mask], axis=0)/ np.nansum(mass[mask]))
+
+        rel_pos_updated = coords - com_updated[np.newaxis, :]
+        radii_relative= np.linalg.norm(rel_pos_updated, axis=1) * afac
+
+    mask_final= radii_relative < scale/1e3
+    com_final=np.nansum(mass[mask_final][:, np.newaxis] * coords[mask_final], axis=0)/ np.nansum(mass[mask_final])
+    vcom_final=(np.nansum(mass[mask_final][:, np.newaxis] * vxyz[mask_final], axis=0)/ np.nansum(mass[mask_final]))
     
-	# Mask including baryons within 30 pkpc (bound if membership present)
-    mask_30pkpc = np.logical_and(radii_relative < 0.03,np.logical_not(particle_type == 1.0))
-    if membership_present:
-        mask_30pkpc = np.logical_and(mask_30pkpc,pdata_candidates["Membership"].values==0)
-    if np.nansum(mask_30pkpc) == 0:
-		# No baryons within 30 pkpc (or none bound); skip to dm only
-        mask_30pkpc = radii_relative < 0.03
-    # Select masses and compute baryonic COM and VCOM within 30 pkpc (bound if membership present)
-    mass_sel = mass[mask_30pkpc]
-    com_030pkpc = (np.nansum(mass_sel[:, np.newaxis] * coords[mask_30pkpc], axis=0)
-		/ np.nansum(mass_sel))
-    vcom_030pkpc = (np.nansum(mass_sel[:, np.newaxis] * vxyz[mask_30pkpc], axis=0)
-		/ np.nansum(mass_sel))
         
     # ------------------------------------------------------------------
-    # 7. Recompute relative positions / velocities using baryonic COM
+    # 7. Recompute relative positions / velocities using iterative COM
     # ------------------------------------------------------------------
-    rel_pos = coords - com_030pkpc[np.newaxis, :]
+    rel_pos = coords - com_final[np.newaxis, :]
     rel_r = np.linalg.norm(rel_pos, axis=1)  # still comoving Mpc
 
     pdata_candidates[[f"Relative_{ax}_comoving" for ax in "xyz"]] = rel_pos
     pdata_candidates["Relative_r_comoving"] = rel_r
 
-    rel_v = vxyz - vcom_030pkpc[np.newaxis, :]
+    rel_v = vxyz - vcom_final[np.newaxis, :]
     pdata_candidates[[f"Relative_v{ax}_pec" for ax in "xyz"]] = rel_v
 
     # Radial unit vector r̂ = r / |r|
