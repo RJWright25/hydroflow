@@ -101,45 +101,20 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         # No particles within the search radius
         return pd.DataFrame()
 
+ 
     # ------------------------------------------------------------------
-    # 4. Apply periodic wrapping if the search sphere crosses the box edge
-    # ------------------------------------------------------------------
-    safe = True
-    if boxsize is not None:
-        # Check if sphere extends beyond any box boundary
-        for i_dim in range(3):
-            if (com[i_dim] - maxrad < 0.0) or (com[i_dim] + maxrad > boxsize):
-                safe = False
-                break
-
-    if (boxsize is not None) and (not safe):
-        # If the halo is near an edge, we wrap coordinates so that particles
-        # just across the periodic boundary end up close to the COM.
-        for i_dim, dim in enumerate(["x", "y", "z"]):
-            coord_col = f"Coordinates_{dim}"
-
-            if com[i_dim] - maxrad < 0.0:
-                # COM is near the "lower" boundary; particles on the far side (> boxsize/2)
-                # should be shifted *down* by one boxsize.
-                mask_otherside = pdata_candidates[coord_col].values > boxsize / 2.0
-                pdata_candidates.loc[mask_otherside, coord_col] -= boxsize
-
-            elif com[i_dim] + maxrad > boxsize:
-                # COM is near the "upper" boundary; particles on the far side (< boxsize/2)
-                # should be shifted *up* by one boxsize.
-                mask_otherside = pdata_candidates[coord_col].values < boxsize / 2.0
-                pdata_candidates.loc[mask_otherside, coord_col] += boxsize
-                
-    # ------------------------------------------------------------------
-    # 5. Compute relative radii (using catalogue COM, comoving coordinates)
+    # 4. Compute relative radii (using catalogue COM, comoving coordinates)
     # ------------------------------------------------------------------
     coords = pdata_candidates[[f"Coordinates_{ax}" for ax in "xyz"]].values
     rel_pos_cat = coords - com[np.newaxis, :]
+    # Minimal-image displacement from catalogue COM in *comoving* Mpc
+    if boxsize is not None:
+        rel_pos_cat -= boxsize * np.round(rel_pos_cat / boxsize)
     # Physical radii (Mpc) from catalogue COM
     radii_relative = np.linalg.norm(rel_pos_cat, axis=1) * afac
     
 	# ------------------------------------------------------------------
-    # 6. Membership classification (central / satellite / unbound)
+    # 5. Membership classification (central / satellite / unbound)
     # ------------------------------------------------------------------
     membership_present= "HaloCatalogueIndex" in pdata_candidates.columns
     pdata_candidates["Membership"] = np.zeros(pdata_candidates.shape[0]) - 1.0
@@ -153,7 +128,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         pdata_candidates.loc[np.logical_and(particle_haloidx >= 0,np.abs(particle_haloidx - float(galaxy["HaloCatalogueIndex"])) >= 0.1,),"Membership"] = 1
 
     # ------------------------------------------------------------------
-    # 7. Compute baryonic COM and VCOM within 30 pkpc for recentering
+    # 6. Compute baryonic COM and VCOM within 30 pkpc for recentering
     # ------------------------------------------------------------------
     # Convert 30 pkpc to comoving Mpc: 30 pkpc = 0.03 pMpc
     # We use radii_relative (physical Mpc) < 0.03 => within 30 pkpc physical
@@ -177,7 +152,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
 		/ np.nansum(mass_sel))
         
     # ------------------------------------------------------------------
-    # 8. Recompute relative positions / velocities using baryonic COM
+    # 7. Recompute relative positions / velocities using baryonic COM
     # ------------------------------------------------------------------
     rel_pos = coords - com_030pkpc[np.newaxis, :]
     rel_r = np.linalg.norm(rel_pos, axis=1)  # still comoving Mpc
@@ -196,7 +171,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     pdata_candidates["Relative_vrad_pec"] = np.sum(rel_v * rhat, axis=1)
 
     # ------------------------------------------------------------------
-    # 9. Sort candidates by increasing radius
+    # 8. Sort candidates by increasing radius
     # ------------------------------------------------------------------
     pdata_candidates.sort_values(by="Relative_r_comoving", inplace=True)
     pdata_candidates.reset_index(drop=True, inplace=True)
@@ -319,8 +294,8 @@ def analyse_galaxy(
 
     vpseudo=(2 / 3) * (constant_G * M200 * Hz / 100) ** (1 / 3)
     vpseudo *= (2 *omegag + (3 / 2) * omegam)
-    print(f"z={z}, Hz={Hz} km/s, omegag={omegag}, omegam={omegam}")
-    print(f"vpseudo= {vpseudo} km/s")
+    # print(f"z={z}, Hz={Hz} km/s, omegag={omegag}, omegam={omegam}")
+    # print(f"vpseudo= {vpseudo} km/s")
 
     # R_dot = (2 / 3) * (G * self.SO_mass * self.cosmology["H"] / 100) ** (
     #                 1 / 3
