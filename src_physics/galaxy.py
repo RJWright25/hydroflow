@@ -153,7 +153,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         baryons = (particle_type != 1)
 
         # If enough baryons *in the current selection*, use them only
-        if np.nansum(mask & baryons) > 50:
+        if np.nansum(mask & baryons) > 10:
             mask = np.logical_and(mask, baryons)
 
         if np.nansum(mask) == 0:
