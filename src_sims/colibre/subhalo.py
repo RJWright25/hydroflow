@@ -96,6 +96,8 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=False):
             if subfind:
                 halodata_out['GroupNumber']=halodata.input_halos_subfind.group_number
                 halodata_out['SubGroupNumber']=halodata.input_halos_subfind.sub_group_number
+                halodata_out['GalaxyID']=halodata_out['GroupNumber'].values*1e12+halodata_out['SubGroupNumber'].values
+
                 
             else:
                 halodata_out['GalaxyID']=halodata.input_halos_hbtplus.track_id.value
