@@ -79,7 +79,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
     for iptype,ptype,pdata_masked_object  in zip(parttypes,partstrs,partbuffer):
         
         if ptype=='dm':
-            subset=15 # only read ~10% of dark matter particles to save memory
+            subset=10 # only read ~10% of dark matter particles to save memory
         elif ptype=='stars':
             subset=2 # only read 50% of star particles to save memory
         else:
