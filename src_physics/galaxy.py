@@ -362,7 +362,7 @@ def analyse_galaxy(
     # The "COM" used for the 30 pkpc sphere is stored from particle [0]
     # (since pdata_candidates is sorted by Relative_r_comoving).
     for i_dim, dim in enumerate(["x", "y", "z"]):
-        galaxy_output[f"030pkpc_sphere-combar_{dim}"] = pdata_candidates.loc[
+        galaxy_output[f"hydroflow-com_{dim}"] = pdata_candidates.loc[
             0, f"Coordinates_{dim}"
         ]
 
