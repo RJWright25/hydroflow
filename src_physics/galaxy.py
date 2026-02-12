@@ -195,6 +195,10 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     com_final = com_ref + (np.nansum(msel[:, None] * rel_sel, axis=0) / np.nansum(msel))
     vcom_final = (np.nansum(msel[:, None] * vxyz[mask_final], axis=0) / np.nansum(msel))
 
+    com_offset=np.linalg.norm(com_final-com)
+    print(f"COM final: {com_final}")
+    print(f"Offset: {com_offset*1e3} kpc")
+
     # ------------------------------------------------------------------
     # 7. Recompute relative positions / velocities using iterative COM
     # ------------------------------------------------------------------
