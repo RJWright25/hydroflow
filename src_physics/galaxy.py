@@ -139,32 +139,63 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
 
     # Iteratively find the baryonic centre of mass and velocity
     # Firstly 100kpc, then 30kpc, then 10kpc
-    for scale in [100,30,10]:
-        mask = radii_relative < scale/1e3
+    com_ref = com.copy()  # start from catalogue centre
+    L = boxsize
 
-        # Impose subhalo membership if present
+    for scale in [100, 30, 10]:
+    # mask in physical Mpc (scale is pkpc)
+        mask = radii_relative < (scale / 1e3)
+
+        # Impose membership if present
         if membership_present:
-            mask=np.logical_and(mask,pdata_candidates["Membership"].values==0)
-        baryons=np.logical_not(particle_type==1)
+            mask = np.logical_and(mask, pdata_candidates["Membership"].values == 0)
 
-        # If enough baryons, use them only
-        if np.nansum(baryons)>50:
-            mask=np.logical_and(mask,baryons)
+        # Baryons mask (everything except DM=1)
+        baryons = (particle_type != 1)
 
-        com_updated = (np.nansum(mass[mask][:, np.newaxis] * coords[mask], axis=0)/ np.nansum(mass[mask]))
+        # If enough baryons *in the current selection*, use them only
+        if np.nansum(mask & baryons) > 50:
+            mask = np.logical_and(mask, baryons)
 
-        rel_pos_updated = coords - com_updated[np.newaxis, :]
-        radii_relative= np.linalg.norm(rel_pos_updated, axis=1) * afac
+        if np.nansum(mask) == 0:
+            continue
 
-    mask_final= radii_relative < scale/1e3
-    com_final=np.nansum(mass[mask_final][:, np.newaxis] * coords[mask_final], axis=0)/ np.nansum(mass[mask_final])
-    vcom_final=(np.nansum(mass[mask_final][:, np.newaxis] * vxyz[mask_final], axis=0)/ np.nansum(mass[mask_final]))
-    
-        
+        rel = coords - com_ref[None, :]
+        rel -= L * np.round(rel / L)
+        msel = mass[mask]
+        rel_sel = rel[mask]
+
+        # COM is reference centre plus mass-weighted mean of wrapped offsets
+        com_updated = com_ref + (np.nansum(msel[:, None] * rel_sel, axis=0) / np.nansum(msel))
+
+        # Update radii for next iteration (still using minimal image about new centre)
+        rel_pos_updated = coords - com_updated[None, :]
+        rel_pos_updated -= L * np.round(rel_pos_updated / L)
+        radii_relative = np.linalg.norm(rel_pos_updated, axis=1) * afac
+
+        # Move reference centre forward (keeps offsets small + stable)
+        com_ref = com_updated
+
+    # Use the last scale (10 pkpc) for final mask (or explicitly set scale=10)
+    mask_final = radii_relative < (10 / 1e3)
+    if membership_present:
+        mask_final = np.logical_and(mask_final, pdata_candidates["Membership"].values == 0)
+
+    # Periodic-safe final COM (again: reference + mean wrapped offsets)
+    rel = coords - com_ref[None, :]
+    rel -= L * np.round(rel / L)
+
+    msel = mass[mask_final]
+    rel_sel = rel[mask_final]
+
+    com_final = com_ref + (np.nansum(msel[:, None] * rel_sel, axis=0) / np.nansum(msel))
+    vcom_final = (np.nansum(msel[:, None] * vxyz[mask_final], axis=0) / np.nansum(msel))
+
     # ------------------------------------------------------------------
     # 7. Recompute relative positions / velocities using iterative COM
     # ------------------------------------------------------------------
     rel_pos = coords - com_final[np.newaxis, :]
+    rel_pos -= boxsize * np.round(rel_pos_updated / boxsize)
     rel_r = np.linalg.norm(rel_pos, axis=1)  # still comoving Mpc
 
     pdata_candidates[[f"Relative_{ax}_comoving" for ax in "xyz"]] = rel_pos
