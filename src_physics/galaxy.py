@@ -178,7 +178,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         # Move reference centre forward (keeps offsets small + stable)
         com_ref = com_updated
 
-    # Use the last scale (0.05 R200) for final mask (or explicitly set scale=10)
+    # Use the last scale (0.1 R200) for final mask 
     mask_final = radii_relative/galaxy['Group_R_Crit200'] < rfac
     if membership_present:
         mask_final = np.logical_and(mask_final, pdata_candidates["Membership"].values == 0)
