@@ -8,7 +8,7 @@ from hydroflow.run.initialise import load_metadata
 
 from swiftsimio import load as swiftsimio_loader
 
-def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=False):
+def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
     """
     extract_subhaloes: Read the subhalo catalog from a COLIBRE SOAP output file using swiftsimio. This massages the data into the preferred format for the subhalo catalog, and saves it to a HDF5 file.
 
