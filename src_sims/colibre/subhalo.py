@@ -85,20 +85,18 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
             
             # IDs
             central=halodata.input_halos.is_central.value
-            if not subfind:
-                halodata_out['HostHaloID']=halodata.soap.host_halo_index.value
-                halodata_out['GroupNumber']=np.arange(numhaloes)
-                halodata_out['SubGroupNumber']=np.zeros(numhaloes)
-                halodata_out.loc[np.logical_not(central),'SubGroupNumber']=1
+            halodata_out['GroupNumber']=np.arange(numhaloes)
+            halodata_out['SubGroupNumber']=np.zeros(numhaloes)
+            halodata_out.loc[np.logical_not(central),'SubGroupNumber']=1                
             halodata_out['HaloCatalogueIndex']=halodata.input_halos.halo_catalogue_index.value #This can be used to map to particle data
 
             #Use TrackID from HBT+ as unique galaxy ID
             if subfind:
                 halodata_out['GroupNumber']=halodata.input_halos_subfind.group_number.value
-                halodata_out['SubGroupNumber']=halodata.input_halos_subfind.sub_group_number.value
                 halodata_out['GalaxyID']=halodata_out['GroupNumber'].values*1e12+halodata_out['SubGroupNumber'].values
 
             else:
+                halodata_out['HostHaloID']=halodata.soap.host_halo_index.value
                 halodata_out['GalaxyID']=halodata.input_halos_hbtplus.track_id.value
                 halodata_out['GalaxyID_unique']=snapnum*1e12+halodata_out['GalaxyID'].values # Unique galaxy ID
                 halodata_out['DescendantID']=halodata.input_halos_hbtplus.descendant_track_id # Descendant galaxy ID

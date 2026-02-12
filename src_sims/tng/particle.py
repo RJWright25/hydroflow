@@ -59,7 +59,10 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False):
     # Get limits for the subvolume
     lims=get_limits(ivol,nslice,boxsize,buffer=0.5)
     
-    ptype_subset={0:1, 1:2, 4:2} 
+    ptype_subset={0:1, # every gas particle
+                  1:2, # every second dm particle
+                  4:2} # every second star particle
+    
     ptype_fields={0:['InternalEnergy',
                      'ElectronAbundance',
                      'Density',

@@ -58,7 +58,9 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None):
                   1:[],
                   4:['Metallicity']}
     
-    ptype_subset={0:1, 1:4, 4:2} 
+    ptype_subset={0:1, # every gas particle
+                  1:2, # every second dm particle
+                  4:2} # every second star particle
 
     # Initialize particle data
     pdata=[None for iptype in range(len(ptype_fields))]

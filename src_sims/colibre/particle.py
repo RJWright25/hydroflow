@@ -79,11 +79,11 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
     for iptype,ptype,pdata_masked_object  in zip(parttypes,partstrs,partbuffer):
         
         if ptype=='dm':
-            subset=20 # only read 5% of dark matter particles to save memory
+            subset=15 # only read ~10% of dark matter particles to save memory
         elif ptype=='stars':
             subset=2 # only read 50% of star particles to save memory
         else:
-            subset=1
+            subset=1 # read every gas/bh particle
 
         logging.info(f"Reading {ptype} particles... [pdata time: {time.time()-t0:.2f} s]")
         pdata_ptype=pd.DataFrame()
@@ -201,7 +201,7 @@ def read_subvol(path,ivol,nslice,metadata,logfile=None,verbose=False,gasonly=Fal
 
     # Generate KDtree
     logging.info(f"Generating KDTree... [pdata time: {time.time()-t0:.2f} s]")
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize+1e-4) #add buffer to avoid weird edge effects
+    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize+1e-4,perio) #add buffer to avoid weird edge effects
 
 
     return pdata,pdata_kdtree
