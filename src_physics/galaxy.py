@@ -141,7 +141,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
 
     print(f'COM ref: {com_ref} Mpc')
     # Recenter within 0.5R200, 0.3R200, 0.1R200, 0.05R200
-    for rfac in [0.5, 0.25, 0.1, 0.05]:
+    for rfac in [0.5, 0.3, 0.1]:
         # mask in physical Mpc (scale is pkpc)
         mask = (radii_relative/galaxy['Group_R_Crit200']) < rfac
 
