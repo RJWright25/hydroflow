@@ -90,6 +90,8 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
             halodata_out.loc[np.logical_not(central),'SubGroupNumber']=1                
             halodata_out['HaloCatalogueIndex']=halodata.input_halos.halo_catalogue_index.value #This can be used to map to particle data
 
+            print('Central fraction: ',np.nanmean(central))
+
             #Use TrackID from HBT+ as unique galaxy ID
             if subfind:
                 halodata_out['GroupNumber']=halodata.input_halos_subfind.group_number.value
