@@ -459,7 +459,7 @@ def analyse_galaxy(
     # Vmax: prefer Subhalo_V_max if present, else approximate from V_circ
     if "Subhalo_V_max" in galaxy.keys():
         vmax = galaxy["Subhalo_V_max"]
-        print(f"Using Subhalo_V_max for Vmax: val = {vmax:.2f} km/s")
+        # print(f"Using Subhalo_V_max for Vmax: val = {vmax:.2f} km/s")
     elif "Group_V_Crit200" in galaxy_output.keys():
         # NFW with c ~ 10 => Vmax ~ 1.33 V_circ,200
         vmax = 1.33 * galaxy_output["Group_V_Crit200"]
@@ -930,17 +930,16 @@ def analyse_galaxy(
             or ("reff" in rshell_str)
         )
 
-        for drfac, drfac_str in zip(dzfacs, dzfacs_str):
-            print('zfac',drfac)
+        for dzfac, dzfac_str in zip(dzfacs, dzfacs_str):
             if not flag_innershell:
                 continue
 
             # z-height limits (in comoving Mpc)
-            rhi = rshell + (drfac * rshell) / 2.0
-            rlo = rshell - (drfac * rshell) / 2.0
+            zhi = rshell + (dzfac * rshell) / 2.0
+            zlo = rshell - (dzfac * rshell) / 2.0
 
             # Particles whose |z| lies in [rlo, rhi)
-            zmask = np.logical_and(np.abs(zheight) >= rlo, np.abs(zheight) < rhi)
+            zmask = np.logical_and(np.abs(zheight) >= zlo, np.abs(zheight) < zhi)
 
             for rmax_str, rmax_val in zip(zslab_radii_strs, zslab_radii_vals):
 
@@ -962,7 +961,7 @@ def analyse_galaxy(
                     Tmask_shell = np.logical_and.reduce([mask_shell, gas, Tmask])
 
                     galaxy_output[
-                        f"{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_{Tstr}-n_tot"
+                        f"{rshell_str}_zslab{dzfac_str}_{rmax_str}-gas_{Tstr}-n_tot"
                     ] = np.nansum(Tmask_shell)
 
                     # Flow rates perpendicular to the disk use vradz
@@ -983,15 +982,15 @@ def analyse_galaxy(
                         )
 
                         galaxy_output[
-                            f"{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_{Tstr}-mdot_tot_inflow_{vkey}_vc000kmps"
+                            f"{rshell_str}_zslab{dzfac_str}_{rmax_str}-gas_{Tstr}-mdot_tot_inflow_{vkey}_vc000kmps"
                         ] = gas_flow_rates[0]
                         galaxy_output[
-                            f"{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_{Tstr}-mdot_tot_outflow_{vkey}_vc000kmps"
+                            f"{rshell_str}_zslab{dzfac_str}_{rmax_str}-gas_{Tstr}-mdot_tot_outflow_{vkey}_vc000kmps"
                         ] = gas_flow_rates[1]
 
                         for iv, vminstr in enumerate(vminstrs):
                             galaxy_output[
-                                f"{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_{Tstr}-mdot_tot_outflow_{vkey}_{vminstr}"
+                                f"{rshell_str}_zslab{dzfac_str}_{rmax_str}-gas_{Tstr}-mdot_tot_outflow_{vkey}_{vminstr}"
                             ] = gas_flow_rates[2 + iv]
 
                         # Species-resolved slab flows (only for Tstr == 'all')
@@ -1005,15 +1004,15 @@ def analyse_galaxy(
                                     vmin=vmins_use,
                                 )
                                 galaxy_output[
-                                    f"{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_{Tstr}-mdot_{spec}_inflow_{vkey}_vc000kmps"
+                                    f"{rshell_str}_zslab{dzfac_str}_{rmax_str}-gas_{Tstr}-mdot_{spec}_inflow_{vkey}_vc000kmps"
                                 ] = spec_flow_rates[0]
                                 galaxy_output[
-                                    f"{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_{Tstr}-mdot_{spec}_outflow_{vkey}_vc000kmps"
+                                    f"{rshell_str}_zslab{dzfac_str}_{rmax_str}-gas_{Tstr}-mdot_{spec}_outflow_{vkey}_vc000kmps"
                                 ] = spec_flow_rates[1]
 
                                 for iv, vminstr in enumerate(vminstrs):
                                     galaxy_output[
-                                        f"{rshell_str}_zslab{drfac_str}_{rmax_str}-gas_{Tstr}-mdot_{spec}_outflow_{vkey}_{vminstr}"
+                                        f"{rshell_str}_zslab{dzfac_str}_{rmax_str}-gas_{Tstr}-mdot_{spec}_outflow_{vkey}_{vminstr}"
                                     ] = spec_flow_rates[2 + iv]
 
     # ------------------------------------------------------------------

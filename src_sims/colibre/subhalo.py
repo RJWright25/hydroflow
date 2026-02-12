@@ -87,15 +87,15 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
             central=halodata.input_halos.is_central.value
             if not subfind:
                 halodata_out['HostHaloID']=halodata.soap.host_halo_index.value
-            halodata_out['GroupNumber']=np.arange(numhaloes)
-            halodata_out['SubGroupNumber']=np.zeros(numhaloes)
-            halodata_out.loc[np.logical_not(central),'SubGroupNumber']=1
+                halodata_out['GroupNumber']=np.arange(numhaloes)
+                halodata_out['SubGroupNumber']=np.zeros(numhaloes)
+                halodata_out.loc[np.logical_not(central),'SubGroupNumber']=1
             halodata_out['HaloCatalogueIndex']=halodata.input_halos.halo_catalogue_index.value #This can be used to map to particle data
 
             #Use TrackID from HBT+ as unique galaxy ID
             if subfind:
-                halodata_out['GroupNumber']=halodata.input_halos_subfind.group_number
-                halodata_out['SubGroupNumber']=halodata.input_halos_subfind.sub_group_number
+                halodata_out['GroupNumber']=halodata.input_halos_subfind.group_number.value
+                halodata_out['SubGroupNumber']=halodata.input_halos_subfind.sub_group_number.value
                 halodata_out['GalaxyID']=halodata_out['GroupNumber'].values*1e12+halodata_out['SubGroupNumber'].values
 
             else:
@@ -225,10 +225,10 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
                         for key,flowrate in zip(['cold','cool','warm','hot'],[halodata.spherical_overdensity_200_crit.cold_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.cool_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.warm_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.hot_gas_mass_flow_rate]):
                             flowrate.convert_to_units(f'{munit}/Gyr')
                             flowrate=flowrate.value
-                            for iflow,flowtype in enumerate(['mdot_tot_inflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc0p25vmx']):
+                            for iflow,flowtype in enumerate(['mdot_tot_inflow_vbpseudo_vc000kmps','mdot_tot_outflow_vbpseudo_vc000kmps','mdot_tot_outflow_vbpseudo_vc0p25vmx']):
                                 halodata_out[f'{scale}_shellp10_full-gas_{key}-{flowtype}-soap']=flowrate[:,iflow*3+scale_idx[scale]]
                         flowrate=halodata.spherical_overdensity_200_crit.dark_matter_mass_flow_rate
-                        for iflow,flowtype in enumerate(['mdot_tot_inflow_vbdef_vc000kmps','mdot_tot_outflow_vbdef_vc000kmps']):
+                        for iflow,flowtype in enumerate(['mdot_tot_inflow_vbpseudof_vc000kmps','mdot_tot_outflow_vbpseudo_vc000kmps']):
                             flowrate.convert_to_units(f'{munit}/Gyr')
                             halodata_out[f'{scale}_shellp10_full-dm-{flowtype}-soap']=flowrate[:,iflow*2+scale_idx[scale]]
                         
