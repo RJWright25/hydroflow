@@ -330,8 +330,8 @@ def analyse_galaxy(
     # ------------------------------------------------------------------
     # Cosmology at this redshift
     z = galaxy["Redshift"]
-    omegag = metadata.cosmology.Ogamma(0)
-    omegam = metadata.cosmology.Om(0)
+    omegag = metadata.cosmology.Ogamma(z)
+    omegam = metadata.cosmology.Om(z)
     Hz = metadata.cosmology.H(z).value  # Hubble rate [km/s/Mpc]
     afac = 1.0 / (1.0 + z)              # scale factor
 
