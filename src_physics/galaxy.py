@@ -142,6 +142,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     com_ref = com.copy()  # start from catalogue centre
     L = boxsize
 
+    print(f'COM ref: {com_ref} Mpc')
     for scale in [100, 30, 10]:
     # mask in physical Mpc (scale is pkpc)
         mask = radii_relative < (scale / 1e3)
@@ -167,6 +168,9 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
 
         # COM is reference centre plus mass-weighted mean of wrapped offsets
         com_updated = com_ref + (np.nansum(msel[:, None] * rel_sel, axis=0) / np.nansum(msel))
+        
+        print(f'COM iteration: {scale} kpc')
+        print(com_updated)
 
         # Update radii for next iteration (still using minimal image about new centre)
         rel_pos_updated = coords - com_updated[None, :]
