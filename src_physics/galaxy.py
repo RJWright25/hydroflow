@@ -110,8 +110,8 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     # Minimal-image displacement from catalogue COM in *comoving* Mpc
     if boxsize is not None:
         rel_pos_cat -= boxsize * np.round(rel_pos_cat / boxsize)
-    # Physical radii (Mpc) from catalogue COM
-    radii_relative = np.linalg.norm(rel_pos_cat, axis=1) * afac
+    # Comoving radii (Mpc) from catalogue COM
+    radii_relative = np.linalg.norm(rel_pos_cat, axis=1) 
     
 	# ------------------------------------------------------------------
     # 5. Membership classification (central / satellite / unbound)
@@ -128,24 +128,22 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         pdata_candidates.loc[np.logical_and(particle_haloidx >= 0,np.abs(particle_haloidx - float(galaxy["HaloCatalogueIndex"])) >= 0.1,),"Membership"] = 1
 
     # ------------------------------------------------------------------
-    # 6. Compute baryonic COM and VCOM within 30 pkpc for recentering
+    # 6. Compute baryonic COM and VCOM for recentering
     # ------------------------------------------------------------------
-    # Convert 30 pkpc to comoving Mpc: 30 pkpc = 0.03 pMpc
-    # We use radii_relative (physical Mpc) < 0.03 => within 30 pkpc physical
-    # for baryon COM, preferring gas + stars if available, else stars only.
+
     particle_type = pdata_candidates["ParticleType"].values
     mass = pdata_candidates["Masses"].values
     vxyz = pdata_candidates[[f"Velocities_{ax}" for ax in "xyz"]].values
 
     # Iteratively find the baryonic centre of mass and velocity
-    # Firstly 100kpc, then 30kpc, then 10kpc
     com_ref = com.copy()  # start from catalogue centre
     L = boxsize
 
     print(f'COM ref: {com_ref} Mpc')
+    # Recenter within 0.5R200, 0.3R200, 0.1R200, 0.05R200
     for rfac in [0.5, 0.25, 0.1, 0.05]:
         # mask in physical Mpc (scale is pkpc)
-        mask = (radii_relative/galaxy['Group_R_Crit200']*afac) < rfac
+        mask = (radii_relative/galaxy['Group_R_Crit200']) < rfac
 
         # Impose membership if present
         if membership_present:
@@ -175,13 +173,13 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         # Update radii for next iteration (still using minimal image about new centre)
         rel_pos_updated = coords - com_updated[None, :]
         rel_pos_updated -= L * np.round(rel_pos_updated / L)
-        radii_relative = np.linalg.norm(rel_pos_updated, axis=1) * afac
+        radii_relative = np.linalg.norm(rel_pos_updated, axis=1) 
 
         # Move reference centre forward (keeps offsets small + stable)
         com_ref = com_updated
 
     # Use the last scale (0.05 R200) for final mask (or explicitly set scale=10)
-    mask_final = radii_relative < rfac/(galaxy['Group_R_Crit200']*afac)
+    mask_final = radii_relative/galaxy['Group_R_Crit200'] < rfac
     if membership_present:
         mask_final = np.logical_and(mask_final, pdata_candidates["Membership"].values == 0)
 
