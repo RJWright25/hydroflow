@@ -140,10 +140,10 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     L = boxsize
 
     print(f'COM ref: {com_ref} Mpc')
-    # Recenter within 0.3R200, 0.1R200
-    for rfac in [0.3, 0.1]:
+    recentering_spheres=[30,10] #pkpc
+    for radius in recentering_spheres:
         # mask in physical Mpc (scale is pkpc)
-        mask = (radii_relative/galaxy['Group_R_Crit200']) < rfac
+        mask = (radii_relative*afac) < radius/1e3
 
         # Impose membership if present
         if membership_present:
