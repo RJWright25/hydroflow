@@ -94,8 +94,6 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
                 halodata_out['GroupNumber']=halodata.input_halos_subfind.group_number.value
                 halodata_out['GalaxyID']=halodata_out['GroupNumber'].values*1e12+halodata_out['SubGroupNumber'].values
 
-                print(len( halodata_out['GroupNumber']))
-                print(len(halodata_out['GroupNumber'].unique()))
 
             else:
                 halodata_out['HostHaloID']=halodata.soap.host_halo_index.value
@@ -208,7 +206,6 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
             # Give each satellite the group mass, r200 and m200 of the central and distance to central
             print('Matching group data to satellite data...')
             satellites=halodata_out['SubGroupNumber'].values>0
-            print(np.nanmean(satellites))
             if not subfind:
                 hosthaloidxs=np.searchsorted(halodata_out['GroupNumber'].values,halodata_out['HostHaloID'].values[satellites])
                 halodata_out.loc[satellites,'GroupMass']=halodata_out['GroupMass'].values[hosthaloidxs]
@@ -216,21 +213,59 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
                 halodata_out.loc[satellites,'Group_R_Crit200']=halodata_out['Group_R_Crit200'].values[hosthaloidxs]
                 halodata_out.loc[satellites,'Group_Rrel']=np.sqrt((halodata_out['CentreOfMass_x'].values[satellites]-halodata_out['CentreOfMass_x'].values[hosthaloidxs])**2+(halodata_out['CentreOfMass_y'].values[satellites]-halodata_out['CentreOfMass_y'].values[hosthaloidxs])**2+(halodata_out['CentreOfMass_z'].values[satellites]-halodata_out['CentreOfMass_z'].values[hosthaloidxs])**2)
             else:
-                # Assign group data to satellites
-                satellites=halodata_out['SubGroupNumber'].values>0
-                centrals=halodata_out['SubGroupNumber'].values==0
-                if subfind:
-                    for groupnumber in halodata_out['GroupNumber'].unique():
-                        group=halodata_out['GroupNumber'].values==groupnumber
-                        if np.nansum(group)>1:
-                            groupcen=np.logical_and(group,centrals)
-                            groupsats=np.logical_and(group,satellites)
-                            for prop in ['Group_M_Crit200','Group_R_Crit200','Group_M_Crit500','Group_R_Crit500']:
-                                halodata_out.loc[satellites,prop]=halodata_out.loc[groupcen,prop].values[0]
-                            central_com=halodata_out.loc[groupcen,['CentreOfMass_x','CentreOfMass_y','CentreOfMass_z']].values[0,:]
-                            satellite_com=halodata_out.loc[groupsats,['CentreOfMass_x','CentreOfMass_y','CentreOfMass_z']].values[:,:]
-                            halodata_out.loc[groupsats,'Group_Rrel']=np.sqrt((satellite_com[:,0]-central_com[0])**2+(satellite_com[:,1]-central_com[1])**2+(satellite_com[:,2]-central_com[2])**2)
-                        
+                is_cen = (halodata_out["SubGroupNumber"].to_numpy() == 0)
+                is_sat = ~is_cen
+
+                central_cols = [
+                    "GroupNumber",
+                    "Group_M_Crit200", "Group_R_Crit200",
+                    "Group_M_Crit500", "Group_R_Crit500",
+                    "CentreOfMass_x", "CentreOfMass_y", "CentreOfMass_z",
+                ]
+
+                # groups that have no central
+                groups_with_cen = pd.Index(halodata_out.loc[is_cen, "GroupNumber"].unique())
+                groups_all = pd.Index(halodata_out["GroupNumber"].unique())
+                missing_cen = groups_all.difference(groups_with_cen)
+                if len(missing_cen) > 0:
+                    print(f"WARNING: {len(missing_cen)} groups have no sgn=0 central (example: {missing_cen[:5].tolist()})")
+                    
+                # --- Build central table: strictly sgn=0, one row per group ---
+                centrals_df = (
+                    halodata_out.loc[is_cen, central_cols]
+                    .drop_duplicates(subset="GroupNumber", keep="first")  # safe if exactly one central per group
+                    .rename(columns={
+                        "Group_M_Crit200": "Host_Group_M_Crit200",
+                        "Group_R_Crit200": "Host_Group_R_Crit200",
+                        "Group_M_Crit500": "Host_Group_M_Crit500",
+                        "Group_R_Crit500": "Host_Group_R_Crit500",
+                        "CentreOfMass_x": "Host_CentreOfMass_x",
+                        "CentreOfMass_y": "Host_CentreOfMass_y",
+                        "CentreOfMass_z": "Host_CentreOfMass_z",
+                    })
+                )
+
+                # Join host properties onto all rows
+                halodata_out = halodata_out.merge(centrals_df, on="GroupNumber", how="left", copy=False)
+
+                # Assign group properties to satellites only
+                for prop in ["Group_M_Crit200", "Group_R_Crit200", "Group_M_Crit500", "Group_R_Crit500"]:
+                    halodata_out.loc[is_sat, prop] = halodata_out.loc[is_sat, f"Host_{prop}"].to_numpy()
+
+                # Satellite distance to *the sgn=0 central*
+                dx = halodata_out["CentreOfMass_x"].to_numpy() - halodata_out["Host_CentreOfMass_x"].to_numpy()
+                dy = halodata_out["CentreOfMass_y"].to_numpy() - halodata_out["Host_CentreOfMass_y"].to_numpy()
+                dz = halodata_out["CentreOfMass_z"].to_numpy() - halodata_out["Host_CentreOfMass_z"].to_numpy()
+
+                halodata_out.loc[is_sat, "Group_Rrel"] = np.sqrt(dx[is_sat]**2 + dy[is_sat]**2 + dz[is_sat]**2)
+
+                # (Optional) drop helper columns
+                halodata_out.drop(columns=[
+                    "Host_Group_M_Crit200","Host_Group_R_Crit200",
+                    "Host_Group_M_Crit500","Host_Group_R_Crit500",
+                    "Host_CentreOfMass_x","Host_CentreOfMass_y","Host_CentreOfMass_z",
+                ], inplace=True)
+
 
             if flowrates:
                 try:
