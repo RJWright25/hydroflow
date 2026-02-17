@@ -85,19 +85,17 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
             
             # IDs
             central=halodata.input_halos.is_central.value
-            halodata_out['GroupNumber']=np.arange(numhaloes)                
             halodata_out['HaloCatalogueIndex']=halodata.input_halos.halo_catalogue_index.value #This can be used to map to particle data
             sgn=np.zeros(numhaloes);sgn[central==0]=1.
             halodata_out['SubGroupNumber']=sgn
-
-            print(halodata.spherical_overdensity_200_crit.total_mass.value[np.where(sgn>0)])
-
-            print('Central fraction: ',np.nanmean(halodata_out['SubGroupNumber'].values==0))
 
             #Use TrackID from HBT+ as unique galaxy ID
             if subfind:
                 halodata_out['GroupNumber']=halodata.input_halos_subfind.group_number.value
                 halodata_out['GalaxyID']=halodata_out['GroupNumber'].values*1e12+halodata_out['SubGroupNumber'].values
+
+                print(len( halodata_out['GroupNumber']))
+                print(len(halodata_out['GroupNumber'].unique()))
 
             else:
                 halodata_out['HostHaloID']=halodata.soap.host_halo_index.value
@@ -106,6 +104,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
                 halodata_out['DescendantID']=halodata.input_halos_hbtplus.descendant_track_id # Descendant galaxy ID
                 halodata_out['ParentID']=halodata.input_halos_hbtplus.nested_parent_track_id # Parent galaxy ID
                 halodata_out['SubhaloRank']=halodata.soap.subhalo_rank_by_bound_mass.value # Rank of the subhalo within its host halo by bound mass
+
 
 
             # Host halo properties
