@@ -123,11 +123,6 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
             vmax=halodata.bound_subhalo.maximum_circular_velocity;vmax.convert_to_units(vunit)
             halodata_out['Subhalo_V_max']=np.array(vmax.value)
 
-            # Assign group data to 
-
-
-
-
             # Centre of mass -- use the central galaxy 30kpc inclusive sphere
             cop_halo=halodata.exclusive_sphere_30kpc.centre_of_mass
             cop_halo.convert_to_units('Mpc')
@@ -219,7 +214,23 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
                 halodata_out.loc[satellites,'GroupMass']=halodata_out['GroupMass'].values[hosthaloidxs]
                 halodata_out.loc[satellites,'Group_M_Crit200']=halodata_out['Group_M_Crit200'].values[hosthaloidxs]
                 halodata_out.loc[satellites,'Group_R_Crit200']=halodata_out['Group_R_Crit200'].values[hosthaloidxs]
-                halodata_out.loc[satellites,'Group_Rrel']=np.sqrt((halodata_out['CentreOfPotential_x'].values[satellites]-halodata_out['CentreOfPotential_x'].values[hosthaloidxs])**2+(halodata_out['CentreOfPotential_y'].values[satellites]-halodata_out['CentreOfPotential_y'].values[hosthaloidxs])**2+(halodata_out['CentreOfPotential_z'].values[satellites]-halodata_out['CentreOfPotential_z'].values[hosthaloidxs])**2)
+                halodata_out.loc[satellites,'Group_Rrel']=np.sqrt((halodata_out['CentreOfMass_x'].values[satellites]-halodata_out['CentreOfMass_x'].values[hosthaloidxs])**2+(halodata_out['CentreOfMass_y'].values[satellites]-halodata_out['CentreOfMass_y'].values[hosthaloidxs])**2+(halodata_out['CentreOfMass_z'].values[satellites]-halodata_out['CentreOfMass_z'].values[hosthaloidxs])**2)
+            else:
+                # Assign group data to satellites
+                satellites=halodata_out['SubGroupNumber'].values>0
+                centrals=halodata_out['SubGroupNumber'].values==0
+                if subfind:
+                    for groupnumber in halodata_out['GroupNumber'].unique():
+                        group=halodata_out['GroupNumber'].values==groupnumber
+                        if np.nansum(group)>1:
+                            groupcen=np.logical_and(group,centrals)
+                            groupsats=np.logical_and(group,satellites)
+                            for prop in ['Group_M_Crit200','Group_R_Crit200','Group_M_Crit500','Group_R_Crit500','GroupMass']:
+                                halodata_out.loc[satellites,prop]=halodata_out.loc[groupcen,prop].values[0]
+                            central_com=halodata_out.loc[groupcen,['CentreOfMass_x','CentreOfMass_y','CentreOfMass_z']].values[0,:]
+                            satellite_com=halodata_out.loc[groupsats,['CentreOfMass_x','CentreOfMass_y','CentreOfMass_z']].values[:,:]
+                            halodata_out.loc[groupsats,'Group_Rrel']=np.sqrt((satellite_com[:,0]-central_com[0])**2+(satellite_com[:,1]-central_com[1])**2+(satellite_com[:,2]-central_com[2])**2)
+                        
 
             if flowrates:
                 try:
