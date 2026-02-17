@@ -90,7 +90,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
             sgn=np.zeros(numhaloes);sgn[central==0]=1.
             halodata_out['SubGroupNumber']=sgn
 
-            print(halodata.spherical_overdensity_200_crit.total_mass[sgn])
+            print(halodata.spherical_overdensity_200_crit.total_mass.value[np.where(sgn>0)])
 
             print('Central fraction: ',np.nanmean(halodata_out['SubGroupNumber'].values==0))
 
