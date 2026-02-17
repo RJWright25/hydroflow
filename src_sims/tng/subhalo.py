@@ -123,7 +123,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None):
         
         # Sort subhalo data
         subhalo_df.sort_values(by=['GroupNumber','Mass'],inplace=True,ascending=[True,False])
-        subhalo_df=subhalo_df.loc[np.logical_and(subhalo_df['Group_M_Crit200'].values,subhalo_df['Mass'].values)>=1e8,:] #apply mass cut
+        subhalo_df=subhalo_df.loc[np.logical_and(subhalo_df['Group_M_Crit200'].values,subhalo_df['Mass'].values)>=1e9,:] #apply mass cut
         subhalo_df.reset_index(inplace=True,drop=True)
 
         # Match group data to subhalo data

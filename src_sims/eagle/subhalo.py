@@ -83,7 +83,7 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 Subhalo.GalaxyID = Aperture.GalaxyID and \
                 Subhalo.GalaxyID = Sizes.GalaxyID and \
                 Aperture.ApertureSize = 30 and\
-                Subhalo.Mass >= 1e8 and\
+                Subhalo.Mass >= 1e9 and\
                 FOF.Group_M_Crit200>= {mcut:2e}\
               ORDER BY \
                 Subhalo.SnapNum desc, \
