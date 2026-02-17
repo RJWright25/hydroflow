@@ -74,7 +74,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     # 1. Galaxy centre and scale factor
     # ------------------------------------------------------------------
     # COM from catalogue (comoving Mpc)
-    com = np.array([galaxy[f"CentreOfPotential_{ax}"] for ax in "xyz"], dtype=float)
+    com = np.array([galaxy[f"CentreOfMass_{ax}"] for ax in "xyz"], dtype=float)
 
     # Cosmological scale factor a = 1 / (1 + z)
     afac = 1.0 / (1.0 + galaxy["Redshift"])
@@ -471,9 +471,14 @@ def analyse_galaxy(
     # ------------------------------------------------------------------
     # 9. Velocity cuts and Vmax estimate
     # ------------------------------------------------------------------
+    # Estimate halo circular velocity
     galaxy_output["Group_V_Crit200"] = np.sqrt(
         constant_G * galaxy["Group_M_Crit200"] / (galaxy["Group_R_Crit200"]*afac)
 	)  # km/s
+
+    # Don't use vmax cut if satellite and no vmax output
+    if galaxy_output['SubGroupNumber']>0:
+        galaxy_output["Group_V_Crit200"] = 0
 
     vmins = []
     vminstrs = list(vcuts.keys())
@@ -482,7 +487,7 @@ def analyse_galaxy(
     if "Subhalo_V_max" in galaxy.keys():
         vmax = galaxy["Subhalo_V_max"]
         # print(f"Using Subhalo_V_max for Vmax: val = {vmax:.2f} km/s")
-    elif "Group_V_Crit200" in galaxy_output.keys():
+    elif "Group_V_Crit200" in galaxy_output.keys() and galaxy_output['SubGroupNumber']==0:
         # NFW with c ~ 10 => Vmax ~ 1.33 V_circ,200
         vmax = 1.33 * galaxy_output["Group_V_Crit200"]
 
