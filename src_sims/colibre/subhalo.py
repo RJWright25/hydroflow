@@ -225,7 +225,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
                         if np.nansum(group)>1:
                             groupcen=np.logical_and(group,centrals)
                             groupsats=np.logical_and(group,satellites)
-                            for prop in ['Group_M_Crit200','Group_R_Crit200','Group_M_Crit500','Group_R_Crit500','GroupMass']:
+                            for prop in ['Group_M_Crit200','Group_R_Crit200','Group_M_Crit500','Group_R_Crit500']:
                                 halodata_out.loc[satellites,prop]=halodata_out.loc[groupcen,prop].values[0]
                             central_com=halodata_out.loc[groupcen,['CentreOfMass_x','CentreOfMass_y','CentreOfMass_z']].values[0,:]
                             satellite_com=halodata_out.loc[groupsats,['CentreOfMass_x','CentreOfMass_y','CentreOfMass_z']].values[:,:]
