@@ -97,7 +97,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None):
         group_df.loc[:,[f'CentreOfMass_{x}' for x in 'xyz']]=caesarfile['/halo_data/minpotpos'][:]*dconv
 
         # Remove groups with mass below the cut and reindex
-        group_df=group_df[group_df.Group_M_Crit200>=mcut]
+        group_df=group_df[group_df.Group_M_Crit200>=mcut,group_df.Mass>1e8]
         group_df.sort_values(['Mass'],inplace=True,ascending=False)
         group_df.reset_index(drop=True,inplace=True)
 
