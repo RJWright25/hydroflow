@@ -290,7 +290,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
                     raise
 
             # Remove subhalos below mass cut
-            halodata_out=halodata_out[halodata_out['Group_M_Crit200'].values>=mcut,halodata_out['Mass'].values>1e8]
+            halodata_out=halodata_out[np.logical_and(halodata_out['Group_M_Crit200'].values>=mcut,halodata_out['Mass'].values>1e8)]
             halodata_out.reset_index(drop=True,inplace=True)
             print(np.nanmean(halodata_out.SubGroupNumber==0))
 
