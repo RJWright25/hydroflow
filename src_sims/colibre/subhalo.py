@@ -87,10 +87,10 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
             central=halodata.input_halos.is_central.value
             halodata_out['GroupNumber']=np.arange(numhaloes)
             halodata_out['SubGroupNumber']=np.zeros(numhaloes)
-            halodata_out.loc[np.logical_not(central),'SubGroupNumber']=1                
+            halodata_out.loc[np.logical_not(central),'SubGroupNumber']=1.                
             halodata_out['HaloCatalogueIndex']=halodata.input_halos.halo_catalogue_index.value #This can be used to map to particle data
 
-            print('Central fraction: ',np.nanmean(halodata_out['SubGroupNumber'].values>0))
+            print('Central fraction: ',np.nanmean(halodata_out['SubGroupNumber'].values==0))
 
             #Use TrackID from HBT+ as unique galaxy ID
             if subfind:
@@ -233,7 +233,6 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
                         
                 except:
                     raise
-                    print("Flow rate extraction failed. Continuing without flow rates...")
 
 
             # Remove subhalos below mass cut
