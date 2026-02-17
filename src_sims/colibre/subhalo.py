@@ -206,6 +206,8 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
             # Give each satellite the group mass, r200 and m200 of the central and distance to central
             print('Matching group data to satellite data...')
             satellites=halodata_out['SubGroupNumber'].values>0
+            print(np.nanmean(halodata_out.SubGroupNumber==0))
+
             if not subfind:
                 hosthaloidxs=np.searchsorted(halodata_out['GroupNumber'].values,halodata_out['HostHaloID'].values[satellites])
                 halodata_out.loc[satellites,'GroupMass']=halodata_out['GroupMass'].values[hosthaloidxs]
