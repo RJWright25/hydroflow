@@ -229,7 +229,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
                 missing_cen = groups_all.difference(groups_with_cen)
                 if len(missing_cen) > 0:
                     print(f"WARNING: {len(missing_cen)} groups have no sgn=0 central (example: {missing_cen[:5].tolist()})")
-                    
+
                 # --- Build central table: strictly sgn=0, one row per group ---
                 centrals_df = (
                     halodata_out.loc[is_cen, central_cols]
@@ -287,10 +287,11 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
                 except:
                     raise
 
-
+            print(np.nanmean(halodata_out.SubGroupNumber==0))
             # Remove subhalos below mass cut
             halodata_out=halodata_out[halodata_out['Group_M_Crit200']>=mcut]
             halodata_out.reset_index(drop=True,inplace=True)
+            print(np.nanmean(halodata_out.SubGroupNumber==0))
 
             # Add to previous snapshots
             subcat.append(halodata_out)
