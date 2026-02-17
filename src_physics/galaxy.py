@@ -167,7 +167,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         # COM is reference centre plus mass-weighted mean of wrapped offsets
         com_updated = com_ref + (np.nansum(msel[:, None] * rel_sel, axis=0) / np.nansum(msel))
         
-        print(f'COM iteration: {radius} R200')
+        print(f'COM iteration: {radius} pkpc')
         print(com_updated)
 
         # Update radii for next iteration (still using minimal image about new centre)
@@ -630,10 +630,8 @@ def analyse_galaxy(
         vsboundary = [vbpseudo,0]
         vsboundary_str = ["vbpseudo",'vbstatic']
 
-        # Skip R200-based shells for satellite galaxies, and ignore rshell <= 0
+        # Skip R200-based shells for satellite galaxies
         if ("r200" in rshell_str) and (galaxy["SubGroupNumber"] > 0):
-            continue
-        if rshell <= 0.0:
             continue
 
         # ------------------------------------------------------------------
