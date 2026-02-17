@@ -94,7 +94,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None):
         group_df['GroupMass']=caesarfile['/halo_data/dicts/masses.total'][:]*mconv
         group_df['Group_M_Crit200']=caesarfile['/halo_data/dicts/virial_quantities.m200c'][:]*mconv
         group_df['Group_R_Crit200']=caesarfile['/halo_data/dicts/virial_quantities.r200c'][:]*dconv 
-        group_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=caesarfile['/halo_data/minpotpos'][:]*dconv
+        group_df.loc[:,[f'CentreOfMass_{x}' for x in 'xyz']]=caesarfile['/halo_data/minpotpos'][:]*dconv
 
         # Remove groups with mass below the cut and reindex
         group_df=group_df[group_df.Group_M_Crit200>=mcut]

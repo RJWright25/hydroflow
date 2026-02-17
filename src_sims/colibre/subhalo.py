@@ -126,9 +126,9 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
             # Centre of mass -- use the central galaxy 30kpc inclusive sphere
             cop_halo=halodata.exclusive_sphere_30kpc.centre_of_mass
             cop_halo.convert_to_units('Mpc')
-            halodata_out['CentreOfPotential_x']=np.array(cop_halo[:,0].value)
-            halodata_out['CentreOfPotential_y']=np.array(cop_halo[:,1].value)
-            halodata_out['CentreOfPotential_z']=np.array(cop_halo[:,2].value)
+            halodata_out['CentreOfMass_x']=np.array(cop_halo[:,0].value)
+            halodata_out['CentreOfMass_y']=np.array(cop_halo[:,1].value)
+            halodata_out['CentreOfMass_z']=np.array(cop_halo[:,2].value)
             
             # Subhalo mass
             subhalomass=halodata.bound_subhalo.total_mass;subhalomass.convert_to_units(munit)

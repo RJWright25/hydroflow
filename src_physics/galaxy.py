@@ -32,7 +32,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     ----------
     galaxy : dict or pd.Series
         Properties of the galaxy, including:
-        - CentreOfPotential_x/y/z (comoving Mpc)
+        - CentreOfMass_x/y/z (comoving Mpc)
         - Redshift
         - Group_R_Crit200 (comoving Mpc) – used if maxrad is None
 

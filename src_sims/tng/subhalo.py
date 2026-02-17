@@ -98,7 +98,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None):
         group_df['GroupMass']=groupcat['GroupMass'][:]*mconv
         group_df['Group_M_Crit200']=groupcat['Group_M_Crit200'][:]*mconv
         group_df['Group_R_Crit200']=groupcat['Group_R_Crit200'][:]*dconv #convert to cMpc
-        group_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=groupcat['GroupPos'][:]*dconv #convert to cMpc
+        group_df.loc[:,[f'CentreOfMass_{x}' for x in 'xyz']]=groupcat['GroupPos'][:]*dconv #convert to cMpc
         group_df.sort_values(by='GroupNumber',inplace=True,ascending=True)
         group_df=group_df.loc[group_df['GroupMass'].values>=mcut,:].copy()
         group_df.reset_index(drop=True,inplace=True)
@@ -113,11 +113,11 @@ def extract_subhaloes(path,mcut=1e10,metadata=None):
         subhalo_df['StarFormationRate']=subcat['SubhaloSFR'][:] #Msun/yr
         subhalo_df['StellarMass']=subcat['SubhaloMassType'][:,4]*mconv
         subhalo_df['Mass']=subcat['SubhaloMass'][:]*mconv 
-        subhalo_df.loc[:,[f'CentreOfPotential_{x}' for x in 'xyz']]=subcat['SubhaloPos'][:]*dconv
+        subhalo_df.loc[:,[f'CentreOfMass_{x}' for x in 'xyz']]=subcat['SubhaloPos'][:]*dconv
         subhalo_df.loc[:,[f'Velocity_{x}' for x in 'xyz']]=subcat['SubhaloVel'][:,:] #peculiar velocity in km/s (no need to convert)
 
         # Initialize group data in subhalo data
-        keys_groups=['SubGroupNumber','GroupMass','Group_M_Crit200','Group_R_Crit200','Group_CentreOfPotential_x','Group_CentreOfPotential_y','Group_CentreOfPotential_z']
+        keys_groups=['SubGroupNumber','GroupMass','Group_M_Crit200','Group_R_Crit200','Group_CentreOfMass_x','Group_CentreOfMass_y','Group_CentreOfMass_z']
         for key in keys_groups:
             subhalo_df[key]=np.zeros(subhalo_df.shape[0])+np.nan
         
@@ -156,8 +156,8 @@ def extract_subhaloes(path,mcut=1e10,metadata=None):
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,'Group_R_Crit200']=group_df.loc[group_idx,'Group_R_Crit200']
 
             # Add relative distance to group centre
-            cop_group=group_df.loc[group_idx,[f'CentreOfPotential_{x}' for x in 'xyz']].values
-            cop_subhalo=subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,[f'CentreOfPotential_{x}' for x in 'xyz']].values
+            cop_group=group_df.loc[group_idx,[f'CentreOfMass_{x}' for x in 'xyz']].values
+            cop_subhalo=subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,[f'CentreOfMass_{x}' for x in 'xyz']].values
             subhalo_df.loc[subhalo_idx_1:subhalo_idx_2-1,'Group_Rrel']=np.sqrt(np.sum((cop_subhalo-cop_group)**2,axis=1))
 
         # Append the group and subhalo dataframes to the subhalo data structure

@@ -145,9 +145,9 @@ logging.info(f'Box limits: x - ({subcat_limits[0]:.1f},{subcat_limits[1]:.1f}); 
 
 snap_mask = subcat[snap_key].values == snap
 mass_mask = subcat[mass_key].values >= mcut
-xmask = (subcat['CentreOfPotential_x'].values >= subcat_limits[0]) & (subcat['CentreOfPotential_x'].values < subcat_limits[1])
-ymask = (subcat['CentreOfPotential_y'].values >= subcat_limits[2]) & (subcat['CentreOfPotential_y'].values < subcat_limits[3])
-zmask = (subcat['CentreOfPotential_z'].values >= subcat_limits[4]) & (subcat['CentreOfPotential_z'].values < subcat_limits[5])
+xmask = (subcat['CentreOfMass_x'].values >= subcat_limits[0]) & (subcat['CentreOfMass_x'].values < subcat_limits[1])
+ymask = (subcat['CentreOfMass_y'].values >= subcat_limits[2]) & (subcat['CentreOfMass_y'].values < subcat_limits[3])
+zmask = (subcat['CentreOfMass_z'].values >= subcat_limits[4]) & (subcat['CentreOfMass_z'].values < subcat_limits[5])
 
 mask = snap_mask & mass_mask & xmask & ymask & zmask
 subcat_selection = subcat.loc[mask].copy().sort_values(by='SubGroupNumber').reset_index(drop=True)
@@ -190,7 +190,7 @@ if numgal:
         maxrad = 3.5 * galaxy['Group_R_Crit200'] if central else 150e-3 # 3.5*r200 for centrals, 150ckpc for satellites
         
         # Check if the galaxy is on the edge of the box
-        com=np.array([galaxy[f'CentreOfPotential_{x}'] for x in 'xyz'])
+        com=np.array([galaxy[f'CentreOfMass_{x}'] for x in 'xyz'])
         galaxy['Edge']=0
         for idim in range(3):
             if com[idim]-maxrad<0 or com[idim]+maxrad>metadata.boxsize:

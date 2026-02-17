@@ -50,9 +50,9 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 Subhalo.GalaxyID as GalaxyID, \
                 Subhalo.Mass as Mass,  \
                 Subhalo.SubGroupNumber as SubGroupNumber, \
-                Subhalo.CentreOfPotential_x as CentreOfPotential_x, \
-                Subhalo.CentreOfPotential_y as CentreOfPotential_y, \
-                Subhalo.CentreOfPotential_z as CentreOfPotential_z, \
+                Subhalo.CentreOfPotential_x as CentreOfMass_x, \
+                Subhalo.CentreOfPotential_y as CentreOfMass_y, \
+                Subhalo.CentreOfPotential_z as CentreOfMass_z, \
                 Subhalo.GasSpin_x as subhalodashgas_alldashL_totdashsubfexcl_x, \
                 Subhalo.GasSpin_y as subhalodashgas_alldashL_totdashsubfexcl_y, \
                 Subhalo.GasSpin_z as subhalodashgas_alldashL_totdashsubfexcl_z, \
@@ -68,9 +68,9 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 FOF.GroupMass as GroupMass, \
                 FOF.Group_M_Crit200 as Group_M_Crit200, \
                 FOF.Group_R_Crit200 as Group_R_Crit200, \
-                FOF.GroupCentreOfPotential_x as GroupCentreOfPotential_x, \
-                FOF.GroupCentreOfPotential_y as GroupCentreOfPotential_y, \
-                FOF.GroupCentreOfPotential_z as GroupCentreOfPotential_z \
+                FOF.GroupCentreOfPotential_x as GroupCentreOfMass_x, \
+                FOF.GroupCentreOfPotential_y as GroupCentreOfMass_y, \
+                FOF.GroupCentreOfPotential_z as GroupCentreOfMass_z \
               FROM \
                 {simname}_Subhalo as Subhalo,\
                 {simname}_Aperture as Aperture,\
