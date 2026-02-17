@@ -140,7 +140,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     L = boxsize
 
     print(f'COM ref: {com_ref} Mpc')
-    recentering_spheres=[30,10] #pkpc
+    recentering_spheres = [30,10] #pkpc
     for radius in recentering_spheres:
         # mask in physical Mpc (scale is pkpc)
         mask = (radii_relative*afac) < radius/1e3
@@ -167,7 +167,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         # COM is reference centre plus mass-weighted mean of wrapped offsets
         com_updated = com_ref + (np.nansum(msel[:, None] * rel_sel, axis=0) / np.nansum(msel))
         
-        print(f'COM iteration: {rfac} R200')
+        print(f'COM iteration: {radius} R200')
         print(com_updated)
 
         # Update radii for next iteration (still using minimal image about new centre)
@@ -179,7 +179,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         com_ref = com_updated
 
     # Use the last scale (0.1 R200) for final mask 
-    mask_final = radii_relative/galaxy['Group_R_Crit200'] < rfac
+    mask_final = radii_relative*afac < radius/1e3
     if membership_present:
         mask_final = np.logical_and(mask_final, pdata_candidates["Membership"].values == 0)
 
