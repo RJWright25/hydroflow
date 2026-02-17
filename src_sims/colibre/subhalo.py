@@ -87,9 +87,10 @@ def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
             central=halodata.input_halos.is_central.value
             halodata_out['GroupNumber']=np.arange(numhaloes)                
             halodata_out['HaloCatalogueIndex']=halodata.input_halos.halo_catalogue_index.value #This can be used to map to particle data
-            sgn=np.zeros(numhaloes)
-            sgn[central==0]=1.
+            sgn=np.zeros(numhaloes);sgn[central==0]=1.
             halodata_out['SubGroupNumber']=sgn
+
+            print(halodata.spherical_overdensity_200_crit.total_mass[sgn])
 
             print('Central fraction: ',np.nanmean(halodata_out['SubGroupNumber'].values==0))
 
