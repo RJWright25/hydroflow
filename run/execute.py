@@ -154,6 +154,7 @@ zmask = (subcat['CentreOfMass_z'].values >= subcat_limits[4]) & (subcat['CentreO
 
 mask = snap_mask & mass_mask & xmask & ymask & zmask
 subcat_selection = subcat.loc[mask].copy(); del subcat
+subcat_selection.reset_index(inplace=True)
 numgal = subcat_selection.shape[0]
 
 logging.info(f'Mass limit: {np.log10(mcut):.1f} [runtime {time.time()-t1:.3f} sec]')
