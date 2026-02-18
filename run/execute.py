@@ -190,6 +190,8 @@ if numgal:
 
         # Initialise galaxy output
         central = galaxy['SubGroupNumber'] == 0
+
+        # Set maximum search radius
         if central:
             maxrad = max_r200fac * galaxy['Group_R_Crit200']
         else:
