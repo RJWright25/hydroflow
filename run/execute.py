@@ -195,7 +195,7 @@ if numgal:
         if central:
             maxrad = max_r200fac * galaxy['Group_R_Crit200']
         else:
-            maxrad = max_pkpc/afac 
+            maxrad = max_pkpc / afac * 1e-3 
 
         maxrad *= (1 + 0.5 * max_dr) # adding dr/2 shell width to upper radial limit 
         maxrad *= (1.05) # adding 5% buffer 

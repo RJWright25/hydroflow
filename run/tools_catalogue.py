@@ -42,44 +42,30 @@ def dump_hdf_group(fname,group,data,metadata={},verbose=False):
 
 
     """
-    # Check if the file exists
-    if os.path.exists(fname):
-        outfile=h5py.File(fname,"r+")
-        if group in outfile:
-            if verbose:
-                print(f'Removing existing group {group} in {fname} ...')
-            del outfile[group]
-    else:
-        if verbose:
-            print(f'Creating new file {fname} ...')
-        if not os.path.exists(os.path.dirname(fname)):
-            try:
-                os.makedirs(os.path.dirname(fname))
-            except:
-                pass
-        outfile=h5py.File(fname,"w")
-    columns=list(data.columns)
+    import os
+    import h5py
 
+    def dump_hdf_group(fname, group, data, metadata=None, verbose=False):
+        if metadata is None:
+            metadata = {}
 
-    # Create the group and add the requested columns
-    for icol,column in enumerate(columns):
-        if verbose:
-            print(f'Dumping {column} ... {icol+1}/{len(columns)}')
-        
-        # Remove data if it already exists
-        if group in outfile:
-            if column in outfile[group]:
-                del outfile[f'{group}/{column}']
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
 
+        with h5py.File(fname, "a") as f:
+            # Delete group if present
+            if group in f:
+                del f[group]
+            g = f.create_group(group)
 
-        outfile.create_dataset(name=f'{group}/{column}',data=data[column].values)
+            # Create datasets
+            for icol, col in enumerate(data.columns):
+                if verbose:
+                    print(f"Dumping {col} ... {icol+1}/{len(data.columns)}")
+                g.create_dataset(col, data=data[col].to_numpy(copy=False))
 
-
-    # Add optional metadata to the group
-    for key in metadata.keys():
-        outfile[group].attrs[key]=metadata[key]
-    outfile.close()
-
+            # Metadata
+            for k, v in metadata.items():
+                g.attrs[k] = v
 
 
 
@@ -293,7 +279,7 @@ def combine_catalogues(path_hydroflow, snaps=None, mcut=10, verbose=False):
     logging.info(f"Writing to {outpath}")
     create_dir(outpath)
     try:
-        snap_outputs.sort_values(by=['SnapNum', 'Mass'], ascending=[False, False], inplace=True, ignore_index=True)
+        snap_outputs.sort_values(by=['SnapNum', 'Group_M_Crit200','SubGroupNumber'], ascending=[False, False,True], inplace=True, ignore_index=True)
     except:
         logging.warning("Sorting by SnapNum and Mass failed, sorting only by HydroflowID")
     snap_outputs.reset_index(drop=True, inplace=True)

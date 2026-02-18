@@ -166,7 +166,6 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
 
         # COM is reference centre plus mass-weighted mean of wrapped offsets
         com_updated = com_ref + (np.nansum(msel[:, None] * rel_sel, axis=0) / np.nansum(msel))
-        
 
         # Update radii for next iteration (still using minimal image about new centre)
         rel_pos_updated = coords - com_updated[None, :]
