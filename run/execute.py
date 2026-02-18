@@ -126,6 +126,9 @@ snap_pdata_fname = metadata.snapshots_flist[snap_mask][0]
 boxsize = metadata.boxsize
 hval = metadata.hval
 afac = metadata.snapshots_afac[snap_mask][0]
+max_dr = np.nanmax(np.array(drfacs))
+max_pkpc = np.nanmax(np.array(kpc_shells))
+max_r200fac = np.nanmax(np.array(r200_shells))
 
 # Output paths
 output_folder = f'{path}/catalogues/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}/snap{str(snap).zfill(3)}/'
@@ -187,13 +190,19 @@ if numgal:
 
         # Initialise galaxy output
         central = galaxy['SubGroupNumber'] == 0
-        maxrad = 3.5 * galaxy['Group_R_Crit200'] if central else 0.05/afac # 3.5*r200 for centrals, 50pkpc for satellites
+        if central:
+            maxrad = max_r200fac * galaxy['Group_R_Crit200']
+        else:
+            maxrad = max_pkpc/afac 
+
+        maxrad *= (1 + 0.5 * max_dr) # adding dr/2 shell width to upper radial limit 
+        maxrad *= (1.05) # adding 5% buffer 
         
         # Check if the galaxy is on the edge of the box
         com=np.array([galaxy[f'CentreOfMass_{x}'] for x in 'xyz'])
         galaxy['Edge']=0
         for idim in range(3):
-            if com[idim]-maxrad<0 or com[idim]+maxrad>metadata.boxsize:
+            if (com[idim]-maxrad)<0 or (com[idim]+maxrad>metadata.boxsize):
                 galaxy['Edge']=1
                 logging.info(f'Galaxy {int(galaxy[galid_key])} is on the edge of the box -- COM {com}. Setting Edge=1 [runtime {time.time()-t1:.3f} sec]')
                 break
