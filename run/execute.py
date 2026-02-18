@@ -143,7 +143,7 @@ if dump:
 
 # Apply subhalo mask
 subcat_limits = get_limits(ivol, nslice, boxsize, buffer=0)
-snap_key, galid_key, mass_key = 'SnapNum', 'GalaxyID', 'Mass'
+snap_key, galid_key, mass_key = 'SnapNum', 'GalaxyID', 'Group_M_Crit200'
 logging.info(f'Box limits: x - ({subcat_limits[0]:.1f},{subcat_limits[1]:.1f}); y - ({subcat_limits[2]:.1f},{subcat_limits[3]:.1f}); z - ({subcat_limits[4]:.1f},{subcat_limits[5]:.1f}) [runtime {time.time()-t1:.3f} sec]')
 
 snap_mask = subcat[snap_key].values == snap

@@ -83,7 +83,6 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
                 Subhalo.GalaxyID = Aperture.GalaxyID and \
                 Subhalo.GalaxyID = Sizes.GalaxyID and \
                 Aperture.ApertureSize = 30 and\
-                Subhalo.Mass >= 3.16e9 and\
                 FOF.Group_M_Crit200>= {mcut:2e}\
               ORDER BY \
                 Subhalo.SnapNum desc, \
@@ -124,6 +123,12 @@ def extract_subhaloes(simname='RefL0100N1504',snapnums=[],uname=None,pw=None,mcu
 
     # Add Rrel to the subhalo catalogue
     data_pd['Group_Rrel']=np.sqrt((data_pd['CentreOfPotential_x']-data_pd['GroupCentreOfPotential_x'])**2+(data_pd['CentreOfPotential_y']-data_pd['GroupCentreOfPotential_y'])**2+(data_pd['CentreOfPotential_z']-data_pd['GroupCentreOfPotential_z'])**2)
+
+    mask=np.logical_and(data_pd['Group_M_Crit200'].values>=mcut,np.logical_or(data_pd['SubGroupNumber'].values==0,data_pd['Mass'].values>mcut*10**-0.5))
+    data_pd=data_pd[mask]
+    data_pd.reset_index(inplace=True,drop=True)
+    data_pd.sort_values(by=['SnapNum','Group_M_Crit200','SubGroupNumber'],ascending=[False,False,True],inplace=True)
+    data_pd.reset_index(inplace=True,drop=True)
 
     # Output path
     outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'

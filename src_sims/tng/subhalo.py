@@ -121,9 +121,7 @@ def extract_subhaloes(path,mcut=1e10,metadata=None):
         for key in keys_groups:
             subhalo_df[key]=np.zeros(subhalo_df.shape[0])+np.nan
         
-        # Sort subhalo data
-        subhalo_df.sort_values(by=['GroupNumber','Mass'],inplace=True,ascending=[True,False])
-        subhalo_df=subhalo_df.loc[np.logical_and(subhalo_df['Group_M_Crit200'].values,subhalo_df['Mass'].values)>=10**9.5,:] #apply mass cut
+        subhalo_df=subhalo_df.loc[subhalo_df['Group_M_Crit200'].values,:] #apply mass cut
         subhalo_df.reset_index(inplace=True,drop=True)
 
         # Match group data to subhalo data
@@ -169,6 +167,10 @@ def extract_subhaloes(path,mcut=1e10,metadata=None):
         subcat=pd.concat(subhalo_dfs)
     else:
         subcat=subhalo_dfs[0]
+    
+    # Sort subhalo data
+    mask=np.logical_and(subcat['Group_M_Crit200'].values>=mcut,np.logical_or(subcat['SubGroupNumber'].values==0,subcat['Mass'].values>mcut*10**-0.5))
+    subcat=subcat[mask].copy();del subcat
     subcat.sort_values(by=['SnapNum','Group_M_Crit200','SubGroupNumber'],ascending=[False,False,True],inplace=True)
     subcat.reset_index(inplace=True,drop=True)
 
