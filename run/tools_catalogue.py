@@ -42,30 +42,24 @@ def dump_hdf_group(fname,group,data,metadata={},verbose=False):
 
 
     """
-    import os
-    import h5py
+    if metadata is None:
+        metadata = {}
+    os.makedirs(os.path.dirname(fname), exist_ok=True)
+    with h5py.File(fname, "a") as f:
+        # Delete group if present
+        if group in f:
+            del f[group]
+        g = f.create_group(group)
 
-    def dump_hdf_group(fname, group, data, metadata=None, verbose=False):
-        if metadata is None:
-            metadata = {}
+        # Create datasets
+        for icol, col in enumerate(data.columns):
+            if verbose:
+                print(f"Dumping {col} ... {icol+1}/{len(data.columns)}")
+            g.create_dataset(col, data=data[col].to_numpy(copy=False))
 
-        os.makedirs(os.path.dirname(fname), exist_ok=True)
-
-        with h5py.File(fname, "a") as f:
-            # Delete group if present
-            if group in f:
-                del f[group]
-            g = f.create_group(group)
-
-            # Create datasets
-            for icol, col in enumerate(data.columns):
-                if verbose:
-                    print(f"Dumping {col} ... {icol+1}/{len(data.columns)}")
-                g.create_dataset(col, data=data[col].to_numpy(copy=False))
-
-            # Metadata
-            for k, v in metadata.items():
-                g.attrs[k] = v
+        # Metadata
+        for k, v in metadata.items():
+            g.attrs[k] = v
 
 
 
