@@ -140,10 +140,10 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     L = boxsize
 
     print(f'COM ref: {com_ref} Mpc')
-    recentering_spheres = [30,10] #ckpc
+    recentering_spheres = [30., 10.] #pkpc
     for radius in recentering_spheres:
         # mask in physical Mpc (scale is ckpc)
-        mask = (radii_relative) < radius/1e3
+        mask = (radii_relative*afac) < radius/1e3
 
         # Impose membership if present
         if membership_present:
@@ -175,8 +175,8 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         # Move reference centre forward (keeps offsets small + stable)
         com_ref = com_updated
 
-    # Use the last scale for final mask 
-    mask_final = radii_relative < radius/1e3
+    # Use 10pkpc as the final scale
+    mask_final = radii_relative*afac < radius/1e3
     if membership_present:
         mask_final = np.logical_and(mask_final, pdata_candidates["Membership"].values == 0)
 
@@ -192,7 +192,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
 
     com_offset=np.linalg.norm(com_final-com)
     print(f"COM final: {com_final}")
-    print(f"Offset: {com_offset*1e3} kpc")
+    print(f"Offset: {com_offset*1e3} ckpc")
 
     # ------------------------------------------------------------------
     # 7. Recompute relative positions / velocities using iterative COM
