@@ -1,129 +1,162 @@
-
 import os
 import h5py
 import numpy as np
 import pandas as pd
-import logging
-import time
 
 from hydroflow.run.tools_catalogue import dump_hdf
 from hydroflow.run.initialise import load_metadata
 
-def extract_subhaloes(path,mcut=1e10,metadata=None):
+
+def extract_subhaloes(path, mcut=1e10, metadata=None):
+    """
+    Build a HYDROFLOW-style halo catalogue from CAESAR HDF5 outputs.
+
+    This loader reads halo-level data only (one row per halo) and assigns
+    SubGroupNumber = 0 for all entries.
+
+    Parameters
+    ----------
+    path : str or list[str]
+        Path(s) to CAESAR catalogue files.
+    mcut : float, optional
+        Minimum halo mass cut applied using Group_M_Crit200 (Msun).
+    metadata : str or object, optional
+        Metadata pickle path or loaded metadata object.
+
+    Returns
+    -------
+    subcat : pandas.DataFrame
+        Halo catalogue sorted by snapshot and halo mass and written to
+        ./catalogues/subhaloes.hdf5
+
+    Notes
+    ------
+    Only ``halo data'' is used here, only centrals included to avoid any non-trivial selection cuts.
 
     """
-    extract_subhaloes: Read the subhalo catalogue from a SIMBA caesar output file. 
-                       Currently only reads central galaxies.
 
-    Input:
-    -----------
-    path: str or list of str.
-        Path(s) to the simulation caesar catalogue(s).
-    mcut: float
-        Minimum mass of subhaloes to include [log10(M/Msun)].
-    metadata: str
-        Path to the metadata file.
+    # ------------------------------------------------------------------
+    # Normalise inputs
+    # ------------------------------------------------------------------
+    if isinstance(path, str):
+        path = [path]
 
-    Output:
-    -----------
-    subcat: pd.DataFrame
-        DataFrame containing the subhalo catalogue.
-
-    """
-    # Check if just one path is given
-    if type(path)==str:
-        path=[path]
-    
-    # Grab metadata from the metadata file
-    if metadata is not None:
-        metadata_path=metadata
-        metadata=load_metadata(metadata)
-    else:
-        simflist=os.listdir(os.getcwd())
-        for metadata_path in simflist:
-            if '.pkl' in metadata_path:
-                metadata_path=metadata_path
-                metadata=load_metadata(metadata_path)
-                print(f"Metadata file found: {metadata_path}")
-                break
-
-    # Ensure that some catalogues exist
-    if len(path)==0:
+    if len(path) == 0:
         print("No catalogue paths given. Exiting...")
         return None
 
-    # Extract snapshot numbers from the paths and metadata
-    snapnums=[]
-    afacs=[]
-    hval=metadata.hval
-    for ipath in path:
-        snapnum=int(ipath.split('.hdf5')[0][-3:]);snapnums.append(snapnum)
-        mask=np.where(metadata.snapshots_idx==snapnum)[0][0]
-        afac=metadata.snapshots_afac[mask];afacs.append(afac)
-
-    # Base output path
-    outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
-
-    # Conversion factors
-    mconv=1 #convert to Msun
-    dconv=1e-3 #convert to cMpc
-
-    # Initialize the subcat list
-    subhalo_dfs=[]
-
-    # Iterate over the snapshots
-    for isnapnum,snapnum in enumerate(snapnums):
-        print (f"Loading snapshot {snapnum}...")
-
-        # Load the caesar file
-        caesarfile=h5py.File(path[isnapnum],mode='r')
-        zval=caesarfile['simulation_attributes'].attrs['redshift']
-        afac=1/(1+zval)
-
-        # Initialize the group data structure
-        group_df=pd.DataFrame()
-
-        # Load the group data
-        numgroups=caesarfile['/halo_data/GroupID'].shape[0]
-        group_df['SnapNum']=np.ones(numgroups)*snapnum
-        group_df['Redshift']=np.ones(numgroups)*zval
-        group_df['GroupNumber']=caesarfile['/halo_data/GroupID'][:]
-        group_df['SubGroupNumber']=np.zeros(numgroups)
-        group_df['GalaxyID']=np.int64(snapnum*1e12+group_df.loc[:,'GroupNumber'])
-        group_df['Mass']=caesarfile['/halo_data/dicts/masses.total'][:]*mconv
-        group_df['GroupMass']=caesarfile['/halo_data/dicts/masses.total'][:]*mconv
-        group_df['Group_M_Crit200']=caesarfile['/halo_data/dicts/virial_quantities.m200c'][:]*mconv
-        group_df['Group_R_Crit200']=caesarfile['/halo_data/dicts/virial_quantities.r200c'][:]*dconv 
-        group_df.loc[:,[f'CentreOfMass_{x}' for x in 'xyz']]=caesarfile['/halo_data/minpotpos'][:]*dconv
-
-        # Remove groups with mass below the cut and reindex
-        mask=np.logical_and(group_df['Group_M_Crit200'].values>=mcut,np.logical_or(group_df['SubGroupNumber'].values==0,group_df['Mass'].values>mcut*10**-0.5))
-
-        group_df=group_df[mask]
-        group_df.reset_index(drop=True,inplace=True)
-
-        # Append the group data to the list
-        subhalo_dfs.append(group_df)
-
-    # Concatenate the subhalo dataframes
-    if len (subhalo_dfs)>1:
-        subcat=pd.concat(subhalo_dfs)
-    else:
-        subcat=subhalo_dfs[0]
-
-    # Sort the subcat by snapshot number and mass
-    subcat.sort_values(by=['SnapNum','Group_M_Crit200','SubGroupNumber'],ascending=[False,False,True],inplace=True)
-    subcat.reset_index(inplace=True,drop=True)
-
-    # Dump the subhalo catalogue
-    dump_hdf(outpath,subcat)
-
-    # Add path to metadata in hdf5
+    # ------------------------------------------------------------------
+    # Load metadata
+    # ------------------------------------------------------------------
     if metadata is not None:
-        with h5py.File(outpath, 'r+') as subcatfile:
-            header= subcatfile.create_group("Header")
-            header.attrs['metadata'] = metadata_path
+        metadata_path = metadata
+        metadata = load_metadata(metadata)
     else:
-        print("No metadata file found. Metadata path not added to subhalo catalogue.")
+        metadata_path = None
+        metadata = None
+        for fname in os.listdir(os.getcwd()):
+            if fname.endswith(".pkl"):
+                metadata_path = fname
+                metadata = load_metadata(metadata_path)
+                print(f"Metadata file found: {metadata_path}")
+                break
+
+    if metadata is None:
+        raise RuntimeError("No metadata provided and no .pkl metadata file found.")
+
+    # ------------------------------------------------------------------
+    # Output path
+    # ------------------------------------------------------------------
+    outpath = os.path.join(os.getcwd(), "catalogues", "subhaloes.hdf5")
+    os.makedirs(os.path.dirname(outpath), exist_ok=True)
+
+    # ------------------------------------------------------------------
+    # Unit conversions
+    # ------------------------------------------------------------------
+    mconv = 1.0     # Msun (no h)
+    dconv = 1e-3    # kpc -> Mpc (no h)
+
+    # ------------------------------------------------------------------
+    # Snapshot numbers
+    # ------------------------------------------------------------------
+    snapnums = [int(p.split(".hdf5")[0][-3:]) for p in path]
+
+    halo_dfs = []
+
+    # ------------------------------------------------------------------
+    # Loop over snapshots
+    # ------------------------------------------------------------------
+    for fname, snapnum in zip(path, snapnums):
+        print(f"Loading snapshot {snapnum}...")
+
+        with h5py.File(fname, mode="r") as caesarfile:
+            zval = float(caesarfile["simulation_attributes"].attrs["redshift"])
+
+            group_id = caesarfile["/halo_data/GroupID"][:].astype(np.int64, copy=False)
+            numgroups = group_id.shape[0]
+
+            m_tot = caesarfile["/halo_data/dicts/masses.total"][:] * mconv
+            m200c = caesarfile["/halo_data/dicts/virial_quantities.m200c"][:] * mconv
+            r200c = caesarfile["/halo_data/dicts/virial_quantities.r200c"][:] * dconv
+            cop = caesarfile["/halo_data/minpotpos"][:] * dconv
+
+            halo_df = pd.DataFrame({
+                "SnapNum": np.full(numgroups, snapnum, dtype=np.int32),
+                "Redshift": np.full(numgroups, zval, dtype=np.float64),
+                "GroupNumber": group_id,
+                "SubGroupNumber": np.zeros(numgroups, dtype=np.int16),
+                "GalaxyID": (np.int64(snapnum * 1e12) + group_id),
+                "Mass": m_tot,
+                "GroupMass": m_tot,
+                "Group_M_Crit200": m200c,
+                "Group_R_Crit200": r200c,
+            })
+
+            halo_df.loc[:, ["CentreOfMass_x", "CentreOfMass_y", "CentreOfMass_z"]] = cop
+
+            mask = np.logical_and(
+                halo_df["Group_M_Crit200"].to_numpy() >= mcut,
+                np.logical_or(
+                    halo_df["SubGroupNumber"].to_numpy() == 0,
+                    halo_df["Mass"].to_numpy() > mcut * 10 ** (-0.5),
+                ),
+            )
+
+            halo_df = halo_df.loc[mask].copy()
+            halo_df.reset_index(drop=True, inplace=True)
+
+            halo_dfs.append(halo_df)
+
+    # ------------------------------------------------------------------
+    # Concatenate snapshots
+    # ------------------------------------------------------------------
+    if len(halo_dfs) > 1:
+        subcat = pd.concat(halo_dfs, ignore_index=True)
+    else:
+        subcat = halo_dfs[0]
+
+    # ------------------------------------------------------------------
+    # Sort catalogue
+    # ------------------------------------------------------------------
+    subcat.sort_values(
+        by=["SnapNum", "Group_M_Crit200", "SubGroupNumber"],
+        ascending=[False, False, True],
+        inplace=True,
+    )
+    subcat.reset_index(drop=True, inplace=True)
+
+    # ------------------------------------------------------------------
+    # Write output
+    # ------------------------------------------------------------------
+    dump_hdf(outpath, subcat)
+
+    if metadata_path is not None:
+        with h5py.File(outpath, "a") as subcatfile:
+            if "Header" in subcatfile:
+                del subcatfile["Header"]
+            header = subcatfile.create_group("Header")
+            header.attrs["metadata"] = metadata_path
+    else:
+        print("No metadata file found. Metadata path not added.")
 
     return subcat

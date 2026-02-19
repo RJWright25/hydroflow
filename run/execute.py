@@ -1,6 +1,3 @@
-# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
-# Ruby Wright (2021)
-
 import os
 import sys
 import time

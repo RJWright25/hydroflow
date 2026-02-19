@@ -1,10 +1,4 @@
-# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
-# Ruby Wright (2021)
-
-# run/tools_hpc.py: handy functions to submit gas flow execute script via batch system.
-
 import os
-
 import importlib.util
 
 def import_variables(filepath):

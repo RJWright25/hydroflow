@@ -1,321 +1,410 @@
 import os
+import h5py
 import numpy as np
 import pandas as pd
-import h5py
 
 from hydroflow.run.tools_catalogue import dump_hdf
 from hydroflow.run.initialise import load_metadata
 
 from swiftsimio import load as swiftsimio_loader
 
-def extract_subhaloes(path,mcut=1e10,metadata=None,flowrates=True):
+
+def extract_subhaloes(path, mcut=1e10, metadata=None, flowrates=True):
     """
-    extract_subhaloes: Read the subhalo catalog from a COLIBRE SOAP output file using swiftsimio. This massages the data into the preferred format for the subhalo catalog, and saves it to a HDF5 file.
+    Build a HYDROFLOW-style subhalo catalogue from COLIBRE SOAP outputs using swiftsimio.
 
-    Input:
-    -----------
+    Parameters
+    ----------
+    path : str or list[str]
+        Path(s) to SOAP catalogue file(s).
+    mcut : float, optional
+        Minimum host halo mass cut applied using Group_M_Crit200 (Msun).
+    metadata : str or object, optional
+        Metadata pickle path or loaded metadata object.
+    flowrates : bool, optional
+        If True, add SOAP spherical overdensity mass flow rates (when available).
 
-    path: str or list of str
-        Path(s) to the simulation SOAP file(s).
-
-    Output:
-    ----------- 
-    subcat: pd.DataFrame
-        DataFrame containing the subhalo catalog.
-
+    Returns
+    -------
+    subcat : pandas.DataFrame
+        Subhalo catalogue sorted by (SnapNum desc, Group_M_Crit200 desc, SubGroupNumber asc),
+        written to ./catalogues/subhaloes.hdf5
     """
-    
 
-    # Check if just one path is given
-    if type(path)==str:
-        path=[path]
-    
-    # Grab metadata from the metadata file
-    if metadata is not None:
-        metadata_path=metadata
-        metadata=load_metadata(metadata)
-    else:
-        simflist=os.listdir(os.getcwd())
-        for metadata_path in simflist:
-            if '.pkl' in metadata_path:
-                metadata_path=metadata_path
-                metadata=load_metadata(metadata_path)
-                print(f"Metadata file found: {metadata_path}")
-                break
-    
-    # Units for masses
-    munit='Msun'
-    dunit='Mpc'
-    vunit='km/s'
+    # ------------------------------------------------------------------
+    # Normalise inputs
+    # ------------------------------------------------------------------
+    if isinstance(path, str):
+        path = [path]
 
-    # Output path
-    outpath=os.getcwd()+'/catalogues/subhaloes.hdf5'
-    if not os.path.exists(os.getcwd()+'/catalogues/'):
-        os.makedirs(os.getcwd()+'/catalogues/')
-
-    # "subcat" will be a list of pandas dataframes which will be concatenated at the end
-    subcat=[]
-
-    # Ensure that some catalogues exist
-    if len(path)==0:
+    if len(path) == 0:
         print("No catalogue paths given. Exiting...")
         return None
-    
-    # Loop over all paths for each snapshot
+
+    # ------------------------------------------------------------------
+    # Load metadata
+    # ------------------------------------------------------------------
+    if metadata is not None:
+        metadata_path = metadata
+        metadata = load_metadata(metadata)
+    else:
+        metadata_path = None
+        metadata = None
+        for fname in os.listdir(os.getcwd()):
+            if fname.endswith(".pkl"):
+                metadata_path = fname
+                metadata = load_metadata(metadata_path)
+                print(f"Metadata file found: {metadata_path}")
+                break
+
+    if metadata is None:
+        raise RuntimeError("No metadata provided and no .pkl metadata file found.")
+
+    # ------------------------------------------------------------------
+    # Output path
+    # ------------------------------------------------------------------
+    outdir = os.path.join(os.getcwd(), "catalogues")
+    os.makedirs(outdir, exist_ok=True)
+    outpath = os.path.join(outdir, "subhaloes.hdf5")
+
+    # ------------------------------------------------------------------
+    # Units (used by swiftsimio conversions)
+    # ------------------------------------------------------------------
+    munit = "Msun"
+    dunit = "Mpc"
+    vunit = "km/s"
+
+    # ------------------------------------------------------------------
+    # Accumulate per-snapshot DataFrames
+    # ------------------------------------------------------------------
+    subcat_parts = []
+
+    # ------------------------------------------------------------------
+    # Loop over SOAP catalogues
+    # ------------------------------------------------------------------
     for ipath in path:
-        if os.path.exists(ipath):
-            print(f"Reading subhalo catalogue from {ipath}...")
-            halodata = swiftsimio_loader(ipath)# Load a dataset
+        if not os.path.exists(ipath):
+            print(f"Path {ipath} does not exist. Skipping...")
+            continue
 
-            # Test if soap or subfind
-            try:
-                halodata.input_halos_subfind.sub_group_number
-                subfind=True
-            except:
-                subfind=False
+        print(f"Reading subhalo catalogue from {ipath}...")
+        halodata = swiftsimio_loader(ipath)
 
-            # Create a pandas dataframe to store the subhalo data
-            halodata_out=pd.DataFrame()
-            # Collect redshift & snapshot number
-            redshift=halodata.metadata.redshift
-            snapnum=int(halodata.metadata.filename.split('/')[-1].split('_')[-1].split('.')[0])
-            numhaloes=halodata.input_halos.halo_catalogue_index.shape[0]
-            halodata_out['Redshift']=np.ones(numhaloes)*redshift
-            halodata_out['SnapNum']=np.ones(numhaloes)*snapnum
-            
-            # IDs
-            central=halodata.input_halos.is_central.value
-            halodata_out['HaloCatalogueIndex']=halodata.input_halos.halo_catalogue_index.value #This can be used to map to particle data
-            sgn=np.zeros(numhaloes);sgn[central==0]=1.
-            halodata_out['SubGroupNumber']=sgn
+        # Detect whether subfind-style group/subgroup numbering exists
+        try:
+            _ = halodata.input_halos_subfind.sub_group_number
+            subfind = True
+        except Exception:
+            subfind = False
 
-            #Use TrackID from HBT+ as unique galaxy ID
-            if subfind:
-                halodata_out['GroupNumber']=halodata.input_halos_subfind.group_number.value
-                halodata_out['GalaxyID']=halodata_out['GroupNumber'].values*1e12+halodata_out['SubGroupNumber'].values
+        # ------------------------------------------------------------------
+        # Snapshot scalars
+        # ------------------------------------------------------------------
+        redshift = float(halodata.metadata.redshift)
+        snapnum = int(halodata.metadata.filename.split("/")[-1].split("_")[-1].split(".")[0])
 
-            else:
-                halodata_out['GroupNumber']=np.arange(numhaloes)
-                halodata_out['HostHaloID']=halodata.soap.host_halo_index.value
-                halodata_out['GalaxyID']=halodata.input_halos_hbtplus.track_id.value
-                halodata_out['GalaxyID_unique']=snapnum*1e12+halodata_out['GalaxyID'].values # Unique galaxy ID
-                halodata_out['DescendantID']=halodata.input_halos_hbtplus.descendant_track_id # Descendant galaxy ID
-                halodata_out['ParentID']=halodata.input_halos_hbtplus.nested_parent_track_id # Parent galaxy ID
-                halodata_out['SubhaloRank']=halodata.soap.subhalo_rank_by_bound_mass.value # Rank of the subhalo within its host halo by bound mass
+        # ------------------------------------------------------------------
+        # Row count
+        # ------------------------------------------------------------------
+        numhaloes = int(halodata.input_halos.halo_catalogue_index.shape[0])
 
+        # ------------------------------------------------------------------
+        # Base table
+        # ------------------------------------------------------------------
+        out = pd.DataFrame()
+        out["Redshift"] = np.full(numhaloes, redshift, dtype=np.float64)
+        out["SnapNum"] = np.full(numhaloes, snapnum, dtype=np.int32)
 
+        # IDs / central flag -> SubGroupNumber
+        out["HaloCatalogueIndex"] = halodata.input_halos.halo_catalogue_index.value
 
-            # Host halo properties
-            if not subfind:
-                mfof=halodata.input_halos_fof.masses;mfof.convert_to_units(munit)
-                halodata_out['GroupMass']=np.array(mfof.value)
+        central_flag = halodata.input_halos.is_central.value  # 1 for central, 0 for non-central
+        sgn = np.zeros(numhaloes, dtype=np.int16)
+        sgn[central_flag == 0] = 1
+        out["SubGroupNumber"] = sgn
 
-            for overdensity in zip(['Crit200','Crit500'],[halodata.spherical_overdensity_200_crit,halodata.spherical_overdensity_500_crit]):
-                od_str=overdensity[0];od_data=overdensity[1]
-                mod=od_data.total_mass;mod.convert_to_units(munit)
-                halodata_out[f'Group_M_{od_str}']=np.array(mod.value)
-                rod=od_data.soradius;rod.convert_to_units(dunit)
-                halodata_out[f'Group_R_{od_str}']=np.array(rod.value) #comoving
+        # Group / galaxy IDs
+        if subfind:
+            out["GroupNumber"] = halodata.input_halos_subfind.group_number.value
+            out["GalaxyID"] = out["GroupNumber"].to_numpy(dtype=np.float64) * 1e12 + out["SubGroupNumber"].to_numpy(dtype=np.float64)
+        else:
+            out["GroupNumber"] = np.arange(numhaloes, dtype=np.int64)
+            out["HostHaloID"] = halodata.soap.host_halo_index.value
+            out["GalaxyID"] = halodata.input_halos_hbtplus.track_id.value
+            out["GalaxyID_unique"] = np.int64(snapnum * 1e12) + out["GalaxyID"].to_numpy(dtype=np.int64)
+            out["DescendantID"] = halodata.input_halos_hbtplus.descendant_track_id
+            out["ParentID"] = halodata.input_halos_hbtplus.nested_parent_track_id
+            out["SubhaloRank"] = halodata.soap.subhalo_rank_by_bound_mass.value
 
+        # ------------------------------------------------------------------
+        # Host halo properties
+        # ------------------------------------------------------------------
+        if not subfind:
+            mfof = halodata.input_halos_fof.masses
+            mfof.convert_to_units(munit)
+            out["GroupMass"] = np.asarray(mfof.value)
 
-            vmax=halodata.bound_subhalo.maximum_circular_velocity;vmax.convert_to_units(vunit)
-            halodata_out['Subhalo_V_max']=np.array(vmax.value)
+        for od_str, od_data in zip(
+            ["Crit200", "Crit500"],
+            [halodata.spherical_overdensity_200_crit, halodata.spherical_overdensity_500_crit],
+        ):
+            mod = od_data.total_mass
+            mod.convert_to_units(munit)
+            out[f"Group_M_{od_str}"] = np.asarray(mod.value)
 
-            # Centre of mass -- use the central galaxy 30kpc inclusive sphere
-            cop_halo=halodata.exclusive_sphere_30kpc.centre_of_mass
-            cop_halo.convert_to_units('Mpc')
-            halodata_out['CentreOfMass_x']=np.array(cop_halo[:,0].value)
-            halodata_out['CentreOfMass_y']=np.array(cop_halo[:,1].value)
-            halodata_out['CentreOfMass_z']=np.array(cop_halo[:,2].value)
+            rod = od_data.soradius
+            rod.convert_to_units(dunit)
+            out[f"Group_R_{od_str}"] = np.asarray(rod.value)
 
-            
-            # Subhalo mass
-            subhalomass=halodata.bound_subhalo.total_mass;subhalomass.convert_to_units(munit)
-            halodata_out['Mass']=np.array(subhalomass.value)
+        vmax = halodata.bound_subhalo.maximum_circular_velocity
+        vmax.convert_to_units(vunit)
+        out["Subhalo_V_max"] = np.asarray(vmax.value)
 
-            # Miscellaneous baryonic properties
-            mstar_30kpc=halodata.exclusive_sphere_30kpc.stellar_mass;mstar_30kpc.convert_to_units(munit)
-            halodata_out['030pkpc_sphere-star-m_tot-soapexcl']=np.array(mstar_30kpc.value)
-            mgas_30kpc=halodata.exclusive_sphere_30kpc.gas_mass;mgas_30kpc.convert_to_units(munit)
-            halodata_out['030pkpc_sphere-gas_all-m_tot-soapexcl']=np.array(mgas_30kpc.value)
-            mHI_30kpc=halodata.exclusive_sphere_30kpc.atomic_hydrogen_mass;mHI_30kpc.convert_to_units(munit)
-            halodata_out['030pkpc_sphere-gas_all-m_HI-soapexcl']=np.array(mHI_30kpc.value)
-            mH2_30kpc=halodata.exclusive_sphere_30kpc.molecular_hydrogen_mass;mH2_30kpc.convert_to_units(munit)
-            halodata_out['030pkpc_sphere-gas_all-m_H2-soapexcl']=np.array(mH2_30kpc.value)
-            sfr_30kpc=halodata.exclusive_sphere_30kpc.star_formation_rate;sfr_30kpc.convert_to_units(f'{munit}/yr')
-            halodata_out['030pkpc_sphere-gas_all-SFR-soapexcl']=np.array(sfr_30kpc.value)
+        # ------------------------------------------------------------------
+        # Centres
+        # ------------------------------------------------------------------
+        cop_halo = halodata.exclusive_sphere_30kpc.centre_of_mass
+        cop_halo.convert_to_units("Mpc")
+        out["CentreOfMass_x"] = np.asarray(cop_halo[:, 0].value)
+        out["CentreOfMass_y"] = np.asarray(cop_halo[:, 1].value)
+        out["CentreOfMass_z"] = np.asarray(cop_halo[:, 2].value)
 
-            rstar=halodata.exclusive_sphere_30kpc.half_mass_radius_stars;rstar.convert_to_units(dunit)
-            halodata_out['030pkpc_sphere-star-r_half-soapexcl']=np.array(rstar.value)
-            rgas=halodata.exclusive_sphere_30kpc.half_mass_radius_gas;rgas.convert_to_units(dunit)
-            halodata_out['030pkpc_sphere-gas_all-r_half-soapexcl']=np.array(rgas.value)
-            disk_to_total_star=halodata.exclusive_sphere_30kpc.disc_to_total_stellar_mass_fraction
-            halodata_out['030pkpc_sphere-star-disk_to_total-soapexcl']=np.array(disk_to_total_star)
-            disk_to_total_gas=halodata.exclusive_sphere_30kpc.disc_to_total_gas_mass_fraction
-            halodata_out['030pkpc_sphere-gas_all-disk_to_total-soapexcl']=np.array(disk_to_total_gas)
-            kappaco_star=halodata.exclusive_sphere_30kpc.kappa_corot_stars
-            halodata_out['030pkpc_sphere-star-kappa_corot-soapexcl']=np.array(kappaco_star)
-            kappaco_gas=halodata.exclusive_sphere_30kpc.kappa_corot_gas
-            halodata_out['030pkpc_sphere-gas_all-kappa_corot-soapexcl']=np.array(kappaco_gas)
+        # ------------------------------------------------------------------
+        # Subhalo mass
+        # ------------------------------------------------------------------
+        subhalomass = halodata.bound_subhalo.total_mass
+        subhalomass.convert_to_units(munit)
+        out["Mass"] = np.asarray(subhalomass.value)
 
-            if not subfind:
-                aveSFR_30kpc=halodata.exclusive_sphere_30kpc.averaged_star_formation_rate;aveSFR_30kpc.convert_to_units(f'{munit}/yr')
-                halodata_out['030pkpc_sphere-gas_all-ave_SFR_10Myr-soapexcl']=np.array(aveSFR_30kpc.value[:,0]) #averaged over 10 Myr
-                halodata_out['030pkpc_sphere-gas_all-ave_SFR_100Myr-soapexcl']=np.array(aveSFR_30kpc.value[:,1]) #averaged over 100 Myr
+        # ------------------------------------------------------------------
+        # Aperture (exclusive sphere 30 kpc) properties
+        # ------------------------------------------------------------------
+        mstar_30kpc = halodata.exclusive_sphere_30kpc.stellar_mass
+        mstar_30kpc.convert_to_units(munit)
+        out["030pkpc_sphere-star-m_tot-soapexcl"] = np.asarray(mstar_30kpc.value)
 
-    
-                stellarluminosities=halodata.exclusive_sphere_30kpc.stellar_luminosity
-                stellarluminosities.convert_to_units('1')
-                for iband,band in enumerate(['u','g','r','i','z','Y','J','H','K']):
-                    lum_band=stellarluminosities[:,iband]
-                    halodata_out[f'030pkpc_sphere-star-L_{band}-soapexcl']=np.array(lum_band.value)
+        mgas_30kpc = halodata.exclusive_sphere_30kpc.gas_mass
+        mgas_30kpc.convert_to_units(munit)
+        out["030pkpc_sphere-gas_all-m_tot-soapexcl"] = np.asarray(mgas_30kpc.value)
 
-            angmom=halodata.exclusive_sphere_30kpc.angular_momentum_baryons;angmom.convert_to_units('Msun*Mpc*km/s');angmom.convert_to_physical()
-            halodata_out['030pkpc_sphere-baryon-L_tot-soapexcl_x']=np.array(angmom.value[:,0])
-            halodata_out['030pkpc_sphere-baryon-L_tot-soapexcl_y']=np.array(angmom.value[:,1])
-            halodata_out['030pkpc_sphere-baryon-L_tot-soapexcl_z']=np.array(angmom.value[:,2])
+        mHI_30kpc = halodata.exclusive_sphere_30kpc.atomic_hydrogen_mass
+        mHI_30kpc.convert_to_units(munit)
+        out["030pkpc_sphere-gas_all-m_HI-soapexcl"] = np.asarray(mHI_30kpc.value)
 
-            # Black hole properties
-            nbh=halodata.exclusive_sphere_30kpc.number_of_black_hole_particles
-            halodata_out['030pkpc_sphere-BH-n_tot-soapexcl']=np.array(nbh)
-            mbh_total=halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass;mbh_total.convert_to_units(munit)
-            halodata_out['030pkpc_sphere-BH-m_tot-soapexcl']=np.array(mbh_total.value)
+        mH2_30kpc = halodata.exclusive_sphere_30kpc.molecular_hydrogen_mass
+        mH2_30kpc.convert_to_units(munit)
+        out["030pkpc_sphere-gas_all-m_H2-soapexcl"] = np.asarray(mH2_30kpc.value)
 
-            if not subfind:
-                bh_aveaccretion=halodata.exclusive_sphere_30kpc.most_massive_black_hole_averaged_accretion_rate;bh_aveaccretion.convert_to_units(f'{munit}/yr')
-                halodata_out['030pkpc_sphere-BH-ave_accretion_10Myr-soapexcl']=np.array(bh_aveaccretion.value[:,0]) #averaged over 10 Myr
-                halodata_out['030pkpc_sphere-BH-ave_accretion_100Myr-soapexcl']=np.array(bh_aveaccretion.value[:,1]) #averaged over 100 Myr
-                bh_thermal_energy=halodata.exclusive_sphere_30kpc.most_massive_black_hole_injected_thermal_energy;bh_thermal_energy.convert_to_units('erg')
-                halodata_out['030pkpc_sphere-BH-thermal_energy_soapexcl']=np.array(bh_thermal_energy.value)
-                bh_accreted_mass=halodata.exclusive_sphere_30kpc.most_massive_black_hole_total_accreted_mass;bh_accreted_mass.convert_to_units(munit)
-                halodata_out['030pkpc_sphere-BH-accreted_mass_soapexcl']=np.array(bh_accreted_mass.value)
+        sfr_30kpc = halodata.exclusive_sphere_30kpc.star_formation_rate
+        sfr_30kpc.convert_to_units(f"{munit}/yr")
+        out["030pkpc_sphere-gas_all-SFR-soapexcl"] = np.asarray(sfr_30kpc.value)
 
-            #hybrid AGN props
-            if hasattr(halodata.exclusive_sphere_30kpc,'most_massive_black_hole_injected_jet_energy_by_mode'):
-                bh_jet_energy_modes=halodata.exclusive_sphere_30kpc.most_massive_black_hole_injected_jet_energy_by_mode;bh_jet_energy_modes.convert_to_units('erg')
-                bh_jet_energy_modes=bh_jet_energy_modes.value
-                for imode,mode in enumerate(['thin','thick','slim']):
-                    halodata_out[f'030pkpc_sphere-BH-jet_energy_{mode}_soapexcl']=bh_jet_energy_modes.value[:,imode]
-            if hasattr(halodata.exclusive_sphere_30kpc,'most_massive_black_hole_accretion_mode'):
-                bh_accretion_mode=halodata.exclusive_sphere_30kpc.most_massive_black_hole_accretion_mode
-                halodata_out['030pkpc_sphere-BH-accdisc_mode_soapexcl']=bh_accretion_mode.value # 0=thin, 1=thick, 2=slim
-            if hasattr(halodata.exclusive_sphere_30kpc,'most_massive_black_hole_number_of_mergers'):
-                mbh_nmergers=halodata.exclusive_sphere_30kpc.most_massive_black_hole_number_of_mergers
-                halodata_out['030pkpc_sphere-BH-n_mergers-soapexcl']=np.array(mbh_nmergers)
+        rstar = halodata.exclusive_sphere_30kpc.half_mass_radius_stars
+        rstar.convert_to_units(dunit)
+        out["030pkpc_sphere-star-r_half-soapexcl"] = np.asarray(rstar.value)
 
-            # Give each satellite the group mass, r200 and m200 of the central and distance to central
-            print('Matching group data to satellite data...')
-            satellites=halodata_out['SubGroupNumber'].values>0
-            print(np.nanmean(halodata_out.SubGroupNumber==0))
+        rgas = halodata.exclusive_sphere_30kpc.half_mass_radius_gas
+        rgas.convert_to_units(dunit)
+        out["030pkpc_sphere-gas_all-r_half-soapexcl"] = np.asarray(rgas.value)
 
-            if not subfind:
-                hosthaloidxs=np.searchsorted(halodata_out['GroupNumber'].values,halodata_out['HostHaloID'].values[satellites])
-                halodata_out.loc[satellites,'GroupMass']=halodata_out['GroupMass'].values[hosthaloidxs]
-                halodata_out.loc[satellites,'Group_M_Crit200']=halodata_out['Group_M_Crit200'].values[hosthaloidxs]
-                halodata_out.loc[satellites,'Group_R_Crit200']=halodata_out['Group_R_Crit200'].values[hosthaloidxs]
-                halodata_out.loc[satellites,'Group_Rrel']=np.sqrt((halodata_out['CentreOfMass_x'].values[satellites]-halodata_out['CentreOfMass_x'].values[hosthaloidxs])**2+(halodata_out['CentreOfMass_y'].values[satellites]-halodata_out['CentreOfMass_y'].values[hosthaloidxs])**2+(halodata_out['CentreOfMass_z'].values[satellites]-halodata_out['CentreOfMass_z'].values[hosthaloidxs])**2)
-            else:
-                is_cen = (halodata_out["SubGroupNumber"].to_numpy() == 0)
-                is_sat = ~is_cen
+        out["030pkpc_sphere-star-disk_to_total-soapexcl"] = np.asarray(
+            halodata.exclusive_sphere_30kpc.disc_to_total_stellar_mass_fraction
+        )
+        out["030pkpc_sphere-gas_all-disk_to_total-soapexcl"] = np.asarray(
+            halodata.exclusive_sphere_30kpc.disc_to_total_gas_mass_fraction
+        )
+        out["030pkpc_sphere-star-kappa_corot-soapexcl"] = np.asarray(
+            halodata.exclusive_sphere_30kpc.kappa_corot_stars
+        )
+        out["030pkpc_sphere-gas_all-kappa_corot-soapexcl"] = np.asarray(
+            halodata.exclusive_sphere_30kpc.kappa_corot_gas
+        )
 
-                central_cols = [
-                    "GroupNumber",
-                    "Group_M_Crit200", "Group_R_Crit200",
-                    "Group_M_Crit500", "Group_R_Crit500",
-                    "CentreOfMass_x", "CentreOfMass_y", "CentreOfMass_z",
-                ]
+        if not subfind:
+            aveSFR_30kpc = halodata.exclusive_sphere_30kpc.averaged_star_formation_rate
+            aveSFR_30kpc.convert_to_units(f"{munit}/yr")
+            out["030pkpc_sphere-gas_all-ave_SFR_10Myr-soapexcl"] = np.asarray(aveSFR_30kpc.value[:, 0])
+            out["030pkpc_sphere-gas_all-ave_SFR_100Myr-soapexcl"] = np.asarray(aveSFR_30kpc.value[:, 1])
 
-                # groups that have no central
-                groups_with_cen = pd.Index(halodata_out.loc[is_cen, "GroupNumber"].unique())
-                groups_all = pd.Index(halodata_out["GroupNumber"].unique())
-                missing_cen = groups_all.difference(groups_with_cen)
-                if len(missing_cen) > 0:
-                    print(f"WARNING: {len(missing_cen)} groups have no sgn=0 central (example: {missing_cen[:5].tolist()})")
+            stellarluminosities = halodata.exclusive_sphere_30kpc.stellar_luminosity
+            stellarluminosities.convert_to_units("1")
+            for iband, band in enumerate(["u", "g", "r", "i", "z", "Y", "J", "H", "K"]):
+                out[f"030pkpc_sphere-star-L_{band}-soapexcl"] = np.asarray(stellarluminosities[:, iband].value)
 
-                # --- Build central table: strictly sgn=0, one row per group ---
-                centrals_df = (
-                    halodata_out.loc[is_cen, central_cols]
-                    .drop_duplicates(subset="GroupNumber", keep="first")  # safe if exactly one central per group
-                    .rename(columns={
-                        "Group_M_Crit200": "Host_Group_M_Crit200",
-                        "Group_R_Crit200": "Host_Group_R_Crit200",
-                        "Group_M_Crit500": "Host_Group_M_Crit500",
-                        "Group_R_Crit500": "Host_Group_R_Crit500",
-                        "CentreOfMass_x": "Host_CentreOfMass_x",
-                        "CentreOfMass_y": "Host_CentreOfMass_y",
-                        "CentreOfMass_z": "Host_CentreOfMass_z",
-                    })
-                )
+        angmom = halodata.exclusive_sphere_30kpc.angular_momentum_baryons
+        angmom.convert_to_units("Msun*Mpc*km/s")
+        angmom.convert_to_physical()
+        out["030pkpc_sphere-baryon-L_tot-soapexcl_x"] = np.asarray(angmom.value[:, 0])
+        out["030pkpc_sphere-baryon-L_tot-soapexcl_y"] = np.asarray(angmom.value[:, 1])
+        out["030pkpc_sphere-baryon-L_tot-soapexcl_z"] = np.asarray(angmom.value[:, 2])
 
-                # Join host properties onto all rows
-                halodata_out = halodata_out.merge(centrals_df, on="GroupNumber", how="left", copy=False)
+        # ------------------------------------------------------------------
+        # Black hole properties
+        # ------------------------------------------------------------------
+        out["030pkpc_sphere-BH-n_tot-soapexcl"] = np.asarray(
+            halodata.exclusive_sphere_30kpc.number_of_black_hole_particles
+        )
 
-                # Assign group properties to satellites only
-                for prop in ["Group_M_Crit200", "Group_R_Crit200", "Group_M_Crit500", "Group_R_Crit500"]:
-                    halodata_out.loc[is_sat, prop] = halodata_out.loc[is_sat, f"Host_{prop}"].to_numpy()
+        mbh_total = halodata.exclusive_sphere_30kpc.most_massive_black_hole_mass
+        mbh_total.convert_to_units(munit)
+        out["030pkpc_sphere-BH-m_tot-soapexcl"] = np.asarray(mbh_total.value)
 
-                # Satellite distance to *the sgn=0 central*
-                dx = halodata_out["CentreOfMass_x"].to_numpy() - halodata_out["Host_CentreOfMass_x"].to_numpy()
-                dy = halodata_out["CentreOfMass_y"].to_numpy() - halodata_out["Host_CentreOfMass_y"].to_numpy()
-                dz = halodata_out["CentreOfMass_z"].to_numpy() - halodata_out["Host_CentreOfMass_z"].to_numpy()
+        if not subfind:
+            bh_aveaccretion = halodata.exclusive_sphere_30kpc.most_massive_black_hole_averaged_accretion_rate
+            bh_aveaccretion.convert_to_units(f"{munit}/yr")
+            out["030pkpc_sphere-BH-ave_accretion_10Myr-soapexcl"] = np.asarray(bh_aveaccretion.value[:, 0])
+            out["030pkpc_sphere-BH-ave_accretion_100Myr-soapexcl"] = np.asarray(bh_aveaccretion.value[:, 1])
 
-                halodata_out.loc[is_sat, "Group_Rrel"] = np.sqrt(dx[is_sat]**2 + dy[is_sat]**2 + dz[is_sat]**2)
+            bh_thermal_energy = halodata.exclusive_sphere_30kpc.most_massive_black_hole_injected_thermal_energy
+            bh_thermal_energy.convert_to_units("erg")
+            out["030pkpc_sphere-BH-thermal_energy_soapexcl"] = np.asarray(bh_thermal_energy.value)
 
-                # (Optional) drop helper columns
-                halodata_out.drop(columns=[
-                    "Host_Group_M_Crit200","Host_Group_R_Crit200",
-                    "Host_Group_M_Crit500","Host_Group_R_Crit500",
-                    "Host_CentreOfMass_x","Host_CentreOfMass_y","Host_CentreOfMass_z",
-                ], inplace=True)
+            bh_accreted_mass = halodata.exclusive_sphere_30kpc.most_massive_black_hole_total_accreted_mass
+            bh_accreted_mass.convert_to_units(munit)
+            out["030pkpc_sphere-BH-accreted_mass_soapexcl"] = np.asarray(bh_accreted_mass.value)
 
+        if hasattr(halodata.exclusive_sphere_30kpc, "most_massive_black_hole_injected_jet_energy_by_mode"):
+            bh_jet_energy_modes = halodata.exclusive_sphere_30kpc.most_massive_black_hole_injected_jet_energy_by_mode
+            bh_jet_energy_modes.convert_to_units("erg")
+            jem = bh_jet_energy_modes.value
+            for imode, mode in enumerate(["thin", "thick", "slim"]):
+                out[f"030pkpc_sphere-BH-jet_energy_{mode}_soapexcl"] = np.asarray(jem[:, imode])
 
-            if flowrates:
-                try:
-                    print('Extracting flow rates...')
-                    scales=['0p10r200','0p30r200','1p00r200']
-                    scale_idx={'0p10r200':0,'0p30r200':1,'1p00r200':2}
+        if hasattr(halodata.exclusive_sphere_30kpc, "most_massive_black_hole_accretion_mode"):
+            out["030pkpc_sphere-BH-accdisc_mode_soapexcl"] = np.asarray(
+                halodata.exclusive_sphere_30kpc.most_massive_black_hole_accretion_mode.value
+            )
 
-                    for iscale,scale in enumerate(scales):
-                        for key,flowrate in zip(['cold','cool','warm','hot'],[halodata.spherical_overdensity_200_crit.cold_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.cool_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.warm_gas_mass_flow_rate,halodata.spherical_overdensity_200_crit.hot_gas_mass_flow_rate]):
-                            flowrate.convert_to_units(f'{munit}/Gyr')
-                            flowrate=flowrate.value
-                            for iflow,flowtype in enumerate(['mdot_tot_inflow_vbpseudo_vc000kmps','mdot_tot_outflow_vbpseudo_vc000kmps','mdot_tot_outflow_vbpseudo_vc0p25vmx']):
-                                halodata_out[f'{scale}_shellp10_full-gas_{key}-{flowtype}-soap']=flowrate[:,iflow*3+scale_idx[scale]]
-                        flowrate=halodata.spherical_overdensity_200_crit.dark_matter_mass_flow_rate
-                        for iflow,flowtype in enumerate(['mdot_tot_inflow_vbpseudo_vc000kmps','mdot_tot_outflow_vbpseudo_vc000kmps']):
-                            flowrate.convert_to_units(f'{munit}/Gyr')
-                            halodata_out[f'{scale}_shellp10_full-dm-{flowtype}-soap']=flowrate[:,iflow*3+scale_idx[scale]]
-                        
-                except:
-                    raise
+        if hasattr(halodata.exclusive_sphere_30kpc, "most_massive_black_hole_number_of_mergers"):
+            out["030pkpc_sphere-BH-n_mergers-soapexcl"] = np.asarray(
+                halodata.exclusive_sphere_30kpc.most_massive_black_hole_number_of_mergers
+            )
 
-            # Remove subhalos below mass cut
-            mask=np.logical_and(halodata_out['Group_M_Crit200'].values>=mcut,np.logical_or(halodata_out['SubGroupNumber'].values==0,halodata_out['Mass'].values>mcut*10**-0.5))
-            halodata_out=halodata_out[mask]
-            halodata_out.reset_index(drop=True,inplace=True)
-            print(np.nanmean(halodata_out.SubGroupNumber==0))
+        # ------------------------------------------------------------------
+        # Assign host properties / satellite distances
+        # ------------------------------------------------------------------
+        satellites = out["SubGroupNumber"].to_numpy() > 0
 
-            # Add to previous snapshots
-            subcat.append(halodata_out)
+        if not subfind:
+            hosthaloidxs = np.searchsorted(out["GroupNumber"].to_numpy(), out["HostHaloID"].to_numpy()[satellites])
+
+            out.loc[satellites, "GroupMass"] = out["GroupMass"].to_numpy()[hosthaloidxs]
+            out.loc[satellites, "Group_M_Crit200"] = out["Group_M_Crit200"].to_numpy()[hosthaloidxs]
+            out.loc[satellites, "Group_R_Crit200"] = out["Group_R_Crit200"].to_numpy()[hosthaloidxs]
+
+            dx = out["CentreOfMass_x"].to_numpy()[satellites] - out["CentreOfMass_x"].to_numpy()[hosthaloidxs]
+            dy = out["CentreOfMass_y"].to_numpy()[satellites] - out["CentreOfMass_y"].to_numpy()[hosthaloidxs]
+            dz = out["CentreOfMass_z"].to_numpy()[satellites] - out["CentreOfMass_z"].to_numpy()[hosthaloidxs]
+            out.loc[satellites, "Group_Rrel"] = np.sqrt(dx * dx + dy * dy + dz * dz)
 
         else:
-            print(f"Path {ipath} does not exist. Skipping...")
+            is_cen = (out["SubGroupNumber"].to_numpy() == 0)
+            is_sat = ~is_cen
 
-    
-    # Concatenate all snapshots
-    subcat=pd.concat(subcat)
-    subcat.sort_values(['SnapNum','Group_M_Crit200','SubGroupNumber'],ascending=[False,False,True],inplace=True)
-    subcat.reset_index(drop=True,inplace=True)
-    
-    dump_hdf(outpath,subcat)
+            central_cols = [
+                "GroupNumber",
+                "Group_M_Crit200", "Group_R_Crit200",
+                "Group_M_Crit500", "Group_R_Crit500",
+                "CentreOfMass_x", "CentreOfMass_y", "CentreOfMass_z",
+            ]
 
-    #add path to metadata in hdf5
-    if metadata is not None:
-        with h5py.File(outpath, 'r+') as subcatfile:
-            header= subcatfile.create_group("Header")
-            header.attrs['metadata'] = str(metadata_path)
+            centrals_df = (
+                out.loc[is_cen, central_cols]
+                .drop_duplicates(subset="GroupNumber", keep="first")
+                .rename(columns={
+                    "Group_M_Crit200": "Host_Group_M_Crit200",
+                    "Group_R_Crit200": "Host_Group_R_Crit200",
+                    "Group_M_Crit500": "Host_Group_M_Crit500",
+                    "Group_R_Crit500": "Host_Group_R_Crit500",
+                    "CentreOfMass_x": "Host_CentreOfMass_x",
+                    "CentreOfMass_y": "Host_CentreOfMass_y",
+                    "CentreOfMass_z": "Host_CentreOfMass_z",
+                })
+            )
+
+            out = out.merge(centrals_df, on="GroupNumber", how="left", copy=False)
+
+            for prop in ["Group_M_Crit200", "Group_R_Crit200", "Group_M_Crit500", "Group_R_Crit500"]:
+                out.loc[is_sat, prop] = out.loc[is_sat, f"Host_{prop}"].to_numpy()
+
+            dx = out["CentreOfMass_x"].to_numpy() - out["Host_CentreOfMass_x"].to_numpy()
+            dy = out["CentreOfMass_y"].to_numpy() - out["Host_CentreOfMass_y"].to_numpy()
+            dz = out["CentreOfMass_z"].to_numpy() - out["Host_CentreOfMass_z"].to_numpy()
+            out.loc[is_sat, "Group_Rrel"] = np.sqrt(dx[is_sat] ** 2 + dy[is_sat] ** 2 + dz[is_sat] ** 2)
+
+            out.drop(
+                columns=[
+                    "Host_Group_M_Crit200", "Host_Group_R_Crit200",
+                    "Host_Group_M_Crit500", "Host_Group_R_Crit500",
+                    "Host_CentreOfMass_x", "Host_CentreOfMass_y", "Host_CentreOfMass_z",
+                ],
+                inplace=True,
+            )
+
+        # ------------------------------------------------------------------
+        # Flow rates
+        # ------------------------------------------------------------------
+        if flowrates:
+            scales = ["0p10r200", "0p30r200", "1p00r200"]
+            scale_idx = {"0p10r200": 0, "0p30r200": 1, "1p00r200": 2}
+
+            for scale in scales:
+                for key, fr in zip(
+                    ["cold", "cool", "warm", "hot"],
+                    [
+                        halodata.spherical_overdensity_200_crit.cold_gas_mass_flow_rate,
+                        halodata.spherical_overdensity_200_crit.cool_gas_mass_flow_rate,
+                        halodata.spherical_overdensity_200_crit.warm_gas_mass_flow_rate,
+                        halodata.spherical_overdensity_200_crit.hot_gas_mass_flow_rate,
+                    ],
+                ):
+                    fr.convert_to_units(f"{munit}/Gyr")
+                    frv = fr.value
+                    for iflow, flowtype in enumerate(
+                        ["mdot_tot_inflow_vbpseudo_vc000kmps", "mdot_tot_outflow_vbpseudo_vc000kmps", "mdot_tot_outflow_vbpseudo_vc0p25vmx"]
+                    ):
+                        out[f"{scale}_shellp10_full-gas_{key}-{flowtype}-soap"] = frv[:, iflow * 3 + scale_idx[scale]]
+
+                frdm = halodata.spherical_overdensity_200_crit.dark_matter_mass_flow_rate
+                frdm.convert_to_units(f"{munit}/Gyr")
+                frdmv = frdm.value
+                for iflow, flowtype in enumerate(["mdot_tot_inflow_vbpseudo_vc000kmps", "mdot_tot_outflow_vbpseudo_vc000kmps"]):
+                    out[f"{scale}_shellp10_full-dm-{flowtype}-soap"] = frdmv[:, iflow * 3 + scale_idx[scale]]
+
+        # ------------------------------------------------------------------
+        # Mass cut and bookkeeping
+        # ------------------------------------------------------------------
+        mask = np.logical_and(
+            out["Group_M_Crit200"].to_numpy() >= mcut,
+            np.logical_or(
+                out["SubGroupNumber"].to_numpy() == 0,
+                out["Mass"].to_numpy() > mcut * 10 ** (-0.5),
+            ),
+        )
+        out = out.loc[mask].copy()
+        out.reset_index(drop=True, inplace=True)
+
+        subcat_parts.append(out)
+
+    if len(subcat_parts) == 0:
+        return pd.DataFrame()
+
+    # ------------------------------------------------------------------
+    # Final concatenation + sorting
+    # ------------------------------------------------------------------
+    subcat = pd.concat(subcat_parts, ignore_index=True)
+    subcat.sort_values(["SnapNum", "Group_M_Crit200", "SubGroupNumber"], ascending=[False, False, True], inplace=True)
+    subcat.reset_index(drop=True, inplace=True)
+
+    dump_hdf(outpath, subcat)
+
+    if metadata_path is not None:
+        with h5py.File(outpath, "a") as subcatfile:
+            if "Header" in subcatfile:
+                del subcatfile["Header"]
+            header = subcatfile.create_group("Header")
+            header.attrs["metadata"] = str(metadata_path)
     else:
-        print("No metadata file found. Metadata path not added to subhalo catalogue.")
+        print("No metadata file found. Metadata path not added.")
 
     return subcat
-                

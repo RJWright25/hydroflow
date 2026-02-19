@@ -1,10 +1,3 @@
-# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
-# Ruby Wright (2021)
-
-
-# run/tools_catalogue.py: routine to combine output gas flow catalogues.
-
-
 import os
 import numpy as np
 import pandas as pd
@@ -12,9 +5,7 @@ import h5py
 import time
 import logging
 
-
 from hydroflow.run.tools_hpc import create_dir
-
 
 def dump_hdf_group(fname,group,data,metadata={},verbose=False):
     """

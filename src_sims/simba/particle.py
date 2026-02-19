@@ -3,154 +3,297 @@ import h5py
 import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree
-from hydroflow.src_physics.utils import get_limits, calc_temperature, partition_neutral_gas, constant_gpmsun, constant_cmpkpc
 
-##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,metadata,logfile=None):
+from hydroflow.src_physics.utils import (
+    get_limits, calc_temperature, partition_neutral_gas,
+    constant_gpmsun, constant_cmpkpc
+)
+
+# --------------------------------------------------------------------------------------
+# READ PARTICLE DATA (SIMBA)
+# --------------------------------------------------------------------------------------
+def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False):
     """
-    read_subvol: Read particle data for a subvolume from a SIMBA simulation snapshot.
+    Read particle data belonging to a spatial subvolume from a SIMBA snapshot (single HDF5 file)
+    and return a unified pandas catalogue plus KDTree for spatial queries.
 
-    Input:
-    -----------
-    path: str
-        Path to the simulation snapshot. 
-    ivol: int
-        Subvolume index.
-    nslice: int
-        Number of subvolumes in each dimension.
-    metadata: object
-        Metadata object containing the simulation parameters.
-    logfile: str
-        Path to the logfile.
+    The routine loads the snapshot once, selects particles inside a buffered cubic subvolume,
+    converts units into the HYDROFLOW analysis conventions, computes derived thermodynamic
+    quantities for gas, and concatenates the results into a single DataFrame required for
+    subsequent processing.
 
-    Output:
-    -----------
-    pdata: pd.DataFrame
-        DataFrame containing the cell & normal baryonic particle data for the subvolume.
-    pdata_kdtree: scipy.spatial.cKDTree
-        KDTree containing the cell & normal baryonic particle data for the subvolume.
+    ---------------------------------------------------------------------------
+    Parameters
+    ---------------------------------------------------------------------------
+    path : str
+        Path to the SIMBA snapshot file (single HDF5 file).
 
+    ivol : int
+        Index of the subvolume to read (0 ≤ ivol < nslice^3). The simulation box is
+        divided evenly into nslice × nslice × nslice cubes.
+
+    nslice : int
+        Number of subdivisions along each axis defining the spatial tiling.
+
+    metadata : object
+        Metadata container produced by HYDROFLOW initialisation. Must contain:
+            boxsize  : comoving box size [cMpc]
+            hval     : little-h
+            snapshots_flist : list of snapshot filenames
+            snapshots_afac  : scale factor per snapshot
+            snapshots_z     : redshift per snapshot
+
+    logfile : str, optional
+        If provided, progress and diagnostics are written to this log file.
+
+    verbose : bool, optional
+        Print progress information to stdout in addition to logging.
+
+    ---------------------------------------------------------------------------
+    Particle selection behaviour
+    ---------------------------------------------------------------------------
+    • Particles are selected if their COMOVING position lies inside the buffered subvolume.
+    • A downsampling stride is applied:
+            gas  (ptype 0): keep all
+            DM   (ptype 1): keep every 2nd particle
+            star (ptype 4): keep every 2nd particle
+      Masses are re-weighted so total mass is conserved statistically.
+
+    ---------------------------------------------------------------------------
+    Units of returned quantities
+    ---------------------------------------------------------------------------
+    Coordinates_* : comoving Mpc
+    Velocities_*  : peculiar km/s
+    Masses        : Msun
+    Density       : g / cm^3
+    Temperature   : K
+
+    Hydrogen partitioning:
+        mfrac_HI_BR06, mfrac_H2_BR06
+        computed using Rahmati (2013) + Blitz & Rosolowsky (2006)
+
+    ---------------------------------------------------------------------------
+    Returns
+    ---------------------------------------------------------------------------
+    pdata : pandas.DataFrame
+        Unified particle catalogue sorted by ParticleIDs.
+
+    pdata_kdtree : scipy.spatial.cKDTree
+        KDTree built from (Coordinates_x, Coordinates_y, Coordinates_z)
+        for fast spatial neighbour searches.
+
+    ---------------------------------------------------------------------------
+    Notes
+    ---------------------------------------------------------------------------
+    - The KDTree uses comoving coordinates.
+    - Temperature is computed only for gas particles.
+    - InternalEnergy and ElectronAbundance are removed after temperature calculation.
     """
 
-    # Set up logging
+    # ------------------------------------------------------------------
+    # Logging
+    # ------------------------------------------------------------------
     if logfile is not None:
-        logging.basicConfig(filename=logfile,level=logging.INFO)
-        logging.info(f"Reading subvolume {ivol} from {path}...")
+        logging.basicConfig(filename=logfile, level=logging.INFO)
+    log = logging.getLogger(__name__)
 
-    # Retrieve metadata
-    boxsize=metadata.boxsize
-    hval=metadata.hval
+    if logfile is not None:
+        log.info(f"Reading SIMBA subvolume {ivol} from {path}...")
 
-    # Get the scale factor
-    snap_idx_in_metadata=np.where(metadata.snapshots_flist==path)[0][0]
-    afac=metadata.snapshots_afac[snap_idx_in_metadata]
-    zval=metadata.snapshots_z[snap_idx_in_metadata]
-    
-    # Get limits for the subvolume
-    lims=get_limits(ivol,nslice,boxsize,buffer=0.1)
+    # ------------------------------------------------------------------
+    # Metadata / snapshot scalars
+    # ------------------------------------------------------------------
+    boxsize = metadata.boxsize
+    hval = metadata.hval
 
-    # Particle type fields -- will always read ParticleIDs, ParticleType, Coordinates, Velocities, Masses
-    ptype_fields={0:['InternalEnergy',
-                     'ElectronAbundance',
-                     'Density',
-                     'Metallicity',
-                     'StarFormationRate'],
-                  1:[],
-                  4:['Metallicity']}
-    
-    ptype_subset={0:1, # every gas particle
-                  1:2, # every second dm particle
-                  4:2} # every second star particle
+    snap_idx_in_metadata = np.where(metadata.snapshots_flist == path)[0][0]
+    afac = float(metadata.snapshots_afac[snap_idx_in_metadata])
+    zval = float(metadata.snapshots_z[snap_idx_in_metadata])
 
-    # Initialize particle data
-    pdata=[None for iptype in range(len(ptype_fields))]
+    # Precompute common conversion factors
+    dconv = 1e-3 / hval            # ckpc/h -> cMpc
+    mconv = 1e10 / hval            # 1e10 Msun/h -> Msun
+    vconv = np.sqrt(afac)          # velocity scaling (peculiar km/s)
+    rhoconv = 1e10 * (hval**2) / (afac**3)  # to Msun/pkpc^3 (from 1e10/h (ckpc/h)^-3)
 
-    # Open the snapshot file
-    pdata_ifile=h5py.File(path,'r')
-    npart_ifile=pdata_ifile['Header'].attrs['NumPart_ThisFile']
+    # ------------------------------------------------------------------
+    # Subvolume limits (comoving Mpc)
+    # ------------------------------------------------------------------
+    lims = get_limits(ivol, nslice, boxsize, buffer=0.1)
+    xmin, xmax, ymin, ymax, zmin, zmax = lims
 
-    # Loop over particle types
-    for iptype,ptype in enumerate(ptype_fields):
-        logging.info(f"Reading ptype {ptype}...")
-        
-        if npart_ifile[ptype]:
-            # Generate a mask for the particles in the subvolume
-            subvol_mask=np.ones(npart_ifile[ptype])
-            coordinates=np.float32(pdata_ifile[f'PartType{ptype}']['Coordinates'][:]*1e-3/hval)
+    # ------------------------------------------------------------------
+    # Particle configuration
+    # ------------------------------------------------------------------
+    # Extra fields to read per ptype (ParticleIDs/Coordinates/Velocities/Masses are always read)
+    ptype_fields = {
+        0: ["InternalEnergy", "ElectronAbundance", "Density", "Metallicity", "StarFormationRate"],
+        1: [],
+        4: ["Metallicity"],
+    }
 
-            logging.info(f"min/max coordinates: {np.min(coordinates)}/{np.max(coordinates)}")
+    # Downsampling stride per ptype (keep identical behaviour)
+    ptype_subset = {
+        0: 1,
+        1: 2,
+        4: 2,
+    }
 
-            # Check for periodicity
-            for idim,dim in enumerate('xyz'):
-                lims_idim=lims[2*idim:(2*idim+2)]
+    coord_cols = [f"Coordinates_{d}" for d in "xyz"]
+    vel_cols = [f"Velocities_{d}" for d in "xyz"]
 
-                idim_mask=np.logical_and(coordinates[:,idim]>=lims_idim[0],coordinates[:,idim]<=lims_idim[1])
-                subvol_mask=np.logical_and(subvol_mask,idim_mask)
-                npart_ifile_invol=np.nansum(subvol_mask)
+    # Collect per-ptype DataFrames then concat once (faster than repeated concat)
+    df_parts = []
 
-            # Check if there are particles in the subvolume
-            if npart_ifile_invol:
-                logging.info(f'There are {npart_ifile_invol} ivol ptype {ptype} particles in this file')
-                subvol_mask=np.where(subvol_mask)
+    # ------------------------------------------------------------------
+    # Open the SIMBA snapshot file once
+    # ------------------------------------------------------------------
+    with h5py.File(path, "r") as f:
+        npart_thisfile = f["Header"].attrs["NumPart_ThisFile"]
 
-                # Save basic particle data 
-                logging.info(f"Reading IDs, coordinates, velocities and masses for ptype {ptype}...")
-                pdata[iptype]=pd.DataFrame(data=pdata_ifile[f'PartType{ptype}']['ParticleIDs'][:][subvol_mask][::ptype_subset[ptype]],columns=['ParticleIDs'])
-                pdata[iptype]['ParticleType']=np.uint16(np.ones(npart_ifile_invol)*ptype)[::ptype_subset[ptype]]
-                pdata[iptype].loc[:,[f'Coordinates_{dim}' for dim in 'xyz']]=coordinates[subvol_mask][::ptype_subset[ptype],:];del coordinates
-                pdata[iptype].loc[:,[f'Velocities_{dim}' for dim in 'xyz']]=pdata_ifile[f'PartType{ptype}']['Velocities'][:][subvol_mask][::ptype_subset[ptype],:]*np.sqrt(afac)#peculiar velocity in km/s
-                pdata[iptype]['Masses']=pdata_ifile[f'PartType{ptype}']['Masses'][:][subvol_mask][::ptype_subset[ptype]]*1e10/hval*ptype_subset[ptype] #mass in Msun
+        # ------------------------------------------------------------------
+        # Loop over particle types
+        # ------------------------------------------------------------------
+        for ptype in ptype_fields.keys():
+            n_this = int(npart_thisfile[ptype])
+            log.info(f"Reading ptype {ptype}... (N_thisfile={n_this})")
 
-                # Load extra baryonic properties
-                for field in ptype_fields[ptype]:
-                    if not field=='Metallicity':
-                        pdata[iptype][field]=np.float128(pdata_ifile[f'PartType{ptype}'][field][:][subvol_mask][::ptype_subset[ptype]])
+            if n_this <= 0:
+                log.info(f"No ptype {ptype} particles in this file!")
+                continue
+
+            gname = f"PartType{ptype}"
+            if gname not in f:
+                log.info(f"Missing group {gname} in file!")
+                continue
+            g = f[gname]
+
+            # --------------------------------------------------------------
+            # 1) Build subvolume mask from Coordinates only (fast, vectorised)
+            # --------------------------------------------------------------
+            coords = g["Coordinates"][:] * dconv  # (N,3) in cMpc
+
+            if verbose:
+                log.info(f"ptype {ptype} min/max coordinates: {coords.min()}/{coords.max()}")
+
+            mask = (
+                (coords[:, 0] >= xmin) & (coords[:, 0] <= xmax) &
+                (coords[:, 1] >= ymin) & (coords[:, 1] <= ymax) &
+                (coords[:, 2] >= zmin) & (coords[:, 2] <= zmax)
+            )
+
+            idx = np.flatnonzero(mask)
+            if idx.size == 0:
+                log.info(f"No ivol ptype {ptype} particles in this file!")
+                continue
+
+            # Apply stride after masking (keeps deterministic downsampling)
+            stride = int(ptype_subset[ptype])
+            if stride > 1:
+                idx = idx[::stride]
+
+            # --------------------------------------------------------------
+            # 2) Load always-present fields (subset by idx)
+            # --------------------------------------------------------------
+            pids = g["ParticleIDs"][idx].astype(np.int64, copy=False)
+            coords_sel = coords[idx, :].astype(np.float64, copy=False)
+            vxyz = g["Velocities"][idx, :].astype(np.float64, copy=False) * vconv
+
+            # Masses in Msun; re-weight by stride to conserve total mass statistically
+            m = g["Masses"][idx].astype(np.float64, copy=False) * mconv
+            if stride > 1:
+                m = m * stride
+
+            ptype_arr = np.full(idx.size, ptype, dtype=np.uint16)
+
+            # --------------------------------------------------------------
+            # 3) Assemble output columns (exact HYDROFLOW naming)
+            # --------------------------------------------------------------
+            out = {
+                "ParticleIDs": pids,
+                "ParticleType": ptype_arr,
+                coord_cols[0]: coords_sel[:, 0],
+                coord_cols[1]: coords_sel[:, 1],
+                coord_cols[2]: coords_sel[:, 2],
+                vel_cols[0]: vxyz[:, 0],
+                vel_cols[1]: vxyz[:, 1],
+                vel_cols[2]: vxyz[:, 2],
+                "Masses": m,
+            }
+
+            # --------------------------------------------------------------
+            # 4) Load extra ptype-specific fields
+            # --------------------------------------------------------------
+            for field in ptype_fields[ptype]:
+                try:
+                    if field == "Metallicity":
+                        out[field] = g[field][idx, 0]
                     else:
-                        pdata[iptype][field]=pdata_ifile[f'PartType{ptype}'][field][:,0][subvol_mask][::ptype_subset[ptype]]
+                        out[field] = g[field][idx].astype(np.float64, copy=False)
+                except Exception:
+                    log.info(f"Trouble reading field {field} for ptype {ptype}. Skipping.")
+                    continue
 
-                # Convert density to g/cm^3
-                if ptype==0:
-                    # Raw data are in 1e10/h (ckpc/h)^-3
-                    pdata[ptype]['Density']=pdata[ptype]['Density'].values*1e10*hval**2/afac**3 #Msun/pkpc^3
-                    pdata[ptype]['Density']=pdata[ptype]['Density'].values*np.float128(constant_gpmsun)/np.float128(constant_cmpkpc)**3 #g/cm^3
+            df_pt = pd.DataFrame(out)
 
-                # If gas, do temp calculation
-                if ptype==0:
-                    logging.info(f"Calculating temperature for {ptype} particles...")
-                    pdata[iptype]['Temperature']=calc_temperature(pdata[ptype],XH=0.76,gamma=5/3)
-                    del pdata[iptype]['InternalEnergy']
-                    del pdata[iptype]['ElectronAbundance']    
-            else:
-                logging.info(f'No ivol ptype {ptype} particles in this file!')
-                pdata[iptype]=pd.DataFrame([])
-        else:
-            logging.info(f'No ptype {ptype} particles in this file!')
-            pdata[iptype]=pd.DataFrame([])
+            # --------------------------------------------------------------
+            # 5) Unit conversions / derived quantities (gas only)
+            # --------------------------------------------------------------
+            if ptype == 0:
+                # Density conversion to g/cm^3
+                dens = df_pt["Density"].to_numpy(dtype=np.float64, copy=False)
+                dens = dens * rhoconv  # Msun/pkpc^3
+                dens = dens * float(constant_gpmsun) / (float(constant_cmpkpc) ** 3)  # g/cm^3
+                df_pt["Density"] = dens
 
-    pdata_ifile.close()
+                # Temperature from InternalEnergy + ElectronAbundance, then drop those columns
+                log.info("Calculating temperature for gas particles...")
+                df_pt["Temperature"] = calc_temperature(df_pt, XH=0.76, gamma=5/3)
+                if "InternalEnergy" in df_pt.columns:
+                    del df_pt["InternalEnergy"]
+                if "ElectronAbundance" in df_pt.columns:
+                    del df_pt["ElectronAbundance"]
 
-    # Combine the particle data
-    pdata=pd.concat(pdata)
-    pdata.sort_values(by="ParticleIDs",inplace=True)
-    pdata.reset_index(inplace=True,drop=True)    
+            df_parts.append(df_pt)
 
-    # Print fraction of particles that are gas
-    print(f"Fraction of gas particles: {np.sum(pdata['ParticleType'].values==0)/pdata.shape[0]:.2e}")
-    logging.info(f"Fraction of gas particles: {np.sum(pdata['ParticleType'].values==0)/pdata.shape[0]:.2e}")  
+    # ------------------------------------------------------------------
+    # Final concatenation and sorting (single concat)
+    # ------------------------------------------------------------------
+    if len(df_parts) == 0:
+        pdata = pd.DataFrame()
+        pdata_kdtree = cKDTree(np.empty((0, 3)))
+        return pdata, pdata_kdtree
 
-    # Add hydrogen partitions into HI, H2, HII from Rahmati (2013) and Blitz & Rosolowsky (2006)
-    logging.info(f"Adding hydrogen partitioning...")
-    gas=pdata['ParticleType'].values==0
-    fHI,fH2,fHII=partition_neutral_gas(pdata,redshift=zval,sfonly=False)
-    logging.info(f"Minima: fHI: {np.nanmin(fHI)}, fHII: {np.nanmin(fHII)}, fH2: {np.nanmin(fH2)}]")
-    logging.info(f"Maxima: fHI: {np.nanmax(fHI)}, fHII: {np.nanmax(fHII)}, fH2: {np.nanmax(fH2)}]")
-    pdata.loc[:,['mfrac_HI_BR06','mfrac_H2_BR06']]=np.nan
-    pdata.loc[gas,'mfrac_HI_BR06']=fHI
-    pdata.loc[gas,'mfrac_H2_BR06']=fH2
+    pdata = pd.concat(df_parts, ignore_index=True)
+    pdata.sort_values(by="ParticleIDs", inplace=True)
+    pdata.reset_index(drop=True, inplace=True)
 
+    # ------------------------------------------------------------------
+    # Diagnostics: gas fraction
+    # ------------------------------------------------------------------
+    gas = (pdata["ParticleType"].to_numpy() == 0)
+    frac_gas = np.sum(gas) / pdata.shape[0]
+    print(f"Fraction of gas particles: {frac_gas:.2e}")
+    log.info(f"Fraction of gas particles: {frac_gas:.2e}")
 
-    
-    # Create a spatial KDTree for the particle data
-    pdata_kdtree=cKDTree(pdata.loc[:,[f'Coordinates_{x}'for x in 'xyz']].values)
-    
+    # ------------------------------------------------------------------
+    # Hydrogen partitioning (Rahmati 2013 + Blitz & Rosolowsky 2006)
+    # ------------------------------------------------------------------
+    log.info("Adding hydrogen partitioning...")
+    fHI, fH2, fHII = partition_neutral_gas(pdata, redshift=zval, sfonly=False)
+
+    log.info(f"Minima: fHI: {np.nanmin(fHI)}, fHII: {np.nanmin(fHII)}, fH2: {np.nanmin(fH2)}]")
+    log.info(f"Maxima: fHI: {np.nanmax(fHI)}, fHII: {np.nanmax(fHII)}, fH2: {np.nanmax(fH2)}]")
+
+    pdata.loc[:, ["mfrac_HI_BR06", "mfrac_H2_BR06"]] = np.nan
+    pdata.loc[gas, "mfrac_HI_BR06"] = fHI
+    pdata.loc[gas, "mfrac_H2_BR06"] = fH2
+
+    # ------------------------------------------------------------------
+    # KDTree (comoving coordinates)
+    # ------------------------------------------------------------------
+    log.info("Creating KDTree for particle data...")
+    xyz = pdata.loc[:, coord_cols].to_numpy(dtype=np.float64, copy=False)
+    pdata_kdtree = cKDTree(xyz)
+
     return pdata, pdata_kdtree

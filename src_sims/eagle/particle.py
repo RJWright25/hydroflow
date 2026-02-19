@@ -1,145 +1,340 @@
 # HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
 # Ruby Wright (2021)
-
-# src_sims/eaglesnap/particle.py: routines to read and convert particle data from EAGLE snapshot outputs – uses read_eagle package.
+#
+# src_sims/eaglesnap/particle.py:
+# Routines to read and convert particle data from EAGLE snapshot outputs.
+# Uses the EagleSnapshot class from the `pyread_eagle` package.
 
 import numpy as np
 import pandas as pd
-import h5py 
+import h5py
 import logging
-
-import matplotlib.pyplot as plt
 
 from scipy.spatial import KDTree
 from pyread_eagle import EagleSnapshot
 
-from hydroflow.src_physics.utils import get_limits, partition_neutral_gas, constant_gpmsun, constant_spyr, constant_cmpkpc
+from hydroflow.src_physics.utils import (
+    get_limits, partition_neutral_gas,
+    constant_gpmsun, constant_spyr
+)
 
-##### READ PARTICLE DATA
-def read_subvol(path,ivol,nslice,metadata,logfile=None):
+# --------------------------------------------------------------------------------------
+# READ PARTICLE DATA (EAGLE)
+# --------------------------------------------------------------------------------------
+def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False):
     """
-    read_subvol: Read particle data for a subvolume from an EAGLE simulation snapshot. Uses the EagleSnapshot class from read_eagle.
+    Read particle data belonging to a spatial subvolume from an EAGLE snapshot (single file)
+    using `pyread_eagle.EagleSnapshot`, and return a unified pandas catalogue plus KDTree.
 
-    Input:
-    -----------
-    path: str
-        Path to the simulation snapshot.
-    ivol: int
-        Subvolume index.
-    nslice: int
-        Number of subvolumes in each dimension.
-    metadata: object
-        Metadata object containing the simulation parameters.
-    logfile: str
-        Path to the logfile.
+    The routine selects particles inside the requested subvolume, reads required
+    particle columns (IDs, types, coordinates, velocities, masses), converts additional baryonic
+    fields into physical/cgs units using the dataset conversion attributes, and concatenates
+    gas + DM + stars into a single DataFrame required for subsequent processing.
 
-    Output:
-    -----------
-    pdata: pd.DataFrame
-        DataFrame containing the particle data for the subvolume.
-    pdata_kdtree: scipy.spatial.cKDTree
-        KDTree containing the particle data for the subvolume.
-    
-        
+    ---------------------------------------------------------------------------
+    Parameters
+    ---------------------------------------------------------------------------
+    path : str
+        Path to the EAGLE snapshot file.
+
+    ivol : int
+        Index of the subvolume to read (0 ≤ ivol < nslice^3). The simulation box is
+        divided evenly into nslice × nslice × nslice cubes.
+
+    nslice : int
+        Number of subdivisions along each axis defining the spatial tiling.
+
+    metadata : object
+        Metadata container produced by HYDROFLOW initialisation. Must contain:
+            boxsize  : comoving box size [cMpc]
+            hval     : little-h
+            snapshots_flist : list of snapshot filenames
+            snapshots_afac  : scale factor per snapshot
+            snapshots_z     : redshift per snapshot
+
+    logfile : str, optional
+        If provided, progress and diagnostics are written to this log file.
+
+    verbose : bool, optional
+        Print progress information to stdout in addition to logging.
+
+    ---------------------------------------------------------------------------
+    Particle selection behaviour
+    ---------------------------------------------------------------------------
+    • Particles are selected if their COMOVING position lies inside the subvolume.
+      `EagleSnapshot.select_region` expects coordinates in cMpc/h, so the HYDROFLOW
+      cMpc limits are multiplied by h before selection.
+    • A downsampling stride is applied:
+            gas  (ptype 0): keep all
+            DM   (ptype 1): keep every 2nd particle
+            star (ptype 4): keep every 2nd particle
+      Masses are re-weighted so total mass is conserved statistically.
+
+    ---------------------------------------------------------------------------
+    Units of returned quantities
+    ---------------------------------------------------------------------------
+    Coordinates_* : comoving Mpc
+    Velocities_*  : peculiar km/s  (scaled by sqrt(a) to match HYDROFLOW conventions)
+    Masses        : Msun
+
+    Extra baryonic fields are converted using EAGLE dataset attributes:
+        value_physical_cgs = value_raw * (h^hexp) * (a^aexp) * CGSConversionFactor
+
+    Gas-only:
+        StarFormationRate is converted from g/s to Msun/yr.
+
+    Hydrogen partitioning:
+        mfrac_HI_BR06, mfrac_H2_BR06
+        computed using Rahmati (2013) + Blitz & Rosolowsky (2006)
+
+    ---------------------------------------------------------------------------
+    Returns
+    ---------------------------------------------------------------------------
+    pdata : pandas.DataFrame
+        Unified particle catalogue sorted by ParticleIDs.
+        Contains gas, dark matter, and stellar particles. For star/DM particles, missing gas-only fields are
+        present and set to NaN.
+
+    pdata_kdtree : scipy.spatial.KDTree
+        KDTree built from (Coordinates_x, Coordinates_y, Coordinates_z).
+        `boxsize` is passed to enable periodic distance calculations.
+
+    ---------------------------------------------------------------------------
+    Notes
+    ---------------------------------------------------------------------------
+    - This routine uses KDTree (not cKDTree) to preserve existing behaviour.
+    - The KDTree uses comoving coordinates.
+    - EAGLESnapshot reads only the region previously selected with select_region.
     """
 
-    # Open the snapshot file
-    file=h5py.File(path,'r')
-
-    # Set up logging
+    # ------------------------------------------------------------------
+    # Logging
+    # ------------------------------------------------------------------
     if logfile is not None:
-        logging.basicConfig(filename=logfile,level=logging.INFO)
-        logging.info(f"Reading subvolume {ivol} from {path}...")
+        logging.basicConfig(filename=logfile, level=logging.INFO)
+    log = logging.getLogger(__name__)
 
-    # Retrieve metadata
-    boxsize=metadata.boxsize
-    hval=metadata.hval
+    if logfile is not None:
+        log.info(f"Reading EAGLE subvolume {ivol} from {path}...")
 
-    # Get the scale factor
-    snap_idx_in_metadata=np.where(metadata.snapshots_flist==path)[0][0]
-    afac=metadata.snapshots_afac[snap_idx_in_metadata]
-    zval=metadata.snapshots_z[snap_idx_in_metadata]
+    # ------------------------------------------------------------------
+    # Metadata / snapshot scalars
+    # ------------------------------------------------------------------
+    boxsize = metadata.boxsize
+    hval = metadata.hval
 
-    # Get limits for the subvolume -- these are in cMpc
-    lims=get_limits(ivol,nslice,boxsize)
+    snap_idx_in_metadata = np.where(metadata.snapshots_flist == path)[0][0]
+    afac = float(metadata.snapshots_afac[snap_idx_in_metadata])
+    zval = float(metadata.snapshots_z[snap_idx_in_metadata])
 
-    # Define the fields to read for each particle type (always include ParticleIDs, Masses, Coordinates, Velocity)
-    ptypes={0:['Temperature',
-                'Metallicity',
-                'Density',
-                'StarFormationRate'],
-            1:[],
-            4:['Metallicity']}
-    
-    ptype_subset={0:1, # every gas particle
-                  1:2, # every second dm particle
-                  4:2} # every second stellar particle
-    
-    # Use the EagleSnapshot class to read the particle data
-    snapshot=EagleSnapshot(path)
+    # Precompute common conversion factors
+    dconv = 1/hval #to cMpc
+    mconv = 1e10/hval #to Msun
+    vconv = np.sqrt(afac)
 
-    # Select the region of interest -- need to convert these limits to cMpc/h
-    snapshot.select_region(xmin=lims[0]*hval,xmax=lims[1]*hval,ymin=lims[2]*hval,ymax=lims[3]*hval,zmin=lims[4]*hval,zmax=lims[5]*hval) 
-    pdata={}
+    # ------------------------------------------------------------------
+    # Subvolume limits (comoving Mpc) and EAGLE region selection (cMpc/h)
+    # ------------------------------------------------------------------
+    lims = get_limits(ivol, nslice, boxsize)  # [xmin,xmax,ymin,ymax,zmin,zmax] in cMpc
+    xmin, xmax, ymin, ymax, zmin, zmax = lims
 
-    # Loop over particle types
-    for iptype,ptype in enumerate(ptypes):
+    # EAGLESnapshot expects cMpc/h limits
+    xmin_h, xmax_h = xmin * hval, xmax * hval
+    ymin_h, ymax_h = ymin * hval, ymax * hval
+    zmin_h, zmax_h = zmin * hval, zmax * hval
 
-        logging.info(f"Reading {ptype} particle IDs, coordinates & velocities...")
-        pdata[ptype]=pd.DataFrame(data=snapshot.read_dataset(ptype,'ParticleIDs')[::ptype_subset[ptype]],columns=['ParticleIDs'])
-        pdata[ptype]['ParticleType']=np.ones(pdata[ptype].shape[0])*ptype
-        pdata[ptype].loc[:,[f'Coordinates_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Coordinates')[::ptype_subset[ptype]]/hval #comoving position in Mpc
-        pdata[ptype].loc[:,[f'Velocities_{x}' for x in 'xyz']]=snapshot.read_dataset(ptype,'Velocity')[::ptype_subset[ptype],:]*np.sqrt(afac) #peculiar velocity in km/s
+    # ------------------------------------------------------------------
+    # Fields and downsampling configuration
+    # ------------------------------------------------------------------
+    # Extra fields to read per ptype (ParticleIDs/Coordinates/Velocity/Mass are always read)
+    ptypes = {
+        0: ["Temperature", "Metallicity", "Density", "StarFormationRate"],
+        1: [],
+        4: ["Metallicity"],
+    }
 
-        # Get masses (use the mass table value for DM particles)
-        if ptype==1:
-            pdata[ptype].loc[:,'Masses']=file['Header'].attrs['MassTable'][1]*1e10/hval*ptype_subset[ptype] #mass in Msun
+    # Stride: keep every Nth particle. Masses are re-weighted by stride.
+    ptype_subset = {
+        0: 1,
+        1: 2,
+        4: 2,
+    }
+
+    coord_cols = [f"Coordinates_{d}" for d in "xyz"]
+    vel_cols = [f"Velocities_{d}" for d in "xyz"]
+
+    # ------------------------------------------------------------------
+    # Open HDF5 file for unit conversion attributes (hexp/aexp/cgs)
+    # ------------------------------------------------------------------
+    with h5py.File(path, "r") as f:
+        # Used only for DM constant mass (MassTable) and conversion attrs
+        mass_table = f["Header"].attrs["MassTable"]
+
+        # ------------------------------------------------------------------
+        # Set up EagleSnapshot and select region
+        # ------------------------------------------------------------------
+        snapshot = EagleSnapshot(path)
+        snapshot.select_region(
+            xmin=xmin_h, xmax=xmax_h,
+            ymin=ymin_h, ymax=ymax_h,
+            zmin=zmin_h, zmax=zmax_h
+        )
+
+        # Collect per-ptype DataFrames then concat once
+        df_parts = []
+
+        # ------------------------------------------------------------------
+        # Loop over particle types
+        # ------------------------------------------------------------------
+        for ptype in ptypes.keys():
+            stride = int(ptype_subset[ptype])
+
+            # --------------------------------------------------------------
+            # 1) Always-read datasets (IDs, coords, velocities, masses)
+            # --------------------------------------------------------------
+            log.info(f"Reading ptype {ptype} particle IDs, coordinates & velocities...")
+
+            # These arrays are already region-selected by EagleSnapshot
+            pids = snapshot.read_dataset(ptype, "ParticleIDs")[::stride].astype(np.int64, copy=False)
+            coords = snapshot.read_dataset(ptype, "Coordinates")[::stride] * dconv  # -> cMpc
+            vxyz = snapshot.read_dataset(ptype, "Velocity")[::stride, :] * vconv  # peculiar km/s
+
+            n = pids.shape[0]
+            if n == 0:
+                continue
+
+            # Masses in Msun, re-weighted by stride
+            if ptype == 1:
+                # DM: constant mass from MassTable (in 1e10 Msun/h)
+                mconst = float(mass_table[1]) * mconv
+                m = np.full(n, mconst * stride, dtype=np.float64)
+            else:
+                m = snapshot.read_dataset(ptype, "Mass")[::stride] * mconv
+                if stride > 1:
+                    m = m * stride
+
+            # ParticleType
+            ptype_arr = np.full(n, ptype, dtype=np.uint16)
+
+            out = {
+                "ParticleIDs": pids,
+                "ParticleType": ptype_arr,
+                coord_cols[0]: coords[:, 0],
+                coord_cols[1]: coords[:, 1],
+                coord_cols[2]: coords[:, 2],
+                vel_cols[0]: vxyz[:, 0],
+                vel_cols[1]: vxyz[:, 1],
+                vel_cols[2]: vxyz[:, 2],
+                "Masses": m,
+            }
+
+            # --------------------------------------------------------------
+            # 2) Extra baryonic properties in physical/cgs units
+            # --------------------------------------------------------------
+            if ptypes[ptype]:
+                log.info("Reading extra baryonic properties...")
+
+                for field in ptypes[ptype]:
+                    try:
+                        # Read conversion attributes from the raw HDF5 dataset
+                        dset = f[f"PartType{ptype}/{field}"]
+                        hexp = dset.attrs["h-scale-exponent"]
+                        aexp = dset.attrs["aexp-scale-exponent"]
+                        cgs = dset.attrs["CGSConversionFactor"]
+
+                        # Read the region-selected raw values and apply the same conversion
+                        raw = snapshot.read_dataset(ptype, field)[::stride]
+                        out[field] = raw * (hval ** hexp) * (afac ** aexp) * cgs
+                    except Exception as e:
+                        log.info(f"Trouble reading/converting field {field} for ptype {ptype}. Skipping. ({e})")
+                        continue
+
+            df_pt = pd.DataFrame(out)
+
+            # --------------------------------------------------------------
+            # 3) Post-processing: gas SFR conversion and star NaN padding
+            # --------------------------------------------------------------
+            if ptype == 0 and "StarFormationRate" in df_pt.columns:
+                # Convert SFR from g/s -> Msun/yr
+                df_pt["StarFormationRate"] = df_pt["StarFormationRate"] * (1.0 / constant_gpmsun) * constant_spyr
+
+            df_parts.append(df_pt)
+
+    # ------------------------------------------------------------------
+    # Ensure star particles have the same extra columns as gas (NaN fill)
+    # ------------------------------------------------------------------
+    if len(df_parts) == 0:
+        pdata = pd.DataFrame()
+        pdata_kdtree = KDTree(np.empty((0, 3)), boxsize=boxsize)
+        return pdata, pdata_kdtree
+
+    # Identify gas and star frames (if present)
+    # We do this after creation to avoid repeated per-row assignments.
+    df_gas = None
+    df_star = None
+    df_other = []
+
+    for df in df_parts:
+        # each df is single ptype, so ParticleType unique
+        ptype_unique = int(df["ParticleType"].iloc[0])
+        if ptype_unique == 0:
+            df_gas = df
+        elif ptype_unique == 4:
+            df_star = df
         else:
-            pdata[ptype]['Masses']=snapshot.read_dataset(ptype,'Mass')[::ptype_subset[ptype]]*1e10/hval*ptype_subset[ptype] #mass in Msun
-        
-        # Convert other properties to physical units
-        logging.info(f"Reading extra baryonic properties...")
-        for field in ptypes[ptype]:
-            hexp=file[f'PartType{ptype}/{field}'].attrs['h-scale-exponent']
-            aexp=file[f'PartType{ptype}/{field}'].attrs['aexp-scale-exponent']
-            cgs=file[f'PartType{ptype}/{field}'].attrs['CGSConversionFactor']
-            pdata[ptype][field]=snapshot.read_dataset(ptype,field)[::ptype_subset[ptype]]*(hval**hexp)*(afac**aexp)*cgs
+            df_other.append(df)
 
+    if (df_gas is not None) and (df_star is not None):
+        # Any gas-only extra fields missing in stars should exist and be NaN
+        gas_fields = set(ptypes[0])
+        star_fields = set(ptypes[4])
+        missing = list(gas_fields.difference(star_fields))
 
-    # Convert SFR to Msun/yr from g/s
-    pdata[0]['StarFormationRate']=pdata[0]['StarFormationRate']*(1/constant_gpmsun)*constant_spyr
+        # Add missing columns as NaN without changing existing values
+        for col in missing:
+            if col not in df_star.columns:
+                df_star[col] = np.nan
 
-    # Add missing fields to star particles
-    npart_star=pdata[4].shape[0]
-    for field in ptypes[0]:
-        if not field in ptypes[4]:
-            pdata[4][field]=np.ones(npart_star)+np.nan
+        # Rebuild df_parts in a deterministic order
+        df_parts = [df_gas] + df_other + [df_star]
+    else:
+        # If stars not present, just proceed
+        df_parts = df_parts
 
-    # Combine the particle data
-    logging.info(f"Concatenating particle data...")
-    pdata=pd.concat([pdata[ptype] for ptype in pdata],ignore_index=True,)
-    pdata.sort_values(by="ParticleIDs",inplace=True)
-    pdata.reset_index(inplace=True,drop=True)
+    # ------------------------------------------------------------------
+    # Concatenate, sort, and reset index (single concat)
+    # ------------------------------------------------------------------
+    log.info("Concatenating particle data...")
+    pdata = pd.concat(df_parts, ignore_index=True)
+    pdata.sort_values(by="ParticleIDs", inplace=True)
+    pdata.reset_index(drop=True, inplace=True)
 
-    # Add hydrogen partitions into HI, H2, HII from Rahmati (2013) and Blitz & Rosolowsky (2006)
-    logging.info(f"Adding hydrogen partitioning...")
-    gas=pdata['ParticleType'].values==0
-    fHI,fH2,fHII=partition_neutral_gas(pdata,redshift=zval,sfonly=False)
-    logging.info(f"Minima: fHI: {np.nanmin(fHI)}, fHII: {np.nanmin(fHII)}, fH2: {np.nanmin(fH2)}]")
-    logging.info(f"Maxima: fHI: {np.nanmax(fHI)}, fHII: {np.nanmax(fHII)}, fH2: {np.nanmax(fH2)}]")
-    pdata.loc[:,['mfrac_HI_BR06','mfrac_H2_BR06']]=np.nan
-    pdata.loc[gas,'mfrac_HI_BR06']=fHI
-    pdata.loc[gas,'mfrac_H2_BR06']=fH2
+    # ------------------------------------------------------------------
+    # Hydrogen partitioning (Rahmati 2013 + Blitz & Rosolowsky 2006)
+    # ------------------------------------------------------------------
+    log.info("Adding hydrogen partitioning...")
+    gas = (pdata["ParticleType"].to_numpy() == 0)
+    fHI, fH2, fHII = partition_neutral_gas(pdata, redshift=zval, sfonly=False)
 
+    log.info(f"Minima: fHI: {np.nanmin(fHI)}, fHII: {np.nanmin(fHII)}, fH2: {np.nanmin(fH2)}]")
+    log.info(f"Maxima: fHI: {np.nanmax(fHI)}, fHII: {np.nanmax(fHII)}, fH2: {np.nanmax(fH2)}]")
 
-    # Print fraction of particles that are gas
-    print(f"Fraction of gas particles: {np.sum(pdata['ParticleType'].values==0)/pdata.shape[0]:.2e}")
-    logging.info(f"Fraction of gas particles: {np.sum(pdata['ParticleType'].values==0)/pdata.shape[0]:.2e}")  
+    pdata.loc[:, ["mfrac_HI_BR06", "mfrac_H2_BR06"]] = np.nan
+    pdata.loc[gas, "mfrac_HI_BR06"] = fHI
+    pdata.loc[gas, "mfrac_H2_BR06"] = fH2
 
+    # ------------------------------------------------------------------
+    # Diagnostics: gas fraction
+    # ------------------------------------------------------------------
+    frac_gas = np.sum(gas) / pdata.shape[0]
+    print(f"Fraction of gas particles: {frac_gas:.2e}")
+    log.info(f"Fraction of gas particles: {frac_gas:.2e}")
 
-    # Create a spatial KDTree for the particle data
-    logging.info(f"Creating KDTree for particle data...")
-    pdata_kdtree=KDTree(pdata.loc[:,[f'Coordinates_{x}' for x in 'xyz']].values,boxsize=boxsize)
+    # ------------------------------------------------------------------
+    # KDTree (comoving coordinates, periodic box)
+    # ------------------------------------------------------------------
+    log.info("Creating KDTree for particle data...")
+    xyz = pdata.loc[:, coord_cols].to_numpy(dtype=np.float64, copy=False)
+    pdata_kdtree = KDTree(xyz, boxsize=boxsize)
 
     return pdata, pdata_kdtree
-

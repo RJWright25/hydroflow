@@ -1,7 +1,3 @@
-# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
-# Ruby Wright (2021)
-
-# src_physics/gasflow.py: Routines to analyse gas flow rates of particles in a given shell. Returns both inflow/outflow rates.
 import numpy as np
 import pandas as pd
 import astropy.units as apy_units

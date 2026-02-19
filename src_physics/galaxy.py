@@ -1,13 +1,3 @@
-# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
-# Ruby Wright (2021)
-#
-# src_physics/galaxy.py:
-# ----------------------
-# Routines to:
-#   1) select baryonic particle candidates associated with a galaxy
-#   2) analyse gas / stars / DM around that galaxy in spherical shells
-#      and vertical slabs, computing masses, metallicities and flow rates.
-
 import numpy as np
 import pandas as pd
 
