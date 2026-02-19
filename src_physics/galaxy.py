@@ -346,17 +346,22 @@ def analyse_galaxy(
     # ------------------------------------------------------------------
     # 2. Save baryonic COM position (from closest particle)
     # ------------------------------------------------------------------
-    # The "COM" used for the 30 pkpc sphere is stored from particle [0]
+    # The "COM" used for the recentering is stored from particle [0]
     # (since pdata_candidates is sorted by Relative_r_comoving).
     for i_dim, dim in enumerate(["x", "y", "z"]):
         galaxy_output[f"hydroflow-com_{dim}"] = pdata_candidates.loc[
             0, f"Coordinates_{dim}"
         ]
+    com_new=pdata_candidates.loc[0, [f"Coordinates_{x}" for x in 'xyz']]
+    com_old=np.array(galaxy_output[f'CentreOfMass_{x}'] for x in 'xyz')
+    com_offset=np.linalg.norm(com_new-com_old)
+
+    galaxy_output['hydroflow-com_offset']=com_offset # offset in 10
 
     # ------------------------------------------------------------------
     # 3. Shell-width bookkeeping (drfacs in frac, string labels)
     # ------------------------------------------------------------------
-    drfacs_pc = [drfac * 100.0 for drfac in drfacs]  # convert 0.1 Mpc => 10 pc style scaling
+    drfacs_pc = [drfac * 100.0 for drfac in drfacs]  # pc style scaling
     drfacs_str = ["p" + f"{val:.0f}".zfill(2) for val in drfacs_pc]
 
     dzfacs_pc=[dzfac * 100.0 for dzfac in dzfacs]
