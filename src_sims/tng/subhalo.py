@@ -118,7 +118,7 @@ def extract_subhaloes(path, mcut=1e10, metadata=None):
     os.makedirs(os.path.dirname(outpath), exist_ok=True)
 
     # Base path for illustris_python loader (strip anything after "/groups")
-    basepath = path[0].split("/groups")[0]
+    basepath = path[0].split("/groups_")[0]
 
     # Storage across snapshots
     subhalo_dfs = []
