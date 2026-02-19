@@ -352,8 +352,8 @@ def analyse_galaxy(
         galaxy_output[f"hydroflow-com_{dim}"] = pdata_candidates.loc[
             0, f"Coordinates_{dim}"
         ]
-    com_new=pdata_candidates.loc[0, [f"Coordinates_{x}" for x in 'xyz']]
-    com_old=np.array(galaxy_output[f'CentreOfMass_{x}'] for x in 'xyz')
+    com_new=np.array([galaxy_output[f"hydroflow-com_{x}"] for x in 'xyz'])
+    com_old=np.array([galaxy_output[f'CentreOfMass_{x}'] for x in 'xyz'])
     com_offset=np.linalg.norm(com_new-com_old)
 
     galaxy_output['hydroflow-com_offset']=com_offset # offset in 10
