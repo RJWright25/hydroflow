@@ -16,37 +16,33 @@ def extract_subhaloes(path, mcut=1e10, metadata=None):
 
     This routine:
       1) loads the Subfind group catalogue for one or more snapshots,
-      2) constructs a "central" halo table (groups) and a "galaxy" table (subhaloes),
-      3) attaches host-halo properties to each subhalo,
-      4) assigns SubGroupNumber within each FoF group (0 = central),
-      5) computes subhalo distance to the host group centre (Group_Rrel),
+      2) builds a host-halo table (FoF groups) and a galaxy table (subhaloes),
+      3) attaches host-halo properties to each subhalo (vectorised),
+      4) assigns SubGroupNumber within each FoF group (0 = most-massive subhalo by construction),
+      5) computes Group_Rrel (distance to host group centre),
       6) applies mass cuts and writes an HDF5 catalogue.
 
-    ---------------------------------------------------------------------------
     Parameters
-    ---------------------------------------------------------------------------
+    ----------
     path : str or list[str]
-        One or more paths pointing to group catalogue directories/files that contain "groups_XXX".
-        Example element: ".../output/groups_099/" or ".../output/groups_099/groups_099.0.hdf5".
-        The function extracts snapnum from the substring after "groups_".
+        One or more paths that include "groups_XXX" (directory or file).
+        The snapshot number is parsed from the substring after "groups_".
 
     mcut : float, optional
         Minimum host-halo mass cut applied to FoF groups and downstream subhaloes (Msun).
 
     metadata : str or object, optional
         If a string: path to the HYDROFLOW metadata pickle.
-        If None: the function searches the current working directory for a ".pkl" metadata file.
+        If None: searches the current working directory for a ".pkl" metadata file.
 
-    ---------------------------------------------------------------------------
     Returns
-    ---------------------------------------------------------------------------
+    -------
     subcat : pandas.DataFrame
-        subhalo catalogue, sorted by (SnapNum desc, Group_M_Crit200 desc, SubGroupNumber asc),
+        Subhalo catalogue sorted by (SnapNum desc, Group_M_Crit200 desc, SubGroupNumber asc),
         and written to "./catalogues/subhaloes.hdf5".
 
-    ---------------------------------------------------------------------------
-    Notes on units 
-    ---------------------------------------------------------------------------
+    Notes on units
+    -------------
     Illustris/TNG group catalogues store:
       - masses in units of 1e10 Msun/h
       - positions/radii in ckpc/h
@@ -54,7 +50,6 @@ def extract_subhaloes(path, mcut=1e10, metadata=None):
     HYDROFLOW conventions used here:
       - masses in Msun
       - distances in comoving Mpc (cMpc)
-
     """
 
     # ------------------------------------------------------------------
@@ -75,6 +70,7 @@ def extract_subhaloes(path, mcut=1e10, metadata=None):
         metadata = load_metadata(metadata)
     else:
         metadata_path = None
+        metadata = None
         for fname in os.listdir(os.getcwd()):
             if fname.endswith(".pkl"):
                 metadata_path = fname
@@ -88,22 +84,16 @@ def extract_subhaloes(path, mcut=1e10, metadata=None):
     hval = float(metadata.hval)
 
     # ------------------------------------------------------------------
-    # Unit conversions 
+    # Unit conversions
     # ------------------------------------------------------------------
-    # TNG masses: 1e10 Msun/h  ->  Msun
-    mconv = 1e10 / hval
-
-    # TNG lengths: ckpc/h  ->  cMpc
-    # (ckpc/h) * (1e-3 Mpc/kpc) / h
-    dconv = 1e-3 / hval
+    mconv = 1e10 / hval      # 1e10 Msun/h -> Msun
+    dconv = 1e-3 / hval      # ckpc/h -> cMpc
 
     # ------------------------------------------------------------------
     # Derive snapshot numbers from input paths and fetch scale factors from metadata
     # ------------------------------------------------------------------
     snapnums, afacs = [], []
     for ipath in path:
-        # Be robust to ".../groups_099/" and ".../groups_099/groups_099.0.hdf5"
-        # We just find the first 3 digits after 'groups_'.
         token = ipath.split("groups_")[-1]
         snapnum = int(token[:3])
         snapnums.append(snapnum)
@@ -117,10 +107,9 @@ def extract_subhaloes(path, mcut=1e10, metadata=None):
     outpath = os.path.join(os.getcwd(), "catalogues", "subhaloes.hdf5")
     os.makedirs(os.path.dirname(outpath), exist_ok=True)
 
-    # Base path for illustris_python loader (strip anything after "/groups")
+    # Base path for illustris_python loader
     basepath = path[0].split("/groups_")[0]
 
-    # Storage across snapshots
     subhalo_dfs = []
 
     # ------------------------------------------------------------------
@@ -133,159 +122,123 @@ def extract_subhaloes(path, mcut=1e10, metadata=None):
         groupcat = subfind_raw["halos"]
         subcat_raw = subfind_raw["subhalos"]
 
-        # Redshift from metadata
         afac = afacs[isnap]
         zval = (1.0 / afac) - 1.0
 
         # ------------------------------------------------------------------
-        # Build FoF group dataframe (centrals live here)
+        # Host-halo (FoF) table
         # ------------------------------------------------------------------
         print("Extracting group data...")
-        numgroups = groupcat["GroupMass"].shape[0]
+        numgroups = int(groupcat["GroupMass"].shape[0])
 
-        group_df = pd.DataFrame({
-            "SnapNum": np.full(numgroups, snapnum, dtype=np.int32),
-            "Redshift": np.full(numgroups, zval, dtype=np.float64),
-            # Use integer group indices 0..N-1 as the canonical GroupNumber
-            "GroupNumber": np.arange(numgroups, dtype=np.int64),
-            # For a "group central record", define SubGroupNumber=0
-            "SubGroupNumber": np.zeros(numgroups, dtype=np.int16),
+        group_mass = groupcat["GroupMass"][:] * mconv
+        keep_group = group_mass >= mcut
 
-            # Host halo masses/radii
-            "GroupMass": groupcat["GroupMass"][:] * mconv,
-            "Group_M_Crit200": groupcat["Group_M_Crit200"][:] * mconv,
-            "Group_R_Crit200": groupcat["Group_R_Crit200"][:] * dconv,
-        })
+        group_numbers_keep = np.flatnonzero(keep_group).astype(np.int64, copy=False)
 
-        # Group centre (comoving Mpc)
+        group_M200 = groupcat["Group_M_Crit200"][:] * mconv
+        group_R200 = groupcat["Group_R_Crit200"][:] * dconv
         gpos = groupcat["GroupPos"][:] * dconv
-        group_df.loc[:, ["CentreOfMass_x", "CentreOfMass_y", "CentreOfMass_z"]] = gpos
-
-        # Apply host mass cut at the group level up-front
-        group_df.sort_values("GroupNumber", inplace=True)
-        group_df = group_df.loc[group_df["GroupMass"].to_numpy() >= mcut, :].copy()
-        group_df.reset_index(drop=True, inplace=True)
-
-        # For fast mapping: we will searchsorted on GroupNumber, so keep it sorted
-        group_numbers_sorted = group_df["GroupNumber"].to_numpy()
 
         # ------------------------------------------------------------------
-        # Build subhalo dataframe (one row per subhalo / galaxy)
+        # Subhalo (galaxy) table
         # ------------------------------------------------------------------
         print("Extracting subhalo data...")
-        numsub = subcat_raw["SubhaloMass"].shape[0]
+        numsub = int(subcat_raw["SubhaloMass"].shape[0])
 
+        sub_group = subcat_raw["SubhaloGrNr"][:].astype(np.int64, copy=False)
+
+        # Drop subhaloes whose host group fails the host mass cut (fast boolean mask)
+        # (GroupNumber indices are 0..numgroups-1, so keep_group is directly indexable)
+        keep_sub = keep_group[sub_group]
+        if not np.any(keep_sub):
+            subhalo_dfs.append(pd.DataFrame())
+            print()
+            continue
+
+        sub_group = sub_group[keep_sub]
+        sub_mass = (subcat_raw["SubhaloMass"][:] * mconv)[keep_sub]
+        sub_sfr = subcat_raw["SubhaloSFR"][:][keep_sub]
+        sub_mstar = (subcat_raw["SubhaloMassType"][:, 4] * mconv)[keep_sub]
+        spos = (subcat_raw["SubhaloPos"][:] * dconv)[keep_sub]
+
+        # ------------------------------------------------------------------
+        # SubGroupNumber assignment (vectorised)
+        # ------------------------------------------------------------------
+        # Subfind convention: subhaloes are stored sorted by GroupNumber, and within each group
+        # they are ordered by decreasing bound mass. Under that ordering, index-within-group
+        # is the SubGroupNumber (0 = most massive).
+        #
+        # If the raw catalogue is not sorted by GroupNumber, sort once here.
+        order = np.argsort(sub_group, kind="mergesort")
+        sub_group = sub_group[order]
+        sub_mass = sub_mass[order]
+        sub_sfr = sub_sfr[order]
+        sub_mstar = sub_mstar[order]
+        spos = spos[order, :]
+
+        # Compute within-group ranks: 0..(count-1) for each contiguous group block
+        # counts per group via run-length encoding
+        change = np.r_[True, sub_group[1:] != sub_group[:-1]]
+        first_idx = np.flatnonzero(change)
+        # group sizes
+        sizes = np.diff(np.r_[first_idx, sub_group.size])
+        # ranks = [0..sizes[0]-1, 0..sizes[1]-1, ...]
+        sub_sgn = np.concatenate([np.arange(n, dtype=np.int32) for n in sizes])
+
+        # ------------------------------------------------------------------
+        # Host property mapping (vectorised direct indexing)
+        # ------------------------------------------------------------------
+        host_mass = group_mass[sub_group]
+        host_M200 = group_M200[sub_group]
+        host_R200 = group_R200[sub_group]
+        host_pos = gpos[sub_group, :]
+
+        # Distance to group centre
+        dr = spos - host_pos
+        group_rrel = np.sqrt(np.sum(dr * dr, axis=1))
+
+        # ------------------------------------------------------------------
+        # Assemble DataFrame 
+        # ------------------------------------------------------------------
         subhalo_df = pd.DataFrame({
-            "SnapNum": np.full(numsub, snapnum, dtype=np.int32),
-            "Redshift": np.full(numsub, zval, dtype=np.float64),
+            "SnapNum": np.full(sub_group.shape[0], snapnum, dtype=np.int32),
+            "Redshift": np.full(sub_group.shape[0], zval, dtype=np.float64),
 
-            # FoF group membership for each subhalo
-            "GroupNumber": subcat_raw["SubhaloGrNr"][:].astype(np.int64, copy=False),
+            "GroupNumber": sub_group,
+            "GalaxyID": np.arange(sub_group.shape[0], dtype=np.int64),
 
-            # A per-snapshot index 
-            "GalaxyID": np.arange(numsub, dtype=np.int64),
+            "StarFormationRate": sub_sfr,
+            "StellarMass": sub_mstar,
+            "Mass": sub_mass,
 
-            # Subhalo properties
-            "StarFormationRate": subcat_raw["SubhaloSFR"][:],                 # Msun/yr (already)
-            "StellarMass": subcat_raw["SubhaloMassType"][:, 4] * mconv,       # 1e10 Msun/h -> Msun
-            "Mass": subcat_raw["SubhaloMass"][:] * mconv,                     # 1e10 Msun/h -> Msun
+            "CentreOfMass_x": spos[:, 0],
+            "CentreOfMass_y": spos[:, 1],
+            "CentreOfMass_z": spos[:, 2],
+
+            "SubGroupNumber": sub_sgn,
+
+            "GroupMass": host_mass,
+            "Group_M_Crit200": host_M200,
+            "Group_R_Crit200": host_R200,
+
+            "Group_CentreOfMass_x": host_pos[:, 0],
+            "Group_CentreOfMass_y": host_pos[:, 1],
+            "Group_CentreOfMass_z": host_pos[:, 2],
+
+            "Group_Rrel": group_rrel,
         })
 
-        # Subhalo centre
-        spos = subcat_raw["SubhaloPos"][:] * dconv
-        subhalo_df.loc[:, ["CentreOfMass_x", "CentreOfMass_y", "CentreOfMass_z"]] = spos
-
-        # ------------------------------------------------------------------
-        # Initialise host-halo columns on the subhalo table (filled by mapping)
-        # ------------------------------------------------------------------
-        # SubGroupNumber = rank within FoF group, with 0 treated as central
-        subhalo_df["SubGroupNumber"] = np.full(numsub, -1, dtype=np.int32)
-
-        # Host halo properties copied down to subhaloes
-        subhalo_df["GroupMass"] = np.nan
-        subhalo_df["Group_M_Crit200"] = np.nan
-        subhalo_df["Group_R_Crit200"] = np.nan
-        subhalo_df["Group_Rrel"] = np.nan  # distance from group centre (cMpc)
-
-        # Also store group centre as separate columns (keeps old naming style)
-        subhalo_df["Group_CentreOfMass_x"] = np.nan
-        subhalo_df["Group_CentreOfMass_y"] = np.nan
-        subhalo_df["Group_CentreOfMass_z"] = np.nan
-
-        # ------------------------------------------------------------------
-        # Apply host mass cut by dropping subhaloes whose host group is not in group_df
-        # ------------------------------------------------------------------
-        # This is *much* faster than trying to apply a meaningless "Group_M_Crit200" filter before it's filled.
-        host_groups = subhalo_df["GroupNumber"].to_numpy()
-        # Membership test against the surviving host group list
-        keep = np.isin(host_groups, group_numbers_sorted)
-        subhalo_df = subhalo_df.loc[keep, :].copy()
-        subhalo_df.reset_index(drop=True, inplace=True)
-
-        # ------------------------------------------------------------------
-        # Match group properties to subhaloes + assign SubGroupNumber
-        # ------------------------------------------------------------------
-        print("Matching group data to subhalo data...")
-
-        # Sort subhaloes by GroupNumber so we can slice contiguous blocks quickly
-        subhalo_df.sort_values("GroupNumber", inplace=True)
-        subhalo_df.reset_index(drop=True, inplace=True)
-
-        sub_groups = subhalo_df["GroupNumber"].to_numpy()
-
-        # Precompute for fast slicing: boundaries where GroupNumber changes
-        # Example: group boundaries indices [0, i1, i2, ..., N]
-        change = np.flatnonzero(np.diff(sub_groups) != 0) + 1
-        bounds = np.concatenate(([0], change, [subhalo_df.shape[0]]))
-
-        # Loop over unique groups present in the filtered subhalo_df
-        # (loop count = number of host haloes, typically far smaller than number of subhaloes)
-        unique_groups = sub_groups[bounds[:-1]]
-
-        for ig, gnum in enumerate(unique_groups):
-            if ig % 1000 == 0:
-                print(f"Group {ig+1}/{unique_groups.shape[0]}...")
-
-            # Find matching row in group_df via searchsorted (group_df is sorted by GroupNumber)
-            gidx = np.searchsorted(group_numbers_sorted, gnum)
-            if gidx >= group_numbers_sorted.size or group_numbers_sorted[gidx] != gnum:
-                # Should not happen due to isin filter, but keep for safety
-                continue
-
-            # Slice subhalo rows belonging to this FoF group
-            i1 = bounds[ig]
-            i2 = bounds[ig + 1]
-            n_in_group = i2 - i1
-            if n_in_group <= 0:
-                continue
-
-            # Assign SubGroupNumber within group: 0..(n_in_group-1)
-            subhalo_df.loc[i1:i2-1, "SubGroupNumber"] = np.arange(n_in_group, dtype=np.int32)
-
-            # Copy host halo properties down to these subhaloes
-            subhalo_df.loc[i1:i2-1, "GroupMass"] = group_df.loc[gidx, "GroupMass"]
-            subhalo_df.loc[i1:i2-1, "Group_M_Crit200"] = group_df.loc[gidx, "Group_M_Crit200"]
-            subhalo_df.loc[i1:i2-1, "Group_R_Crit200"] = group_df.loc[gidx, "Group_R_Crit200"]
-
-            gx, gy, gz = group_df.loc[gidx, ["CentreOfMass_x", "CentreOfMass_y", "CentreOfMass_z"]].to_numpy()
-            subhalo_df.loc[i1:i2-1, "Group_CentreOfMass_x"] = gx
-            subhalo_df.loc[i1:i2-1, "Group_CentreOfMass_y"] = gy
-            subhalo_df.loc[i1:i2-1, "Group_CentreOfMass_z"] = gz
-
-            # Compute distance to host group centre (cMpc)
-            cop_sub = subhalo_df.loc[i1:i2-1, ["CentreOfMass_x", "CentreOfMass_y", "CentreOfMass_z"]].to_numpy()
-            dr = cop_sub - np.array([gx, gy, gz])[None, :]
-            subhalo_df.loc[i1:i2-1, "Group_Rrel"] = np.sqrt(np.sum(dr * dr, axis=1))
-
-        # ------------------------------------------------------------------
-        # Append this snapshot's subhalo table
-        # ------------------------------------------------------------------
         subhalo_dfs.append(subhalo_df)
         print()
 
     # ------------------------------------------------------------------
     # Concatenate across snapshots
     # ------------------------------------------------------------------
+    subhalo_dfs = [df for df in subhalo_dfs if df is not None and len(df) > 0]
+    if len(subhalo_dfs) == 0:
+        return pd.DataFrame()
+
     if len(subhalo_dfs) > 1:
         subcat = pd.concat(subhalo_dfs, ignore_index=True)
     else:
@@ -294,7 +247,6 @@ def extract_subhaloes(path, mcut=1e10, metadata=None):
     # ------------------------------------------------------------------
     # Final selection + sorting
     # ------------------------------------------------------------------
-    # host mass cut AND (central OR sufficiently massive satellite)
     mask = np.logical_and(
         subcat["Group_M_Crit200"].to_numpy() >= mcut,
         np.logical_or(
@@ -316,7 +268,6 @@ def extract_subhaloes(path, mcut=1e10, metadata=None):
     # ------------------------------------------------------------------
     dump_hdf(outpath, subcat)
 
-    # Add metadata path into output HDF5
     if metadata_path is not None:
         with h5py.File(outpath, "a") as subcatfile:
             if "Header" in subcatfile:
