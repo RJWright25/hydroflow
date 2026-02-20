@@ -188,6 +188,12 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
 
                 for ptype in ptype_fields.keys():
                     print(f"Processing particle type {ptype}... [file time: {time.time() - t0:.2f} s]")
+
+                    if maxifile is not None:
+                        print(f"maxifile={maxifile} limit is active, skipping {ptype} particles in this file.")
+                        if ptype>0:
+                            continue
+
                     n_this = int(npart_thisfile[ptype])
                     if n_this <= 0:
                         log.info(f"No {ptype} particles in this file!")
