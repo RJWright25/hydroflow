@@ -130,7 +130,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     L = boxsize
 
     print(f'COM ref: {com_ref} Mpc')
-    recentering_spheres = [30., 10.] #ckpc
+    recentering_spheres = [30.] #ckpc
     for radius in recentering_spheres:
         # mask in Mpc (scale is ckpc)
         mask = (radii_relative) < radius/1e3
@@ -165,7 +165,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         # Move reference centre forward (keeps offsets small + stable)
         com_ref = com_updated
 
-    # Use 10ckpc as the final scale
+    # Use 30ckpc as the final scale
     mask_final = radii_relative < recentering_spheres[-1]/1e3
     if membership_present:
         mask_final = np.logical_and(mask_final, pdata_candidates["Membership"].values == 0)
@@ -515,8 +515,8 @@ def analyse_galaxy(
     gas_r_half = np.nan
     gas_rz_half = np.nan
 
-    # Stars within 0.03 Mpc physical (~30 pkpc) for r_half computation -- exclusive if membership present
-    star_mask = np.logical_and(star, rrel * afac < 0.03)
+    # Stars within 0.03 Mpc comoving (30 ckpc) for r_half computation -- exclusive if membership present
+    star_mask = np.logical_and(star, rrel < 0.03)
     if 'excl' in membership_masks:
         star_mask = np.logical_and(star_mask, pdata_candidates["Membership"].values == 0.0)
         
@@ -526,8 +526,8 @@ def analyse_galaxy(
             mass[star_mask], np.abs(zheight[star_mask])
         )
 
-    # Gas within 0.01 Mpc physical (~10 ckpc) for r_half computation -- exclusive if membership present
-    gas_mask = np.logical_and(gas, rrel < 0.01)
+    # Gas within 0.03 Mpc comoving (30 ckpc) for r_half computation -- exclusive if membership present
+    gas_mask = np.logical_and(gas, rrel < 0.03)
     if 'excl' in membership_masks:
         gas_mask = np.logical_and(gas_mask, pdata_candidates["Membership"].values == 0.0)
     if np.nansum(gas_mask):
@@ -536,10 +536,10 @@ def analyse_galaxy(
             mass[gas_mask], np.abs(zheight[gas_mask])
         )
 
-    galaxy_output["010ckpc_sphere-star-r_half"] = star_r_half
-    galaxy_output["010ckpc_sphere-star-rz_half"] = star_rz_half
-    galaxy_output["010ckpc_sphere-gas-r_half"] = gas_r_half
-    galaxy_output["010ckpc_sphere-gas-rz_half"] = gas_rz_half
+    galaxy_output["030ckpc_sphere-star-r_half"] = star_r_half
+    galaxy_output["030ckpc_sphere-star-rz_half"] = star_rz_half
+    galaxy_output["030ckpc_sphere-gas-r_half"] = gas_r_half
+    galaxy_output["030ckpc_sphere-gas-rz_half"] = gas_rz_half
 
     # ------------------------------------------------------------------
     # 11. Theta masks (gas polar angle selections)
