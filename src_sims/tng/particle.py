@@ -177,6 +177,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
             if verbose:
                 print(f"Opening file {ifile+1}/{numfiles}: {ifname}")
             log.info(f"Opening file {ifile+1}/{numfiles}: {ifname}")
+            print(f"Opening file {ifile+1}/{numfiles}: {ifname}")
 
             with h5py.File(ifname, "r") as f:
                 npart_thisfile = f["Header"].attrs["NumPart_ThisFile"]
@@ -186,6 +187,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
                 df_file_parts = []
 
                 for ptype in ptype_fields.keys():
+                    print(f"Processing particle type {ptype}... [file time: {time.time() - t0:.2f} s]")
                     n_this = int(npart_thisfile[ptype])
                     if n_this <= 0:
                         log.info(f"No {ptype} particles in this file!")
@@ -202,6 +204,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
                     # 1) Build subvolume mask using Coordinates only
                     #    Coordinates are stored in ckpc/h; convert -> cMpc
                     # ------------------------------------------------------
+                    print(f"Building spatial mask for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
                     coords = g["Coordinates"][:]  # (N,3)
                     coords = coords * dconv  # ckpc/h -> cMpc
 
@@ -227,12 +230,14 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
                     # 2) Load always-present fields for idx
                     # ------------------------------------------------------
                     # Particle IDs
+                    print(f"Reading ParticleIDs for {ptype} particles... [file time: {time.time() - t0:.2f} s]")    
                     pids = g["ParticleIDs"][idx].astype(np.int64, copy=False)
 
                     # Coordinates (already converted to cMpc, but we need subset + stride)
                     coords_sel = coords[idx, :].astype(np.float64, copy=False)
 
                     # Velocities: stored as peculiar
+                    print(f"Reading Velocities for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
                     vxyz = g["Velocities"][idx, :].astype(np.float64, copy=False) * vconv
 
                     # Masses:
@@ -270,6 +275,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
                     # ------------------------------------------------------
                     # 4) Load extra ptype-specific fields (only for idx)
                     # ------------------------------------------------------
+                    print(f"Reading extra fields for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
                     if ptype_fields[ptype]:
                         for field in ptype_fields[ptype]:
                             try:
