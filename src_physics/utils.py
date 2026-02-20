@@ -104,7 +104,7 @@ def get_limits(ivol,nslice,boxsize,buffer=1):
 	return xmin,xmax,ymin,ymax,zmin,zmax
 
 
-def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1):
+def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3):
     """
     compute_cylindrical_ztheta: Calculate the angular momentum of a system of particles and the angle between the angular momentum and the position vector of each particle.
 
@@ -115,7 +115,7 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1):
     baryons: bool
         Flag to only consider baryonic particles.
     aperture: float
-        Aperture radius to mask the particles (in physical Mpc). 
+        Aperture radius to mask the particles (in comoving Mpc). 
     
     Output:
     -----------
@@ -128,15 +128,15 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1):
 
     z : np.array
         Array containing the z-coordinate of the particles relative to the disk plane.
-        The output is in physical Mpc and can be positive or negative.
+        The output is in comoving Mpc and can be positive or negative.
 
     """
 
     # Mask the particles within the aperture and only baryonic particles
     ptypes=pdata['ParticleType'].values
     masses=pdata['Masses'].values
-    radii=pdata['Relative_r_comoving'].values*afac
-    positions=pdata.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values*afac
+    radii=pdata['Relative_r_comoving'].values
+    positions=pdata.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values
     velocities=pdata.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values
 
     if baryons:
@@ -150,7 +150,7 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1):
 
     # Find the z-coordinate of the particles relative to the disk plane
     zheight=np.dot(positions,Lbarhat)
-    zheight=zheight/afac #convert back to comoving units
+    zheight=zheight #convert back to comoving units
 
     ## Position angles
 	# Find the angle between the angular momentum of the galaxy and the position vector of each particle
@@ -168,8 +168,6 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1):
     deg_theta_vel[deg_theta_vel>90]=180-deg_theta_vel[deg_theta_vel>90] # particles with e.g. theta=180 degrees (opposite minor axis) are re-assigned to 0 degrees (mirrored)
     # Now make 90 degrees the minor axis
     theta_vel=90-deg_theta_vel
-
-
 
     return Lbar, theta_pos, theta_vel, zheight
 

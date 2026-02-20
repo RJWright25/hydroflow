@@ -165,7 +165,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         # Move reference centre forward (keeps offsets small + stable)
         com_ref = com_updated
 
-    # Use 10pkpc as the final scale
+    # Use 10ckpc as the final scale
     mask_final = radii_relative < recentering_spheres[-1]/1e3
     if membership_present:
         mask_final = np.logical_and(mask_final, pdata_candidates["Membership"].values == 0)
@@ -356,7 +356,7 @@ def analyse_galaxy(
     com_old=np.array([galaxy_output[f'CentreOfMass_{x}'] for x in 'xyz'])
     com_offset=np.linalg.norm(com_new-com_old)
 
-    galaxy_output['hydroflow-com_offset']=com_offset # offset in 10
+    galaxy_output['hydroflow-com_offset']=com_offset # offset in ckpc
 
     # ------------------------------------------------------------------
     # 3. Shell-width bookkeeping (drfacs in frac, string labels)
@@ -377,7 +377,7 @@ def analyse_galaxy(
     #   zheight  : height above the disk plane (Mpc)
 
     Lbar, thetapos, thetavel, zheight = compute_cylindrical_ztheta(
-        pdata=pdata_candidates, afac=afac, baryons=True, aperture=0.03
+        pdata=pdata_candidates, afac=afac, baryons=True, aperture=0.01
     )
 
     pdata_candidates["Relative_theta_pos"] = thetapos
@@ -385,7 +385,7 @@ def analyse_galaxy(
     pdata_candidates["Relative_zheight"] = zheight
 
     for i_dim, dim in enumerate(["x", "y", "z"]):
-        galaxy_output[f"030pkpc_sphere-Lbar{dim}"] = Lbar[i_dim]
+        galaxy_output[f"010ckpc_sphere-Lbar{dim}"] = Lbar[i_dim]
 
     # ------------------------------------------------------------------
     # 5. Pre-load particle data into NumPy arrays for speed
