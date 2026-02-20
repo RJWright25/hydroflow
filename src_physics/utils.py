@@ -104,7 +104,7 @@ def get_limits(ivol,nslice,boxsize,buffer=1):
 	return xmin,xmax,ymin,ymax,zmin,zmax
 
 
-def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3):
+def compute_cylindrical_ztheta(pdata,baryons=True,aperture=10*1e-3,inclusive=True):
     """
     compute_cylindrical_ztheta: Calculate the angular momentum of a system of particles and the angle between the angular momentum and the position vector of each particle.
 
@@ -116,6 +116,8 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3):
         Flag to only consider baryonic particles.
     aperture: float
         Aperture radius to mask the particles (in comoving Mpc). 
+    inclusive: bool
+        If True, include all particles within the aperture. If False, only include particles that are not members of the galaxy (Membership=0) within the aperture.
     
     Output:
     -----------
@@ -144,6 +146,9 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3):
     else:
         mask=(radii<aperture)
 
+    if not inclusive:
+        mask=np.logical_and(mask,pdata['Membership'].values==0)
+         
 	# Define the angular momentum of the galaxy with baryonic elements within aperture
     Lbar=np.nansum(np.cross(positions[mask],masses[mask][:,np.newaxis]*velocities[mask]),axis=0)
     Lbarhat=Lbar/np.linalg.norm(Lbar)

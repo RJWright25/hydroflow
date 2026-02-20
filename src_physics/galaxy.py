@@ -374,10 +374,15 @@ def analyse_galaxy(
     #   Lbar   : total baryonic angular momentum vector
     #   thetapos : polar angle of positions relative to Lbar
     #   thetavel : polar angle of velocities relative to Lbar
-    #   zheight  : height above the disk plane (Mpc)
+    #   zheight  : height above the disk plane (cMpc)
+
+    inclusive=True 
+    if "Membership" in pdata_candidates.columns:
+        inclusive=False          
+
 
     Lbar, thetapos, thetavel, zheight = compute_cylindrical_ztheta(
-        pdata=pdata_candidates, afac=afac, baryons=True, aperture=0.01
+        pdata=pdata_candidates, afac=afac, baryons=True, aperture=0.01,inclusive=inclusive
     )
 
     pdata_candidates["Relative_theta_pos"] = thetapos
@@ -521,8 +526,8 @@ def analyse_galaxy(
             mass[star_mask], np.abs(zheight[star_mask])
         )
 
-    # Gas within 0.03 Mpc physical (~30 pkpc) for r_half computation -- exclusive if membership present
-    gas_mask = np.logical_and(gas, rrel * afac < 0.03)
+    # Gas within 0.01 Mpc physical (~10 ckpc) for r_half computation -- exclusive if membership present
+    gas_mask = np.logical_and(gas, rrel < 0.01)
     if 'excl' in membership_masks:
         gas_mask = np.logical_and(gas_mask, pdata_candidates["Membership"].values == 0.0)
     if np.nansum(gas_mask):
@@ -531,10 +536,10 @@ def analyse_galaxy(
             mass[gas_mask], np.abs(zheight[gas_mask])
         )
 
-    galaxy_output["030pkpc_sphere-star-r_half"] = star_r_half
-    galaxy_output["030pkpc_sphere-star-rz_half"] = star_rz_half
-    galaxy_output["030pkpc_sphere-gas-r_half"] = gas_r_half
-    galaxy_output["030pkpc_sphere-gas-rz_half"] = gas_rz_half
+    galaxy_output["010ckpc_sphere-star-r_half"] = star_r_half
+    galaxy_output["010ckpc_sphere-star-rz_half"] = star_rz_half
+    galaxy_output["010ckpc_sphere-gas-r_half"] = gas_r_half
+    galaxy_output["010ckpc_sphere-gas-rz_half"] = gas_rz_half
 
     # ------------------------------------------------------------------
     # 11. Theta masks (gas polar angle selections)
