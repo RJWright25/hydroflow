@@ -14,7 +14,7 @@ from hydroflow.src_physics.utils import (
 # --------------------------------------------------------------------------------------
 # READ PARTICLE DATA (TNG)
 # --------------------------------------------------------------------------------------
-def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False):
+def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxifile=None):
     """
     Read particle data belonging to a spatial subvolume from a multi–file TNG/Illustris-style
     snapshot and return a unified pandas catalogue plus KDTree for spatial queries.
@@ -164,6 +164,10 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False):
     # ------------------------------------------------------------------
     df_all = []
     t0 = time.time()
+
+    if maxifile is not None:
+        isnap_flist = isnap_flist[:maxifile]
+        log.info(f"Limiting to maxifile={maxifile}, now reading {len(isnap_flist)} files...")
 
     # ------------------------------------------------------------------
     # Loop over snapshot chunks
