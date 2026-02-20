@@ -382,7 +382,7 @@ def analyse_galaxy(
 
 
     Lbar, thetapos, thetavel, zheight = compute_cylindrical_ztheta(
-        pdata=pdata_candidates, afac=afac, baryons=True, aperture=0.01,inclusive=inclusive
+        pdata=pdata_candidates, baryons=True, aperture=0.03,inclusive=inclusive
     )
 
     pdata_candidates["Relative_theta_pos"] = thetapos
@@ -390,7 +390,7 @@ def analyse_galaxy(
     pdata_candidates["Relative_zheight"] = zheight
 
     for i_dim, dim in enumerate(["x", "y", "z"]):
-        galaxy_output[f"010ckpc_sphere-Lbar{dim}"] = Lbar[i_dim]
+        galaxy_output[f"030ckpc_sphere-Lbar{dim}"] = Lbar[i_dim]
 
     # ------------------------------------------------------------------
     # 5. Pre-load particle data into NumPy arrays for speed
