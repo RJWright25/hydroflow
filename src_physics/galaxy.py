@@ -378,8 +378,8 @@ def analyse_galaxy(
 
     inclusive=True 
     if "Membership" in pdata_candidates.columns:
+        print('Membership column found in pdata_candidates, using it to select only bound particles for disk orientation calculation.')
         inclusive=False          
-
 
     Lbar, thetapos, thetavel, zheight = compute_cylindrical_ztheta(
         pdata=pdata_candidates, baryons=True, aperture=0.03,inclusive=inclusive

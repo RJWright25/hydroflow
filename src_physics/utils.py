@@ -104,7 +104,7 @@ def get_limits(ivol,nslice,boxsize,buffer=1):
 	return xmin,xmax,ymin,ymax,zmin,zmax
 
 
-def compute_cylindrical_ztheta(pdata,baryons=True,aperture=10*1e-3,inclusive=True):
+def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,inclusive=True):
     """
     compute_cylindrical_ztheta: Calculate the angular momentum of a system of particles and the angle between the angular momentum and the position vector of each particle.
 
@@ -145,6 +145,7 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=10*1e-3,inclusive=Tru
         mask=np.logical_or(ptypes==0,ptypes==4) & (radii<aperture)
     else:
         mask=(radii<aperture)
+    print(f"Number of particles in aperture: {np.sum(mask)}")
 
     if not inclusive:
         mask=np.logical_and(mask,pdata['Membership'].values==0)
