@@ -377,7 +377,7 @@ def analyse_galaxy(
     #   zheight  : height above the disk plane (cMpc)
 
     inclusive=True 
-    if "Membership" in pdata_candidates.columns:
+    if  "HaloCatalogueIndex" in pdata_candidates.columns:
         print('Membership column found in pdata_candidates, using it to select only bound particles for disk orientation calculation.')
         inclusive=False          
 
