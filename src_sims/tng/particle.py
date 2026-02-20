@@ -167,7 +167,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
 
     if maxifile is not None:
         half_numfiles = np.round(numfiles/2).astype(int)
-        isnap_flist = isnap_flist[half_numfiles:half_numfiles+maxifile]
+        isnap_flist = isnap_flist[(half_numfiles+1):(half_numfiles+maxifile+1)]
         log.info(f"Limiting to maxifile={maxifile}, now reading {len(isnap_flist)} files...")
         print(f"Limiting to maxifile={maxifile}, now reading {len(isnap_flist)} files...")
     # ------------------------------------------------------------------
