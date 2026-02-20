@@ -168,7 +168,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
     if maxifile is not None:
         isnap_flist = isnap_flist[:maxifile]
         log.info(f"Limiting to maxifile={maxifile}, now reading {len(isnap_flist)} files...")
-
+        print(f"Limiting to maxifile={maxifile}, now reading {len(isnap_flist)} files...")
     # ------------------------------------------------------------------
     # Loop over snapshot chunks
     # ------------------------------------------------------------------
