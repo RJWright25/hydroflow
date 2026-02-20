@@ -118,7 +118,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
     dconv = 1e-3/hval #to cMpc
     mconv = 1e10/hval #to Msun
     vconv = np.sqrt(afac)
-    rhoconv = 1e10 * (hval**2) / (afac**3) #to Msun/pkpc^3
+    rhoconv = 1e10 * (hval**2)/(afac**-3) #to Msun/pkpc^3
 
     # ------------------------------------------------------------------
     # Snapshot chunk list
@@ -191,8 +191,8 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
                     print(f"Processing particle type {ptype}... [file time: {time.time() - t0:.2f} s]")
 
                     if maxifile is not None:
-                        print(f"maxifile={maxifile} limit is active, skipping {ptype} particles in this file.")
                         if ptype>0:
+                            print(f"maxifile={maxifile} limit is active, skipping {ptype} particles in this file.")
                             continue
 
                     n_this = int(npart_thisfile[ptype])
