@@ -389,6 +389,9 @@ def analyse_galaxy(
     pdata_candidates["Relative_theta_vel"] = thetavel
     pdata_candidates["Relative_zheight"] = zheight
 
+    print(Lbar)
+    print(zheight)
+
     for i_dim, dim in enumerate(["x", "y", "z"]):
         galaxy_output[f"030ckpc_sphere-Lbar{dim}"] = Lbar[i_dim]
 
