@@ -114,7 +114,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
     dconv = 1e-3 / hval            # ckpc/h -> cMpc
     mconv = 1e10 / hval            # 1e10 Msun/h -> Msun
     vconv = np.sqrt(afac)          # velocity scaling (peculiar km/s)
-    rhoconv = 1e10 * (hval**2) / (afac**-3)  # to Msun/pkpc^3 (from 1e10/h (ckpc/h)^-3)
+    rhoconv = 1e10 * (hval**2) / (afac**3)  # to Msun/pkpc^3 (from 1e10/h (ckpc/h)^-3)
 
     # ------------------------------------------------------------------
     # Subvolume limits (comoving Mpc)
