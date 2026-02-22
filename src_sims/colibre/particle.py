@@ -244,8 +244,8 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gason
             # Density (physical g/cm^3)
             log.info(f"Reading density... [elapsed {time.time() - t0:.2f} s]")
             dens = obj.densities
-            dens.convert_to_physical()
             dens.convert_to_units(unit_rho)
+            dens.convert_to_physical()
             out["Density"] = dens.value[::subset] 
             del dens
 
