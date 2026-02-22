@@ -104,7 +104,7 @@ def get_limits(ivol,nslice,boxsize,buffer=1):
 	return xmin,xmax,ymin,ymax,zmin,zmax
 
 
-def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,inclusive=True):
+def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1,inclusive=True):
     """
     compute_cylindrical_ztheta: Calculate the angular momentum of a system of particles and the angle between the angular momentum and the position vector of each particle.
 
@@ -116,6 +116,8 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,inclusive=Tru
         Flag to only consider baryonic particles.
     aperture: float
         Aperture radius to mask the particles (in comoving Mpc). 
+    afac: float
+        Cosmological scale factor.
     inclusive: bool
         If True, include all particles within the aperture. If False, only include particles that are not members of the galaxy (Membership=0) within the aperture.
     
@@ -136,10 +138,10 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,inclusive=Tru
 
     # Mask the particles within the aperture and only baryonic particles
     ptypes=pdata['ParticleType'].values
-    masses=pdata['Masses'].values
-    radii=pdata['Relative_r_comoving'].values
-    positions=pdata.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values
-    velocities=pdata.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values
+    masses=pdata['Masses'].values # in Msun
+    radii=pdata['Relative_r_comoving'].values # already in comoving Mpc
+    positions=pdata.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values # already in comoving Mpc
+    velocities=pdata.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values # already in physical units (km/s)
 
     if baryons:
         mask=np.logical_or(ptypes==0,ptypes==4) & (radii<aperture)
@@ -153,12 +155,12 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,inclusive=Tru
     print(f"Number of particles in aperture: {np.sum(mask)}")
          
 	# Define the angular momentum of the galaxy with baryonic elements within aperture
-    Lbar=np.nansum(np.cross(positions[mask],masses[mask][:,np.newaxis]*velocities[mask]),axis=0)
+    Lbar=np.nansum(np.cross(positions[mask]*afac,masses[mask][:,np.newaxis]*velocities[mask]),axis=0)
     Lbarhat=Lbar/np.linalg.norm(Lbar)
 
     # Find the z-coordinate of the particles relative to the disk plane
     zheight=np.dot(positions,Lbarhat)
-    zheight=zheight #convert back to comoving units
+    zheight=zheight  # in comoving Mpc
 
     ## Position angles
 	# Find the angle between the angular momentum of the galaxy and the position vector of each particle

@@ -9,6 +9,7 @@ from hydroflow.src_physics.utils import (
 
 from hydroflow.src_physics.gasflow import calculate_flow_rate
 
+recentering_spheres=[30.] #ckpc, used for iterative COM calculation
 
 # --------------------------------------------------------------------------------------
 # 1) Retrieve particle candidates for a single galaxy
@@ -130,7 +131,6 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     L = boxsize
 
     print(f'COM ref: {com_ref} Mpc')
-    recentering_spheres = [30.] #ckpc
     for radius in recentering_spheres:
         # mask in Mpc (scale is ckpc)
         mask = (radii_relative) < radius/1e3
@@ -382,7 +382,7 @@ def analyse_galaxy(
         inclusive=False          
 
     Lbar, thetapos, thetavel, zheight = compute_cylindrical_ztheta(
-        pdata=pdata_candidates, baryons=True, aperture=0.03,inclusive=inclusive
+        pdata=pdata_candidates, baryons=True, aperture=recentering_spheres[-1]/1e3,inclusive=inclusive
     )
 
     pdata_candidates["Relative_theta_pos"] = thetapos
