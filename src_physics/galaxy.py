@@ -9,7 +9,8 @@ from hydroflow.src_physics.utils import (
 
 from hydroflow.src_physics.gasflow import calculate_flow_rate
 
-recentering_spheres=[30.] #ckpc, used for iterative COM calculation
+recentering_spheres=[30.] #ckpc, used for iterative COM calculation -- works for centrals and satellites
+recentering_spheres_str=['030ckpc'] 
 
 # --------------------------------------------------------------------------------------
 # 1) Retrieve particle candidates for a single galaxy
@@ -382,7 +383,7 @@ def analyse_galaxy(
         inclusive=False          
 
     Lbar, thetapos, thetavel, zheight = compute_cylindrical_ztheta(
-        pdata=pdata_candidates, baryons=True, aperture=recentering_spheres[-1]/1e3,inclusive=inclusive
+        pdata=pdata_candidates, baryons=True, aperture=recentering_spheres[-1]/1e3,inclusive=inclusive,afac=afac
     )
 
     pdata_candidates["Relative_theta_pos"] = thetapos
@@ -390,7 +391,7 @@ def analyse_galaxy(
     pdata_candidates["Relative_zheight"] = zheight
 
     for i_dim, dim in enumerate(["x", "y", "z"]):
-        galaxy_output[f"030ckpc_sphere-Lbar{dim}"] = Lbar[i_dim]
+        galaxy_output[f"{recentering_spheres_str[-1]}_sphere-Lbar{dim}"] = Lbar[i_dim]
 
     # ------------------------------------------------------------------
     # 5. Pre-load particle data into NumPy arrays for speed
@@ -515,8 +516,8 @@ def analyse_galaxy(
     gas_r_half = np.nan
     gas_rz_half = np.nan
 
-    # Stars within 0.03 Mpc comoving (30 ckpc) for r_half computation -- exclusive if membership present
-    star_mask = np.logical_and(star, rrel < 0.03)
+    # Stars within last recentering sphere -- exclusive if membership present
+    star_mask = np.logical_and(star, rrel < recentering_spheres[-1]/1e3)
     if 'excl' in membership_masks:
         star_mask = np.logical_and(star_mask, pdata_candidates["Membership"].values == 0.0)
         
@@ -526,8 +527,8 @@ def analyse_galaxy(
             mass[star_mask], np.abs(zheight[star_mask])
         )
 
-    # Gas within 0.03 Mpc comoving (30 ckpc) for r_half computation -- exclusive if membership present
-    gas_mask = np.logical_and(gas, rrel < 0.03)
+    # Gas within last recentering sphere -- exclusive if membership present
+    gas_mask = np.logical_and(gas, rrel < recentering_spheres[-1]/1e3)
     if 'excl' in membership_masks:
         gas_mask = np.logical_and(gas_mask, pdata_candidates["Membership"].values == 0.0)
     if np.nansum(gas_mask):
@@ -536,10 +537,10 @@ def analyse_galaxy(
             mass[gas_mask], np.abs(zheight[gas_mask])
         )
 
-    galaxy_output["030ckpc_sphere-star-r_half"] = star_r_half
-    galaxy_output["030ckpc_sphere-star-rz_half"] = star_rz_half
-    galaxy_output["030ckpc_sphere-gas-r_half"] = gas_r_half
-    galaxy_output["030ckpc_sphere-gas-rz_half"] = gas_rz_half
+    galaxy_output[f"{recentering_spheres_str[-1]}_sphere-star-r_half"] = star_r_half
+    galaxy_output[f"{recentering_spheres_str[-1]}_sphere-star-rz_half"] = star_rz_half
+    galaxy_output[f"{recentering_spheres_str[-1]}_sphere-gas-r_half"] = gas_r_half
+    galaxy_output[f"{recentering_spheres_str[-1]}_sphere-gas-rz_half"] = gas_rz_half
 
     # ------------------------------------------------------------------
     # 11. Theta masks (gas polar angle selections)
@@ -585,7 +586,7 @@ def analyse_galaxy(
         if isinstance(zslab_radius, str) and "reff" in zslab_radius:
             # e.g. '2reff' => 2 * r_half of stars, from the 10 pkpc sphere
             zslab_radius_val = (
-                galaxy_output["030pkpc_sphere-star-r_half"]
+                galaxy_output[f"{recentering_spheres_str[-1]}_sphere-star-r_half"]
                 * float(zslab_radius.split("reff")[0])
             )
         elif isinstance(zslab_radius, str) and "zheight" in zslab_radius:
