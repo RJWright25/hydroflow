@@ -118,7 +118,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
     dconv = 1e-3/hval #to cMpc
     mconv = 1e10/hval #to Msun
     vconv = np.sqrt(afac)
-    rhoconv = 1e10 * (hval**2)/(afac**-3) #to Msun/pkpc^3
+    rhoconv = 1e10 * (hval**2)/(afac**-3) #converting to Msun/pkpc^3 from 1e10/h (ckpc/h)^-3
 
     # ------------------------------------------------------------------
     # Snapshot chunk list
