@@ -183,33 +183,46 @@ def extract_subhaloes(path, mcut=1e10, metadata=None, flowrates=True):
         mstar_30kpc.convert_to_units(munit)
         out["030pkpc_sphere-star-m_tot-soapexcl"] = np.asarray(mstar_30kpc.value)
 
-        mstar_30kpc = halodata.inclusive_sphere_30kpc.stellar_mass
-        mstar_30kpc.convert_to_units(munit)
-        out["030pkpc_sphere-star-m_tot-soapincl"] = np.asarray(mstar_30kpc.value)
+        try:
+            mstar_30kpc = halodata.inclusive_sphere_30kpc.stellar_mass
+            mstar_30kpc.convert_to_units(munit)
+            out["030pkpc_sphere-star-m_tot-soapincl"] = np.asarray(mstar_30kpc.value)
+        except:
+            print('no inclusive sphere')
+            pass
 
         mgas_30kpc = halodata.exclusive_sphere_30kpc.gas_mass
         mgas_30kpc.convert_to_units(munit)
         out["030pkpc_sphere-gas_all-m_tot-soapexcl"] = np.asarray(mgas_30kpc.value)
 
-        mgas_30kpc = halodata.inclusive_sphere_30kpc.gas_mass
-        mgas_30kpc.convert_to_units(munit)
-        out["030pkpc_sphere-gas_all-m_tot-soapincl"] = np.asarray(mgas_30kpc.value)
+        try:
+            mgas_30kpc = halodata.inclusive_sphere_30kpc.gas_mass
+            mgas_30kpc.convert_to_units(munit)
+            out["030pkpc_sphere-gas_all-m_tot-soapincl"] = np.asarray(mgas_30kpc.value)
+        except:
+            pass
 
         mHI_30kpc = halodata.exclusive_sphere_30kpc.atomic_hydrogen_mass
         mHI_30kpc.convert_to_units(munit)
         out["030pkpc_sphere-gas_all-m_HI-soapexcl"] = np.asarray(mHI_30kpc.value)
 
-        mHI_30kpc = halodata.inclusive_sphere_30kpc.atomic_hydrogen_mass
-        mHI_30kpc.convert_to_units(munit)
-        out["030pkpc_sphere-gas_all-m_HI-soapincl"] = np.asarray(mHI_30kpc.value)
+        try:
+            mHI_30kpc = halodata.inclusive_sphere_30kpc.atomic_hydrogen_mass
+            mHI_30kpc.convert_to_units(munit)
+            out["030pkpc_sphere-gas_all-m_HI-soapincl"] = np.asarray(mHI_30kpc.value)
+        except:
+            pass
 
         mH2_30kpc = halodata.exclusive_sphere_30kpc.molecular_hydrogen_mass
         mH2_30kpc.convert_to_units(munit)
         out["030pkpc_sphere-gas_all-m_H2-soapexcl"] = np.asarray(mH2_30kpc.value)
 
-        mH2_30kpc = halodata.inclusive_sphere_30kpc.molecular_hydrogen_mass
-        mH2_30kpc.convert_to_units(munit)
-        out["030pkpc_sphere-gas_all-m_H2-soapincl"] = np.asarray(mH2_30kpc.value)
+        try:
+            mH2_30kpc = halodata.inclusive_sphere_30kpc.molecular_hydrogen_mass
+            mH2_30kpc.convert_to_units(munit)
+            out["030pkpc_sphere-gas_all-m_H2-soapincl"] = np.asarray(mH2_30kpc.value)
+        except:
+            pass
 
         sfr_30kpc = halodata.exclusive_sphere_30kpc.star_formation_rate
         sfr_30kpc.convert_to_units(f"{munit}/yr")
