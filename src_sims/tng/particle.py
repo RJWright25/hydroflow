@@ -14,7 +14,7 @@ from hydroflow.src_physics.utils import (
 # --------------------------------------------------------------------------------------
 # READ PARTICLE DATA (TNG)
 # --------------------------------------------------------------------------------------
-def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxifile=None):
+def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxifile=None, gasonly=True):
     """
     Read particle data belonging to a spatial subvolume from a multi–file TNG/Illustris-style
     snapshot and return a unified pandas catalogue plus KDTree for spatial queries.
@@ -147,6 +147,11 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
         1: [],
         4: ["GFM_Metallicity"],
     }
+
+    if gasonly:
+        ptype_fields=ptype_fields[0]
+        ptype_fields={0:ptype_fields}
+
     # Column name templates (kept identical)
     coord_cols = [f"Coordinates_{d}" for d in "xyz"]
     vel_cols = [f"Velocities_{d}" for d in "xyz"]
