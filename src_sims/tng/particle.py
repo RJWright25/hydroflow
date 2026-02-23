@@ -244,7 +244,8 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
                     # 2) Load always-present fields for idx
                     # ------------------------------------------------------
                     # Particle IDs
-                    print(f"Reading ParticleIDs for {ptype} particles... [file time: {time.time() - t0:.2f} s]")    
+                    print(f"Reading ParticleIDs for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
+                    log.info(f"Reading ParticleIDs for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
                     pids = g["ParticleIDs"][:][idx].astype(np.int64, copy=False)
 
                     # Coordinates (already converted to cMpc, but we need subset + stride)
@@ -252,6 +253,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
 
                     # Velocities: stored as peculiar
                     print(f"Reading Velocities for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
+                    log.info(f"Reading Velocities for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
                     vxyz = g["Velocities"][:][idx, :].astype(np.float64, copy=False) * vconv
 
                     # Masses:
@@ -290,6 +292,8 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
                     # 4) Load extra ptype-specific fields (only for idx)
                     # ------------------------------------------------------
                     print(f"Reading extra fields for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
+                    log.info(f"Reading extra fields for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
+
                     if ptype_fields[ptype]:
                         for field in ptype_fields[ptype]:
                             try:

@@ -174,8 +174,9 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gason
             g = f[gname]
 
             # --------------------------------------------------------------
-            # 1) Build subvolume mask from Coordinates only (fast, vectorised)
+            # 1) Build subvolume mask from Coordinates only
             # --------------------------------------------------------------
+            log.info(f"Creating spatial mask for ptype {ptype}... ")
             coords = g["Coordinates"][:] * dconv  # (N,3) in cMpc
 
             if verbose:
@@ -200,11 +201,13 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gason
             # --------------------------------------------------------------
             # 2) Load always-present fields (subset by idx)
             # --------------------------------------------------------------
+            log.info(f"Reading IDs and velocities for ptype {ptype}... ")
             pids = g["ParticleIDs"][:][idx].astype(np.int64, copy=False)
             coords_sel = coords[idx, :].astype(np.float64, copy=False)
             vxyz = g["Velocities"][:][idx, :].astype(np.float64, copy=False) * vconv
 
             # Masses in Msun; re-weight by stride to conserve total mass statistically
+            log.info(f"Reading masses for ptype {ptype}... ")
             m = g["Masses"][:][idx].astype(np.float64, copy=False) * mconv
             if stride > 1:
                 m = m * stride
@@ -230,6 +233,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gason
             # 4) Load extra ptype-specific fields
             # --------------------------------------------------------------
             for field in ptype_fields[ptype]:
+                log.info(f"Reading extra quantity {field} for ptype {ptype}... ")
                 try:
                     if field == "Metallicity":
                         out[field] = g[field][:][idx, 0]
@@ -244,6 +248,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gason
             # --------------------------------------------------------------
             # 5) Unit conversions / derived quantities (gas only)
             # --------------------------------------------------------------
+            log.info(f"Converting for ptype {ptype}... ")
             if ptype == 0:
                 # Density conversion to g/cm^3
                 dens = df_pt["Density"].to_numpy(dtype=np.float64, copy=False)
