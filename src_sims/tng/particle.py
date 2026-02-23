@@ -217,10 +217,12 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
                     #    Coordinates are stored in ckpc/h; convert -> cMpc
                     # ------------------------------------------------------
                     print(f"Building spatial mask for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
+                    log.info(f"Building spatial mask for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
                     coords = g["Coordinates"][:]  # (N,3)
                     coords = coords * dconv  # ckpc/h -> cMpc
 
                     # Vectorised mask (no per-dimension loop)
+
                     mask = (
                         (coords[:, 0] >= xmin) & (coords[:, 0] <= xmax) &
                         (coords[:, 1] >= ymin) & (coords[:, 1] <= ymax) &
@@ -243,20 +245,20 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
                     # ------------------------------------------------------
                     # Particle IDs
                     print(f"Reading ParticleIDs for {ptype} particles... [file time: {time.time() - t0:.2f} s]")    
-                    pids = g["ParticleIDs"][idx].astype(np.int64, copy=False)
+                    pids = g["ParticleIDs"][:][idx].astype(np.int64, copy=False)
 
                     # Coordinates (already converted to cMpc, but we need subset + stride)
                     coords_sel = coords[idx, :].astype(np.float64, copy=False)
 
                     # Velocities: stored as peculiar
                     print(f"Reading Velocities for {ptype} particles... [file time: {time.time() - t0:.2f} s]")
-                    vxyz = g["Velocities"][idx, :].astype(np.float64, copy=False) * vconv
+                    vxyz = g["Velocities"][:][idx, :].astype(np.float64, copy=False) * vconv
 
                     # Masses:
                     # - DM uses MassTable
                     # - others use particle Masses dataset
                     if ptype != 1:
-                        m = g["Masses"][idx].astype(np.float64, copy=False) * mconv
+                        m = g["Masses"][:][idx].astype(np.float64, copy=False) * mconv
                         # Re-weight mass because we're downsampling by stride (keep identical behaviour)
                         if stride > 1:
                             m = m * stride
@@ -291,7 +293,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, maxif
                     if ptype_fields[ptype]:
                         for field in ptype_fields[ptype]:
                             try:
-                                arr = g[field][idx]
+                                arr = g[field][:][idx]
                             except Exception:
                                 log.info(
                                     f"Trouble reading field {field} for ptype {ptype} in file {ifile+1}/{numfiles}. "

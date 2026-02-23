@@ -200,12 +200,12 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gason
             # --------------------------------------------------------------
             # 2) Load always-present fields (subset by idx)
             # --------------------------------------------------------------
-            pids = g["ParticleIDs"][idx].astype(np.int64, copy=False)
+            pids = g["ParticleIDs"][:][idx].astype(np.int64, copy=False)
             coords_sel = coords[idx, :].astype(np.float64, copy=False)
-            vxyz = g["Velocities"][idx, :].astype(np.float64, copy=False) * vconv
+            vxyz = g["Velocities"][:][idx, :].astype(np.float64, copy=False) * vconv
 
             # Masses in Msun; re-weight by stride to conserve total mass statistically
-            m = g["Masses"][idx].astype(np.float64, copy=False) * mconv
+            m = g["Masses"][:][idx].astype(np.float64, copy=False) * mconv
             if stride > 1:
                 m = m * stride
 
@@ -232,9 +232,9 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gason
             for field in ptype_fields[ptype]:
                 try:
                     if field == "Metallicity":
-                        out[field] = g[field][idx, 0]
+                        out[field] = g[field][:][idx, 0]
                     else:
-                        out[field] = g[field][idx].astype(np.float64, copy=False)
+                        out[field] = g[field][:][idx].astype(np.float64, copy=False)
                 except Exception:
                     log.info(f"Trouble reading field {field} for ptype {ptype}. Skipping.")
                     continue
