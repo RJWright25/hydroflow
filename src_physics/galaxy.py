@@ -477,7 +477,8 @@ def analyse_galaxy(
     # Don't use vmax cut if satellite and no vmax output
     if galaxy_output['SubGroupNumber']>0:
         galaxy_output["Group_V_Crit200"] = 0
-
+    
+    vmax=0
     vmins = []
     vminstrs = list(vcuts.keys())
 
