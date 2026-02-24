@@ -151,8 +151,6 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1,inclus
 
     if not inclusive:
         mask=np.logical_and(mask,pdata['Membership'].values==0)
-
-    print(f"Number of particles in aperture: {np.sum(mask)}")
          
 	# Define the angular momentum of the galaxy with baryonic elements within aperture
     Lbar=np.nansum(np.cross(positions[mask]*afac,masses[mask][:,np.newaxis]*velocities[mask]),axis=0)

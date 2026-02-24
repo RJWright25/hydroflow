@@ -1,8 +1,3 @@
-# HYDROFLOW – GAS FLOWS IN COSMOLOGICAL SIMULATIONS
-# Ruby Wright (2021)
-
-# run/initialise.py: initialise simulation object with associated attributes -- snapshot lists, redshifts, and cosmological parameters.
-
 import os
 import time
 import h5py
