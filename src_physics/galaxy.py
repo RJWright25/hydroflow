@@ -189,7 +189,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     # 7. Recompute relative positions / velocities using iterative COM
     # ------------------------------------------------------------------
     rel_pos = coords - com_final[np.newaxis, :]
-    rel_pos -= boxsize * np.round(rel_pos_updated / boxsize)
+    rel_pos -= boxsize * np.round(rel_pos / boxsize)
     rel_r = np.linalg.norm(rel_pos, axis=1)  # still comoving Mpc
 
     pdata_candidates[[f"Relative_{ax}_comoving" for ax in "xyz"]] = rel_pos
