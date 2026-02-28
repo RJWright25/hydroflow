@@ -88,6 +88,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     pdata_candidates.reset_index(drop=True, inplace=True)
 
     num_candidates = pdata_candidates.shape[0]
+    print(num_candidates, 'candidates')
 
     if num_candidates == 0:
         # No particles within the search radius
