@@ -145,13 +145,14 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         # Impose membership if present
         if membership_present:
             mask = np.logical_and(mask, pdata_candidates["Membership"].values == 0)
-
+        print(np.nansum(mask))
         # Baryons mask (everything except DM=1)
         baryons = (particle_type != 1)
 
         # If enough baryons *in the current selection*, use them only
         if np.nansum(mask & baryons) > 10:
             mask = np.logical_and(mask, baryons)
+        print(np.nansum(mask))
 
         if np.nansum(mask) == 0:
             continue
