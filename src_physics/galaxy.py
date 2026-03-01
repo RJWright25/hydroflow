@@ -88,7 +88,6 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     pdata_candidates.reset_index(drop=True, inplace=True)
 
     num_candidates = pdata_candidates.shape[0]
-    print(num_candidates, 'candidates')
 
     if num_candidates == 0:
         # No particles within the search radius
@@ -135,7 +134,13 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     print(f'COM ref: {com_ref} Mpc')
     for radius in recentering_spheres:
         # mask in Mpc (scale is ckpc)
+        print(radii_relative)
+        print(np.nanpercentile(radii_relative,1))
+        print(np.nanpercentile(radii_relative,50))
+        print(np.nanpercentile(radii_relative,99))
+        
         mask = (radii_relative) < radius/1e3
+        print(np.nansum(mask))
 
         # Impose membership if present
         if membership_present:
