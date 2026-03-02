@@ -5,6 +5,13 @@ import h5py
 import time
 import logging
 
+from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor, as_completed
+
+import numpy as np
+import pandas as pd
+
+
 from hydroflow.run.tools_hpc import create_dir
 
 def dump_hdf_group(fname,group,data,metadata={},verbose=False):
@@ -104,170 +111,175 @@ def dump_hdf(fname,data,verbose=False):
     outfile.close()
 
 
-# Read an hdf5 file and return a pandas DataFrame
-def read_hdf(fname,columns=None,verbose=False):
+def read_hdf(fname, columns=None, verbose=False):
     """
-    read_hdf: Read an hdf5 file (generated with dump_hdf) and return a pandas DataFrame.
-
-
-    Input:
-    -----------
-    fname: str
-        Path to the input file.
-
-
-    columns: list
-        List of columns to read. If None, all columns are read.
-
-
-    verbose: bool
-        Print progress.
-
-
-    Output:
-    -----------
-    outdf: pd.DataFrame
-        DataFrame containing the data from the hdf5 file.
-
-
-
-
+    Read an HDF5 file (written by dump_hdf) into a pandas DataFrame.
     """
+    out = {}
+    failed = []
 
-    # Open the hdf5 file and get columns if not specified
-    infile=h5py.File(fname,mode='r')
-    if not columns:
-        columns=list(infile.keys())
-    outdf={}
-    failed=[]
+    with h5py.File(fname, "r") as infile:
 
+        # Decide which datasets to read
+        if columns is None:
+            cols = list(infile.keys())
+        else:
+            cols = list(columns)
 
-    # Read the requested columns
-    for icol, column in enumerate(columns):
-        if verbose:
-            print(f'Reading {column} ... {icol+1}/{len(columns)}')
+        # skip header explicitly
+        cols = [c for c in cols if c != "Header"]
 
+        # if user passed columns, filter to those that actually exist
+        # (avoids exceptions in the loop)
+        if columns is not None:
+            missing = [c for c in cols if c not in infile]
+            if missing:
+                failed.extend(missing)
+            cols = [c for c in cols if c in infile]
 
-        # Skip the header if it exists; read the data otherwise
-        if not 'Header' in column:
+        # Read datasets
+        for icol, col in enumerate(cols, start=1):
+            if verbose:
+                print(f"Reading {col} ... {icol}/{len(cols)}")
+
             try:
-                data=infile[column][:]
-            except:
+                out[col] = infile[col][:]
+            except (OSError, KeyError, ValueError, RuntimeError) as e:
+                failed.append(col)
                 if verbose:
-                    print(f'Failed to read {column}')
-                failed.append(column)
+                    print(f"Failed to read {col}: {e}")
+
+        df = pd.DataFrame(out)
+
+        # Header attrs -> df.attrs
+        if "Header" in infile:
+            hdr = infile["Header"]
+            if "metadata" in hdr.attrs:
+                df.attrs["metadata"] = hdr.attrs["metadata"]
+
+    if failed and verbose:
+        print("Note, failed to load the following fields:")
+        for col in failed:
+            print(col)
+
+    return df
 
 
-            outdf[column]=data
-    
-    outdf=pd.DataFrame(outdf)
+def _read_one_hdf(path):
+    return read_hdf(path)
 
 
-    # Search for metadata in the header
-    if 'Header' in infile.keys():
-        if 'metadata' in infile['Header'].attrs.keys():
-            metadata_path=infile['Header'].attrs['metadata']
-            outdf.attrs['metadata']=metadata_path
+def combine_catalogues(path_hydroflow, snaps=None, mcut=10, verbose=False, nproc=None, log_every=200):
 
-    infile.close()
+    path_hydroflow = Path(path_hydroflow)
 
-    # Print any failed columns
-    if failed:
-        if verbose:
-            print('Note, failed to load the following fields:')
-            for column in failed:
-                print(column)
-
-    return outdf
-
-def combine_catalogues(path_hydroflow, snaps=None, mcut=10, verbose=False):
-
-    # Configure logging
-    if 'catalogues'  in path_hydroflow:
-        path_run=path_hydroflow.split('catalogues')[0]
-        log_path = path_run+'/jobs/combine_catalogues.log'
-        if not os.path.exists(path_run+'jobs'):
-            os.makedirs(path_run+'jobs')
+    # logging
+    if "catalogues" in str(path_hydroflow):
+        path_run = Path(str(path_hydroflow).split("catalogues")[0])
+        jobs_dir = path_run / "jobs"
+        jobs_dir.mkdir(parents=True, exist_ok=True)
+        log_path = jobs_dir / "combine_catalogues.log"
     else:
-        log_path = 'combine_catalogues.log'
+        log_path = Path("combine_catalogues.log")
 
-    if os.path.exists(log_path):
-        os.remove(log_path)
+    if log_path.exists():
+        log_path.unlink()
 
     print(f"Logging to {log_path}")
-    
-    logging.basicConfig(filename=log_path, level=logging.INFO)
+    logging.basicConfig(filename=str(log_path), level=logging.INFO)
     t1 = time.time()
     logging.info(f"Started combine catalogues at {time.ctime(t1)}")
 
+    # snapshot list
+    if snaps is None:
+        snaps = []
+        for d in path_hydroflow.iterdir():
+            if d.is_dir() and d.name.startswith("snap"):
+                try:
+                    snaps.append(int(d.name.split("snap")[-1][:3]))
+                except ValueError:
+                    pass
+        snaps = sorted(set(snaps))
 
-    calc_str = 'nvol' + path_hydroflow.split('nvol')[-1].split('/')[0]
+    if not snaps:
+        logging.info("No snapshots requested / found.")
+        print("No snapshots requested / found.")
+        return []
+
     snap_set = set(snaps)
     snap_range = (min(snaps), max(snaps))
+
+    calc_str = "nvol" + str(path_hydroflow).split("nvol")[-1].split("/")[0]
     snap_str = f"{snap_range[0]:03d}" if snap_range[0] == snap_range[1] else f"{snap_range[0]:03d}to{snap_range[1]:03d}"
-    outpath = os.path.join(path_hydroflow, f"gasflow_snap{snap_str}_{calc_str}.hdf5")
+    outpath = path_hydroflow / f"gasflow_snap{snap_str}_{calc_str}.hdf5"
 
-    logging.info(f"Reading hydroflow outputs... (t = {time.time() - t1:.2f}s) ")
-
-    snapdirs = sorted([d for d in os.listdir(path_hydroflow) if d.startswith("snap")])
-    logging.info(f"Snapdirs: {snapdirs}")
-
-    # Iterate through desired snapshots and read the available hydroflow outputs
-    snap_outputs = []
-    for snapdir in snapdirs:
+    # gather ivol files
+    ivol_files = []
+    for d in path_hydroflow.iterdir():
+        if not (d.is_dir() and d.name.startswith("snap")):
+            continue
         try:
-            snap = int(snapdir.split("snap")[-1][:3])
+            snap = int(d.name.split("snap")[-1][:3])
         except ValueError:
             continue
         if snap not in snap_set:
             continue
+        ivol_files.extend(d.glob("*ivol*"))
 
-        snapdir_path = os.path.join(path_hydroflow, snapdir)
-        if not os.path.isdir(snapdir_path):
-            continue
+    ivol_files = [str(p) for p in ivol_files]
 
-        isnap_files = [os.path.join(snapdir_path, f) for f in os.listdir(snapdir_path) if 'ivol' in f]
-        if not isnap_files:
-            continue
+    if not ivol_files:
+        logging.info("No hydroflow outputs found for the specified snapshots.")
+        print("No hydroflow outputs found for the specified snapshots")
+        return []
 
-        logging.info(f"Loading {len(isnap_files)} files for snap {snap} (t = {time.time() - t1:.2f}s)")
-        logging.info(f"Files: {isnap_files}")
+    # parallel read
+    if nproc is None:
+        nproc = max(1, (os.cpu_count() or 4) - 1)
 
-        isnap_outputs = [read_hdf(f) for f in isnap_files]
+    logging.info(f"Found {len(ivol_files)} files. Reading with nproc={nproc} (t={time.time()-t1:.2f}s)")
+    dfs = []
 
-        logging.info(f"Loaded {len(isnap_outputs)} files for snap {snap} - concatenating... (t = {time.time() - t1:.2f}s)")
-        isnap_outputs=pd.concat(isnap_outputs, ignore_index=True)
-        
-        #Enforce mass cut
-        logging.info(f"Enforcing mass cut of log10 {mcut}/Msun (t = {time.time() - t1:.2f}s)")
-        if mcut:
-            if not 'Mass' in isnap_outputs.columns:
-                logging.warning(f"Mass column not found in {snapdir_path} - skipping mass cut")
-            else:
-                isnap_outputs = isnap_outputs.loc[isnap_outputs['Mass'].values > 10**mcut,:].copy()
+    t_read0 = time.time()
+    with ProcessPoolExecutor(max_workers=nproc) as ex:
+        futures = [ex.submit(_read_one_hdf, f) for f in ivol_files]
+        for i, fut in enumerate(as_completed(futures), start=1):
+            df = fut.result()
+            if df is not None and len(df) > 0:
+                dfs.append(df)
+            if log_every and (i % log_every == 0):
+                logging.info(f"  read {i}/{len(ivol_files)} files (dt={time.time()-t_read0:.1f}s)")
 
-        snap_outputs.append(isnap_outputs)
+    if not dfs:
+        logging.info("All reads returned empty.")
+        print("All reads returned empty.")
+        return []
 
+    # combine once
+    logging.info(f"Concatenating {len(dfs)} frames (t={time.time()-t1:.2f}s)")
+    snap_outputs = pd.concat(dfs, ignore_index=True, copy=False)
 
-    if not snap_outputs:
-        print('No hydroflow outputs found for the specified snapshots')
-        logging.info("No hydroflow outputs found.")
-        return snap_outputs
+    if "HydroflowID" in snap_outputs.columns:
+        snap_outputs["HydroflowID"] = snap_outputs["HydroflowID"].astype(np.int64, copy=False)
 
-    logging.info(f"Concatenating data from {len(snap_outputs)} snapshots... (t = {time.time() - t1:.2f}s)")
-    snap_outputs = pd.concat(snap_outputs, ignore_index=True)
-    snap_outputs.sort_values(by='HydroflowID', inplace=True)
-    snap_outputs.reset_index(drop=True, inplace=True)
-    snap_outputs['HydroflowID'] = snap_outputs['HydroflowID'].astype(np.int64)
+    # final ordering
+    sort_cols = ["SnapNum", "Group_M_Crit200", "SubGroupNumber"]
+    if all(c in snap_outputs.columns for c in sort_cols):
+        snap_outputs.sort_values(
+            by=sort_cols,
+            ascending=[False, False, True],
+            inplace=True,
+            kind="mergesort",
+            ignore_index=True,
+        )
+    elif "HydroflowID" in snap_outputs.columns:
+        snap_outputs.sort_values(by="HydroflowID", inplace=True, kind="mergesort", ignore_index=True)
 
-    print(f'Writing to {outpath} ... (t = {time.time() - t1:.2f}s)')
-    logging.info(f"Writing to {outpath}")
-    create_dir(outpath)
-    try:
-        snap_outputs.sort_values(by=['SnapNum', 'Group_M_Crit200','SubGroupNumber'], ascending=[False, False,True], inplace=True, ignore_index=True)
-    except:
-        logging.warning("Sorting by SnapNum and Mass failed, sorting only by HydroflowID")
-    snap_outputs.reset_index(drop=True, inplace=True)
-    dump_hdf(outpath, data=snap_outputs, verbose=verbose)
+    # write
+    logging.info(f"Writing to {outpath} (t={time.time()-t1:.2f}s)")
+    print(f"Writing to {outpath} ... (t={time.time()-t1:.2f}s)")
+    create_dir(str(outpath))
+    dump_hdf(str(outpath), data=snap_outputs, verbose=verbose)
 
+    logging.info(f"Done. rows={len(snap_outputs)} (t={time.time()-t1:.2f}s)")
     return snap_outputs
