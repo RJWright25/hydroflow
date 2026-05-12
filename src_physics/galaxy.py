@@ -308,8 +308,7 @@ def analyse_galaxy(
     -------
     galaxy_output : dict
         
-        Flat dictionary of all computed quantities. Keys are unchanged
-        relative to the original implementation.
+        Flat dictionary of all computed quantities. 
         
     """
 
@@ -367,7 +366,7 @@ def analyse_galaxy(
     galaxy_output['hydroflow-com_offset']=com_offset # offset in ckpc
 
     # ------------------------------------------------------------------
-    # 3. Shell-width bookkeeping (drfacs in frac, string labels)
+    # 3. Shell-width bookkeeping 
     # ------------------------------------------------------------------
     drfacs_pc = [drfac * 100.0 for drfac in drfacs]  # pc style scaling
     drfacs_str = ["p" + f"{val:.0f}".zfill(2) for val in drfacs_pc]
@@ -461,7 +460,7 @@ def analyse_galaxy(
     # ------------------------------------------------------------------
     # 8. Species mass arrays (e.g. HI, H2, metals, etc.)
     # ------------------------------------------------------------------
-    # Expect columns named 'mfrac_<spec>' which store mass fraction for that spec.
+    # Columns named 'mfrac_<spec>' which store mass fraction for that spec.
     specmass = {}
     mfrac_columns = [col for col in pdata_candidates.columns if "mfrac" in col]
 
