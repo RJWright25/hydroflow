@@ -124,9 +124,19 @@ boxsize = metadata.boxsize
 hval = metadata.hval
 afac = metadata.snapshots_afac[snap_mask][0]
 max_dr = np.nanmax(np.array(drfacs))
-max_pkpc = np.nanmax(np.array(kpc_shells))
-max_ckpc=np.nanmax(np.array(ckpc_shells))
-max_r200fac = np.nanmax(np.array(r200_shells))
+if len(kpc_shells)>0:
+    max_pkpc = np.nanmax(np.array(kpc_shells))
+else:
+    max_pkpc = 0
+if len(ckpc_shells)>0:
+    max_ckpc = np.nanmax(np.array(ckpc_shells))
+else:
+    max_ckpc = 0
+
+if len(r200_shells)>0:
+    max_r200fac = np.nanmax(np.array(r200_shells))
+else:
+    max_r200fac = 0
 
 # Output paths
 output_folder = f'{path}/catalogues/gasflow/{namecat}/nvol{str(int(nslice**3)).zfill(3)}/snap{str(snap).zfill(3)}/'

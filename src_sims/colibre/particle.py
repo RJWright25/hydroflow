@@ -139,9 +139,9 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gason
 
         mask = swiftsimio_mask(path)
         mask.constrain_spatial([
-            [limits[0] * unyt.Mpc, limits[1] * unyt.Mpc],
-            [limits[2] * unyt.Mpc, limits[3] * unyt.Mpc],
-            [limits[4] * unyt.Mpc, limits[5] * unyt.Mpc],
+            [limits[0] * unyt.cMpc, limits[1] * unyt.cMpc],
+            [limits[2] * unyt.cMpc, limits[3] * unyt.cMpc],
+            [limits[4] * unyt.cMpc, limits[5] * unyt.cMpc],
         ])
         pdata_snap_masked = swiftsimio_loader(path, mask=mask)
     else:
