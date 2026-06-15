@@ -617,8 +617,8 @@ def analyse_galaxy(
     radial_shells_rstar = [fstar * star_r_half for fstar in rstar_shells]
 
     radial_shells_R200_str = [f"{fR200:.2f}".replace(".", "p") + "r200" for fR200 in r200_shells]
-    radial_shells_pkpc_str = [str(int(fpkpc)).zfill(3) + "pkpc" for fpkpc in kpc_shells]
-    radial_shells_ckpc_str = [str(int(fckpc)).zfill(3) + "ckpc" for fckpc in ckpc_shells]
+    radial_shells_pkpc_str = [str(int(fpkpc)).zfill(4) + "pkpc" for fpkpc in kpc_shells]
+    radial_shells_ckpc_str = [str(int(fckpc)).zfill(4) + "ckpc" for fckpc in ckpc_shells]
     radial_shells_rstar_str = [f"{fstar:.2f}".replace(".", "p") + "reff" for fstar in rstar_shells]
 
     radial_shells = radial_shells_R200 + radial_shells_pkpc + radial_shells_ckpc + radial_shells_rstar
