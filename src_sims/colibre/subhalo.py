@@ -296,7 +296,7 @@ def extract_subhaloes(path, mcut=1e10, metadata=None, flowrates=True):
             bh_accreted_mass_by_mode=halodata.exclusive_sphere_30kpc.most_massive_black_hole_total_accreted_masses_by_mode
             bh_accreted_mass_by_mode.convert_to_units(munit)
             bh_accreted_mass_by_mode=bh_accreted_mass_by_mode.value
-            for imode, mode in enumerate(["thin", "thick", "slim"]):
+            for imode, mode in enumerate(["thick", "thin", "slim"]):
                 out[f"030pkpc_sphere-BH-accreted_mass_{mode}_soapexcl"]=np.asarray(bh_accreted_mass_by_mode[:,imode])
 
 
@@ -304,7 +304,7 @@ def extract_subhaloes(path, mcut=1e10, metadata=None, flowrates=True):
             bh_jet_energy_modes = halodata.exclusive_sphere_30kpc.most_massive_black_hole_injected_jet_energy_by_mode
             bh_jet_energy_modes.convert_to_units("erg")
             jem = bh_jet_energy_modes.value
-            for imode, mode in enumerate(["thin", "thick", "slim"]):
+            for imode, mode in enumerate(["thick", "thin", "slim"]):
                 out[f"030pkpc_sphere-BH-jet_energy_{mode}_soapexcl"] = np.asarray(jem[:, imode])
 
         if hasattr(halodata.exclusive_sphere_30kpc, "most_massive_black_hole_accretion_mode"):

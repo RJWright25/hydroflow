@@ -230,6 +230,7 @@ def analyse_galaxy(
     metadata,
     r200_shells=[0.1, 0.3, 1],
     kpc_shells=[10, 30, 100],
+    ckpc_shells=[],
     rstar_shells=[1, 2, 4],
     zslab_radii={"rmx2reff": "2reff", "rmx10pkpc": 10, "rmxzheight": 1},
     Tbins={"cold": [0, 1e3], "cool": [1e3, 1e5], "warm": [1e5, 1e7], "hot": [1e7, 1e15]},
@@ -274,10 +275,11 @@ def analyse_galaxy(
         Must provide `metadata.cosmology` with methods:
         - Ogamma(z), Om(z), H(z).value
 
-    r200_shells, kpc_shells, rstar_shells : lists
+    r200_shells, kpc_shells, ckpc_shells, rstar_shells : lists
         Radii at which to compute spherical/shell properties, expressed as:
         - multiples of R200,crit (comoving)
         - physical kpc (pkpc)
+        - comoving pkpc (ckpc)
         - multiples of the stellar half-mass radius
 
     zslab_radii : dict
@@ -610,15 +612,17 @@ def analyse_galaxy(
     # ------------------------------------------------------------------
     # Radii in COMOVING Mpc
     radial_shells_R200 = [fR200 * galaxy["Group_R_Crit200"] for fR200 in r200_shells]
-    radial_shells_pkpc = [fpkpc / 1e3 / afac for fpkpc in kpc_shells]
+    radial_shells_pkpc = [fpkpc / 1e3 / afac for fpkpc in kpc_shells] # in cMpc
+    radial_shells_ckpc = [fckpc / 1e3 for fckpc in ckpc_shells] # in cMpc
     radial_shells_rstar = [fstar * star_r_half for fstar in rstar_shells]
 
     radial_shells_R200_str = [f"{fR200:.2f}".replace(".", "p") + "r200" for fR200 in r200_shells]
     radial_shells_pkpc_str = [str(int(fpkpc)).zfill(3) + "pkpc" for fpkpc in kpc_shells]
+    radial_shells_ckpc_str = [str(int(fckpc)).zfill(3) + "ckpc" for fckpc in ckpc_shells]
     radial_shells_rstar_str = [f"{fstar:.2f}".replace(".", "p") + "reff" for fstar in rstar_shells]
 
-    radial_shells = radial_shells_R200 + radial_shells_pkpc + radial_shells_rstar
-    radial_shells_str = radial_shells_R200_str + radial_shells_pkpc_str + radial_shells_rstar_str
+    radial_shells = radial_shells_R200 + radial_shells_pkpc + radial_shells_ckpc + radial_shells_rstar
+    radial_shells_str = radial_shells_R200_str + radial_shells_pkpc_str + radial_shells_ckpc_str + radial_shells_rstar_str
 
     # ------------------------------------------------------------------
     # 14. Loop over all spherical radii and compute sphere + shell quantities

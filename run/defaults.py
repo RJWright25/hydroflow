@@ -1,7 +1,8 @@
 # Default runtime parameters
 r200_shells=[0.03,0.1,0.2,0.3,1,2,3] # Shells as fraction of r200
 rstar_shells=[1,2] # Shells as fraction of stellar half mass radius
-kpc_shells=[1,2,3,10,20,30,100] # Shells in pkpc 
+kpc_shells=[1,2,3,10,20,30,100] # Shells in proper kpc 
+ckpc_shells=[] # Shells in comoving pkpc
 zslab_radii={'rmx05pkpc':5,'rmx10pkpc':10,'rmxzheight':1,'rmx2reff':2}
 Tbins={'cold':[0,1e3],'cool':[1e3,1e5],'warm':[1e5,1e7],'hot':[1e7,1e15]} # Temperature bins for inflow/outflow calculations
 theta_bins={'minax':[30,90],'full':[0,90]} # Angular bins for inflow/outflow calculations

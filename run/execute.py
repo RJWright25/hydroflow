@@ -58,7 +58,7 @@ logging.info(f"************{datetime.now()}************")
 logging.info(f'Running hydroflow for {code} simulation with {namecat} catalogue [runtime {time.time():.3f} sec]')
 
 # Initialise variables
-r200_shells, rstar_shells, kpc_shells, zslab_radii= None, None, None, None
+r200_shells, rstar_shells, kpc_shells, ckpc_shells, zslab_radii= None, None, None, None, None
 Tbins, theta_bins, vcuts, drfacs, dzfacs = None, None, None, None, None
 pdata_fields = []
 
@@ -66,7 +66,7 @@ pdata_fields = []
 pfile=args.pars
 if pfile is not None and os.path.exists(pfile):
     params=import_variables(pfile)
-    pars=['r200_shells','rstar_shells','kpc_shells','zslab_radii','Tbins','theta_bins','vcuts','drfacs','dzfacs','pdata_fields']
+    pars=['r200_shells','rstar_shells','kpc_shells','ckpc_shells','zslab_radii','Tbins','theta_bins','vcuts','drfacs','dzfacs','pdata_fields']
     for par in pars:
         if hasattr(params,par):
             exec(f"{par}=params.{par}")
@@ -125,6 +125,7 @@ hval = metadata.hval
 afac = metadata.snapshots_afac[snap_mask][0]
 max_dr = np.nanmax(np.array(drfacs))
 max_pkpc = np.nanmax(np.array(kpc_shells))
+max_ckpc=np.nanmax(np.array(ckpc_shells))
 max_r200fac = np.nanmax(np.array(r200_shells))
 
 # Output paths
@@ -190,10 +191,17 @@ if numgal:
         central = galaxy['SubGroupNumber'] == 0
 
         # Set maximum search radius
+        # Maximum in cMpc of max_r200fac*r200, max_pkpc, max_ckpc (all with buffers added) -- this is to speed up the candidate retrieval step by avoiding unnecessary searches far from the galaxy
+
         if central:
-            maxrad = max_r200fac * galaxy['Group_R_Crit200']
+            maxrad_1=max_r200fac * galaxy['Group_R_Crit200'] #cMpc
+            maxrad_2=max_pkpc / afac * 1e-3 #cMpc
+            maxrad_3=max_ckpc * 1e-3 #cMpc
+            maxrad = max(maxrad_1, maxrad_2, maxrad_3)
         else:
-            maxrad = max_pkpc / afac * 1e-3 
+            maxrad_1=max_pkpc / afac * 1e-3 #cMpc
+            maxrad_2=max_ckpc * 1e-3 #cMpc
+            maxrad = max(maxrad_1, maxrad_2)
 
         maxrad *= (1 + 0.5 * max_dr) # adding dr/2 shell width to upper radial limit 
         maxrad *= (1.05) # adding 5% buffer 
@@ -225,6 +233,7 @@ if numgal:
                                                 metadata=metadata,
                                                 r200_shells=r200_shells,
                                                 kpc_shells=kpc_shells,
+                                                ckpc_shells=ckpc_shells,
                                                 rstar_shells=rstar_shells,
                                                 zslab_radii=zslab_radii,
                                                 Tbins=Tbins,
