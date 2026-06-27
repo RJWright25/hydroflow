@@ -12,7 +12,7 @@ from hydroflow.src_physics.utils import (
 # --------------------------------------------------------------------------------------
 # READ PARTICLE DATA (SIMBA)
 # --------------------------------------------------------------------------------------
-def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gasonly=False, maxifile=None):
+def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gasonly=False, buffer=2, maxifile=None):
     """
     Read particle data belonging to a spatial subvolume from a SIMBA snapshot (single HDF5 file)
     and return a unified pandas catalogue plus KDTree for spatial queries.
@@ -119,7 +119,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gason
     # ------------------------------------------------------------------
     # Subvolume limits (comoving Mpc)
     # ------------------------------------------------------------------
-    lims = get_limits(ivol, nslice, boxsize, buffer=0.1)
+    lims = get_limits(ivol, nslice, boxsize, buffer=buffer)  # [xmin,xmax,ymin,ymax,zmin,zmax] in cMpc
     xmin, xmax, ymin, ymax, zmin, zmax = lims
 
     # ------------------------------------------------------------------

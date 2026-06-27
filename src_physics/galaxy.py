@@ -9,8 +9,8 @@ from hydroflow.src_physics.utils import (
 
 from hydroflow.src_physics.gasflow import calculate_flow_rate
 
-recentering_spheres=[30.] #ckpc, used for iterative COM calculation -- works for centrals and satellites
-recentering_spheres_str=['030ckpc'] 
+recentering_spheres=[10] #ckpc, used for iterative COM calculation -- works for centrals and satellites
+recentering_spheres_str=['010ckpc'] # string version for output keys
 
 # --------------------------------------------------------------------------------------
 # 1) Retrieve particle candidates for a single galaxy
@@ -99,6 +99,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     # ------------------------------------------------------------------
     coords = pdata_candidates[[f"Coordinates_{ax}" for ax in "xyz"]].values
     rel_pos_cat = coords - com[np.newaxis, :]
+    
     # Minimal-image displacement from catalogue COM in *comoving* Mpc
     if boxsize is not None:
         rel_pos_cat -= boxsize * np.round(rel_pos_cat / boxsize)
@@ -123,44 +124,38 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     # 6. Compute baryonic COM and VCOM for recentering
     # ------------------------------------------------------------------
 
+    temp = pdata_candidates["Temperature"].values
     particle_type = pdata_candidates["ParticleType"].values
     mass = pdata_candidates["Masses"].values
     vxyz = pdata_candidates[[f"Velocities_{ax}" for ax in "xyz"]].values
-
+ 
     # Iteratively find the baryonic centre of mass and velocity
+    # Use: stars & cold gas (T < 5e4 K) within 010 ckpc (comoving) of the catalogue COM (for colibre, exclusive_sphere_30kpc.centre_of_mass)   
+
     com_ref = com.copy()  # start from catalogue centre
     L = boxsize
 
     print(f'COM ref: {com_ref} Mpc')
     for radius in recentering_spheres:
         # mask in Mpc (scale is ckpc)
-        print(radii_relative)
-        print(np.nanpercentile(radii_relative,1))
-        print(np.nanpercentile(radii_relative,50))
-        print(np.nanpercentile(radii_relative,99))
-        
-        mask = (radii_relative) < radius/1e3
-        print(np.nansum(mask))
+        mask_spatial = (radii_relative) < radius/1e3
 
         # Impose membership if present
         if membership_present:
-            mask = np.logical_and(mask, pdata_candidates["Membership"].values == 0)
-        print(np.nansum(mask))
-        # Baryons mask (everything except DM=1)
-        baryons = (particle_type != 1)
+            mask_spatial = np.logical_and(mask_spatial, pdata_candidates["Membership"].values == 0)
 
-        # If enough baryons *in the current selection*, use them only
-        if np.nansum(mask & baryons) > 10:
-            mask = np.logical_and(mask, baryons)
-        print(np.nansum(mask))
+        # Mask for baryons: stars (type 4) and cold gas (type 0, T < 5e4 K)
+        baryons = np.logical_or(particle_type == 4, np.logical_and(particle_type == 0, temp < 5e4))
 
-        if np.nansum(mask) == 0:
+        # Skip if no baryons in this radius
+        if np.nansum(mask_spatial & baryons) == 0:
             continue
-
+        
+        # Compute relative positions to the current reference COM, with periodic wrapping
         rel = coords - com_ref[None, :]
         rel -= L * np.round(rel / L)
-        msel = mass[mask]
-        rel_sel = rel[mask]
+        msel = mass[mask_spatial & baryons]
+        rel_sel = rel[mask_spatial & baryons]
 
         # COM is reference centre plus mass-weighted mean of wrapped offsets
         com_updated = com_ref + (np.nansum(msel[:, None] * rel_sel, axis=0) / np.nansum(msel))
@@ -173,7 +168,7 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
         # Move reference centre forward (keeps offsets small + stable)
         com_ref = com_updated
 
-    # Use 30ckpc as the final scale
+    # Use the final scale
     mask_final = radii_relative < recentering_spheres[-1]/1e3
     if membership_present:
         mask_final = np.logical_and(mask_final, pdata_candidates["Membership"].values == 0)
@@ -182,11 +177,19 @@ def retrieve_galaxy_candidates(galaxy, pdata_subvol, kdtree_subvol, maxrad=None,
     rel = coords - com_ref[None, :]
     rel -= L * np.round(rel / L)
 
-    msel = mass[mask_final]
-    rel_sel = rel[mask_final]
+    # If no baryons in the final mask, use all particles
+    if np.nansum(mask_final & baryons) == 0:
+        print("WARNING: No cold baryons in final aperture. Using all particles in final aperture.")
+        baryons = np.ones_like(baryons, dtype=bool)
 
+    # Compute final baryonic COM and VCOM using the final mask
+    msel = mass[mask_final & baryons]
+    rel_sel = rel[mask_final & baryons]
+    vxyz_sel = vxyz[mask_final & baryons]
+
+    # Final COM and vCOM (peculiar) in comoving Mpc and km/s
     com_final = com_ref + (np.nansum(msel[:, None] * rel_sel, axis=0) / np.nansum(msel))
-    vcom_final = (np.nansum(msel[:, None] * vxyz[mask_final], axis=0) / np.nansum(msel))
+    vcom_final = (np.nansum(msel[:, None] * vxyz_sel, axis=0) / np.nansum(msel))
 
     com_offset=np.linalg.norm(com_final-com)
     print(f"COM final: {com_final}")
@@ -337,19 +340,6 @@ def analyse_galaxy(
 
     vpseudo=(2 / 3) * (constant_G * M200 * Hz / 100) ** (1 / 3)
     vpseudo *= (2 *omegag + (3 / 2) * omegam)
-    # print(f"z={z}, Hz={Hz} km/s, omegag={omegag}, omegam={omegam}")
-    # print(f"vpseudo= {vpseudo} km/s")
-
-    # R_dot = (2 / 3) * (G * self.SO_mass * self.cosmology["H"] / 100) ** (
-    #                 1 / 3
-    #             )
-    #             R_dot *= (
-    #                 2 * self.cosmology["Omega_g"] + (3 / 2) * self.cosmology["Omega_m"]
-    #             )
-    #             R_dot *= R_frac
- 
-
-
     galaxy_output["1p00r200-vpdoev"] = vpseudo  # km/s
 
     # ------------------------------------------------------------------
@@ -364,8 +354,7 @@ def analyse_galaxy(
     com_new=np.array([galaxy_output[f"hydroflow-com_{x}"] for x in 'xyz'])
     com_old=np.array([galaxy_output[f'CentreOfMass_{x}'] for x in 'xyz'])
     com_offset=np.linalg.norm(com_new-com_old)
-
-    galaxy_output['hydroflow-com_offset']=com_offset # offset in ckpc
+    galaxy_output['hydroflow-com_offset']=com_offset # offset in ckpc (estimate of recentering error)
 
     # ------------------------------------------------------------------
     # 3. Shell-width bookkeeping 
@@ -391,7 +380,7 @@ def analyse_galaxy(
         inclusive=False          
 
     Lbar, thetapos, thetavel, zheight = compute_cylindrical_ztheta(
-        pdata=pdata_candidates, baryons=True, aperture=recentering_spheres[-1]/1e3,inclusive=inclusive,afac=afac
+        pdata=pdata_candidates, baryons=True, coldgas=True, aperture=recentering_spheres[-1]/1e3, inclusive=inclusive, afac=afac
     )
 
     pdata_candidates["Relative_theta_pos"] = thetapos
@@ -498,7 +487,7 @@ def analyse_galaxy(
         # NFW with c ~ 10 => Vmax ~ 1.33 V_circ,200
         vmax = 1.33 * galaxy_output["Group_V_Crit200"]
 
-    # Convert vcuts (possibly string fractions of Vmax) to km/s
+    # Convert vcuts (string fractions of Vmax) to km/s
     for vcut_key in vcuts.keys():
         vcut_val = vcuts[vcut_key]
         if isinstance(vcut_val, str) and "Vmax" in vcut_val:
@@ -737,7 +726,7 @@ def analyse_galaxy(
                 * ((rhi_phys * 1e3) ** 3 - (rlo_phys * 1e3) ** 3)
             )
             galaxy_output[f"{rshell_str}_shell{drfac_str}_full-area"] = (
-                4.0 * np.pi * ((rhi_phys * 1e3) ** 2 - (rlo_phys * 1e3) ** 2)
+                np.pi * ((rhi_phys * 1e3) ** 2 - (rlo_phys * 1e3) ** 2)
             )
 
             for mem_str, mem_mask in membership_masks.items():

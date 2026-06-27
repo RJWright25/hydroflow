@@ -21,7 +21,7 @@ from hydroflow.src_physics.utils import (
 # --------------------------------------------------------------------------------------
 # READ PARTICLE DATA (EAGLE)
 # --------------------------------------------------------------------------------------
-def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False):
+def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, buffer=2):
     """
     Read particle data belonging to a spatial subvolume from an EAGLE snapshot (single file)
     using `pyread_eagle.EagleSnapshot`, and return a unified pandas catalogue plus KDTree.
@@ -135,7 +135,7 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False):
     # ------------------------------------------------------------------
     # Subvolume limits (comoving Mpc) and EAGLE region selection (cMpc/h)
     # ------------------------------------------------------------------
-    lims = get_limits(ivol, nslice, boxsize)  # [xmin,xmax,ymin,ymax,zmin,zmax] in cMpc
+    lims = get_limits(ivol, nslice, boxsize, buffer=buffer)  # [xmin,xmax,ymin,ymax,zmin,zmax] in cMpc
     xmin, xmax, ymin, ymax, zmin, zmax = lims
 
     # EAGLESnapshot expects cMpc/h limits

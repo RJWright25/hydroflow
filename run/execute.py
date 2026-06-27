@@ -66,7 +66,7 @@ pdata_fields = []
 pfile=args.pars
 if pfile is not None and os.path.exists(pfile):
     params=import_variables(pfile)
-    pars=['r200_shells','rstar_shells','kpc_shells','ckpc_shells','zslab_radii','Tbins','theta_bins','vcuts','drfacs','dzfacs','pdata_fields']
+    pars=['r200_shells','rstar_shells','kpc_shells','ckpc_shells','zslab_radii','Tbins','theta_bins','vcuts','drfacs','dzfacs','pdata_fields','buffer']
     for par in pars:
         if hasattr(params,par):
             exec(f"{par}=params.{par}")

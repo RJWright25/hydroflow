@@ -9,6 +9,7 @@ theta_bins={'minax':[30,90],'full':[0,90]} # Angular bins for inflow/outflow cal
 vcuts={'vc0p25vmx':'0.25Vmax','vc1p00vmx':'1.00Vmax','vc050kmps':50,'vc250kmps':250}
 drfacs=[0.1] # Fraction of shell radius to use for shell thickness (r-dr/2 - r+dr/2)
 dzfacs=[0.4] # Fraction of slab height to use for slab thickness (z-dz/2 - z+dz/2)
+buffer=2 # Buffer in cMpc for reading subvolumes from simulation boxes
 
 # Particle data fields to dump if requested
 pdata_fields=['Masses',

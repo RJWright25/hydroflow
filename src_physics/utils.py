@@ -60,7 +60,7 @@ def ivol_idx(ivol,nslice):
 	return (ix,iy,iz)
 
 
-def get_limits(ivol,nslice,boxsize,buffer=1):
+def get_limits(ivol,nslice,boxsize,buffer=2):
 	"""
 	get_limits: Generate the limits of a subvolume in the simulation volume.
 
@@ -104,22 +104,24 @@ def get_limits(ivol,nslice,boxsize,buffer=1):
 	return xmin,xmax,ymin,ymax,zmin,zmax
 
 
-def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1,inclusive=True):
+def compute_cylindrical_ztheta(pdata,baryons=True,coldgas=True,aperture=10*1e-3,afac=1,inclusive=True):
     """
-    compute_cylindrical_ztheta: Calculate the angular momentum of a system of particles and the angle between the angular momentum and the position vector of each particle.
+    compute_cylindrical_ztheta: Calculate the angular momentum vector of the system and the angle between the angular momentum vector and the position vector of each particle.
+    Also calculates the z-coordinate of the particles relative to the disk plane.
 
-    Input:
     -----------
     pdata: pd.DataFrame
-        DataFrame containing the particle data.
+        DataFrame containing the particle data. Includes updated positions and velocities relative to the pre-computed galaxy centre.
     baryons: bool
         Flag to only consider baryonic particles.
+    coldgas: bool
+        Flag to only consider cold gas particles (T<5e4 K).
     aperture: float
         Aperture radius to mask the particles (in comoving Mpc). 
     afac: float
         Cosmological scale factor.
     inclusive: bool
-        If True, include all particles within the aperture. If False, only include particles that are not members of the galaxy (Membership=0) within the aperture.
+        If True, include all particles within the aperture. If False, only include particles that are members of the galaxy (Membership==0) within the aperture.
     
     Output:
     -----------
@@ -128,7 +130,7 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1,inclus
 
     theta: np.array
         Array containing the angle between the angular momentum of the system and the position vector of each particle.
-        The output is in degrees and ranges from [0,90] degrees -- 0 degrees corresponds to particles aligned with the angular momentum vector/minor axis.
+        The output is in degrees and ranges from [0,90] degrees -- 90 degrees corresponds to particles aligned with the angular momentum vector/minor axis.
 
     z : np.array
         Array containing the z-coordinate of the particles relative to the disk plane.
@@ -143,16 +145,28 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1,inclus
     positions=pdata.loc[:,[f'Relative_{x}_comoving' for x in 'xyz']].values # already in comoving Mpc
     velocities=pdata.loc[:,[f'Relative_v{x}_pec' for x in 'xyz']].values # already in physical units (km/s)
 
+    # Mask the particles within the aperture and only baryonic particles if baryons is True and cold gas if coldgas is True
     if baryons:
         mask=np.logical_or(ptypes==0,ptypes==4) & (radii<aperture)
+        if coldgas:
+            mask=np.logical_and(mask,np.logical_or(ptypes==4,np.logical_and(ptypes==0,pdata['Temperature'].values<5e4)))
     else:
         mask=(radii<aperture)
-    print(f"Number of particles in aperture: {np.sum(mask)}")
 
+    # If inclusive is False, only include particles that are members of the galaxy (Membership==0) within the aperture    
     if not inclusive:
         mask=np.logical_and(mask,pdata['Membership'].values==0)
-         
-	# Define the angular momentum of the galaxy with baryonic elements within aperture
+
+    print(f"Number of particles in aperture: {np.sum(mask)}")
+
+    # If no selected baryonic/cold particles, fall back to all particles in aperture
+    if baryons and np.count_nonzero(mask) == 0:
+        print("WARNING: No baryonic/cold particles in aperture. Falling back to all particles.")
+        mask = radii < aperture
+        if not inclusive:
+            mask &= (pdata["Membership"].values == 0)
+
+	# Define the angular momentum of the galaxy with the relevant elements within aperture
     Lbar=np.nansum(np.cross(positions[mask]*afac,masses[mask][:,np.newaxis]*velocities[mask]),axis=0)
     Lbarhat=Lbar/np.linalg.norm(Lbar)
 
@@ -174,6 +188,7 @@ def compute_cylindrical_ztheta(pdata,baryons=True,aperture=30*1e-3,afac=1,inclus
     cos_theta_vel=np.sum(Lbar*velocities,axis=1)/(np.linalg.norm(Lbar)*np.linalg.norm(velocities,axis=1))
     deg_theta_vel=np.arccos(cos_theta_vel)*180/np.pi
     deg_theta_vel[deg_theta_vel>90]=180-deg_theta_vel[deg_theta_vel>90] # particles with e.g. theta=180 degrees (opposite minor axis) are re-assigned to 0 degrees (mirrored)
+    
     # Now make 90 degrees the minor axis
     theta_vel=90-deg_theta_vel
 
@@ -338,27 +353,32 @@ def partition_neutral_gas(pdata,redshift,xH=0.76,sfonly=True):
 	# Mask for star-forming gas particles (if required)
     if not sfonly:
         sfr=np.ones(nH.shape[0])
-    sfrmask=np.where(sfr>0)
+    sfrmask=sfr>0
 	 
     # Neutral fraction
     fneutral=rahmati2013_neutral_fraction(nH,T,redshift=redshift)
-    fHII=(1-fneutral)*xH
-    t0=time.time()
+    # ionized hydrogen fraction of total gas mass
+    fHII_gas = (1.0 - fneutral) * xH
 
-    # H2 fraction
-    midplane_pressure = T*nH # true pressure have to multiply this by kB, this is in cm^-3 K
+    # thermal pressure proxy, P/kB in cm^-3 K
+    pressure_over_kB = T * nH
 
-    # Partition function
-    Rmol=(midplane_pressure/4.3e4)**0.92 # Blitz & Rosolowsky (2006) 
-    fH2=np.zeros(nH.shape[0])
-    fH2[sfrmask]=1/(1+Rmol[sfrmask])
-    fHI=1-fH2
-    fH2*=fneutral*xH # convert from fraction of neutral mass to fraction of total mass
-    fHI*=fneutral*xH # convert from fraction of neutral mass to fraction of total mass
-    t1=time.time()
-    print(f"Time taken for neutral hydrogen partitioning: {t1-t0:.3f} sec")
-	
-    return fHI,fH2,fHII
+    Rmol = (pressure_over_kB / 4.3e4)**0.92
+
+    fH2_neutral = np.zeros_like(nH)
+    fHI_neutral = np.ones_like(nH)
+
+    fH2_neutral[sfrmask] = Rmol[sfrmask] / (1.0 + Rmol[sfrmask])
+    fHI_neutral[sfrmask] = 1.0 / (1.0 + Rmol[sfrmask])
+
+    fH2_gas = fH2_neutral * fneutral * xH
+    fHI_gas = fHI_neutral * fneutral * xH
+
+    fHI[gas]  = fHI_gas
+    fH2[gas]  = fH2_gas
+    fHII[gas] = fHII_gas
+
+    return fHI, fH2, fHII
 
 
 def calc_temperature(pdata,XH=0.76,gamma=5/3):

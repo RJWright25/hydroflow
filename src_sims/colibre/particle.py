@@ -6,8 +6,12 @@ import logging
 import unyt
 
 from scipy.spatial import cKDTree
+import swiftsimio
 from swiftsimio import load as swiftsimio_loader
 from swiftsimio import mask as swiftsimio_mask
+from swiftsimio import cosmo_quantity
+from swiftsimio.objects import cosmo_factor
+from swiftsimio.objects import a 
 
 from hydroflow.src_physics.utils import get_limits
 
@@ -15,7 +19,7 @@ from hydroflow.src_physics.utils import get_limits
 # --------------------------------------------------------------------------------------
 # READ PARTICLE DATA (COLIBRE)
 # --------------------------------------------------------------------------------------
-def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gasonly=False):
+def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gasonly=False, buffer=2):
     """
     Read particle data belonging to a spatial subvolume from a COLIBRE snapshot using swiftsimio,
     and return a unified pandas catalogue plus KDTree for spatial queries.
@@ -134,14 +138,15 @@ def read_subvol(path, ivol, nslice, metadata, logfile=None, verbose=False, gason
     # Spatially mask the subregion if nslice > 1
     # ------------------------------------------------------------------
     if nslice > 1:
-        limits = get_limits(ivol=ivol, nslice=nslice, boxsize=boxsize)
+        limits = get_limits(ivol=ivol, nslice=nslice, boxsize=boxsize, buffer=buffer)
+        limits_wunit=[cosmo_quantity(limit,units=unyt.Mpc,comoving=True,cosmo_factor=cosmo_factor(a,scale_factor=pdata_snap.metadata.a)) for limit in limits]
         log.info(f"Limits given: {limits}")
-
         mask = swiftsimio_mask(path)
+
         mask.constrain_spatial([
-            [limits[0]*unyt.cMpc, limits[1]*unyt.cMpc],
-            [limits[2]*unyt.cMpc, limits[3]*unyt.cMpc],
-            [limits[4]*unyt.cMpc, limits[5]*unyt.cMpc],
+        [limits_wunit[0], limits_wunit[1]],
+        [limits_wunit[2], limits_wunit[3]],
+        [limits_wunit[4], limits_wunit[5]],
         ])
         pdata_snap_masked = swiftsimio_loader(path, mask=mask)
     else:
